@@ -1,5 +1,5 @@
 {
-  "name": "@stumatch/shared",
+  "name": "@rukan/shared",
   "version": "0.0.0",
   "private": true,
   "description": "Types, zod schemas และ constants ที่ใช้ร่วมกันระหว่าง api / web / mobile",
@@ -33,8 +33,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@stumatch/eslint-config": "workspace:*",
-    "@stumatch/tsconfig": "workspace:*",
+    "@rukan/eslint-config": "workspace:*",
+    "@rukan/tsconfig": "workspace:*",
     "eslint": "^9.39.0",
     "tsup": "^9.0.0",
     "typescript": "~6.0.3",

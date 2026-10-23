@@ -1,4 +1,4 @@
-# Architecture — stuMatch
+# Architecture — รู้กัน (rukan)
 
 ## 1. ภาพรวมระบบ
 
@@ -53,7 +53,7 @@
 - `src/lib/supabase.ts` — client ตัวเดียวของทั้งแอป
 - Session เก็บด้วย `LargeSecureStore`: key AES อยู่ใน SecureStore (Keychain/Keystore), session ที่เข้ารหัสแล้วอยู่ใน AsyncStorage
 - refresh token เฉพาะตอนแอปอยู่ foreground (AppState listener)
-- OAuth / magic link ใช้ deep link scheme `stumatch://` (อยู่ใน `additional_redirect_urls` ของ config.toml แล้ว)
+- OAuth / magic link ใช้ deep link scheme `rukan://` (อยู่ใน `additional_redirect_urls` ของ config.toml แล้ว)
 - Build/ส่ง store ด้วย EAS (`eas build`, `eas submit`)
 
 ### `packages/shared`
@@ -120,7 +120,7 @@
 1. สร้าง project ที่ supabase.com (region Singapore)
 2. `pnpm exec supabase login` แล้ว `pnpm exec supabase link --project-ref <ref>`
 3. `pnpm exec supabase db push` — apply migrations ทั้งหมดขึ้น project จริง (**seed.sql ไม่ถูก push**)
-4. Dashboard → Authentication → URL Configuration: ตั้ง Site URL = `https://<domain>` และ Redirect URLs เพิ่ม `https://<domain>/**`, `stumatch://**`
+4. Dashboard → Authentication → URL Configuration: ตั้ง Site URL = `https://<domain>` และ Redirect URLs เพิ่ม `https://<domain>/**`, `rukan://**`
 
 ### Supabase (หลัง merge PR ที่มี migration ใหม่)
 

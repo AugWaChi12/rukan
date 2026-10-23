@@ -1,6 +1,6 @@
 'use client';
 
-import { SUPABASE_RPC, healthResponseSchema, type HealthResponse } from '@stumatch/shared';
+import { SUPABASE_RPC, healthResponseSchema, type HealthResponse } from '@rukan/shared';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 

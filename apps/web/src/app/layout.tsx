@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'stuMatch',
+  title: 'รู้กัน (rukan)',
   description: 'match / นัดเจอ',
 };
 

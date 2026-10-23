@@ -1,5 +1,5 @@
 {
-  "extends": "@stumatch/tsconfig/base.json",
+  "extends": "@rukan/tsconfig/base.json",
   "compilerOptions": {
     "outDir": "dist"
   },

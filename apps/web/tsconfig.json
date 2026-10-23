@@ -1,5 +1,5 @@
 {
-  "extends": "@stumatch/tsconfig/nextjs.json",
+  "extends": "@rukan/tsconfig/nextjs.json",
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]
