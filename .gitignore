@@ -1,0 +1,48 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+.next/
+out/
+.expo/
+web-build/
+.turbo/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Expo native folders (Continuous Native Generation — สร้างใหม่ได้ด้วย `expo prebuild`)
+apps/mobile/ios/
+apps/mobile/android/
+
+# env / secrets — ห้าม commit
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+!.env.example
+*.pem
+*.keystore
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

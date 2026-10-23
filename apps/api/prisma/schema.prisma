@@ -1,0 +1,24 @@
+// Database schema ของ stuMatch — กติกาการตั้งชื่อดู docs/ARCHITECTURE.md หัวข้อ 3
+// แก้ไฟล์นี้แล้วต้องรัน `pnpm db:migrate` เพื่อสร้าง migration ทุกครั้ง
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  displayName  String   @map("display_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}

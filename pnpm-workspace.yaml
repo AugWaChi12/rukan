@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - packages/*
+
+# React Native / Expo ต้องการ node_modules แบบ flat (pnpm 11+ อ่าน setting จากไฟล์นี้ ไม่ใช่ .npmrc)
+nodeLinker: hoisted
+
+# package ที่อนุญาต (true) / ไม่อนุญาต (false) ให้รัน install script — pnpm บล็อกเป็นค่าเริ่มต้น
+allowBuilds:
+  esbuild: true
+  argon2: true
+  prisma: true
+  '@prisma/engines': true
+  '@swc/core': true
+  '@scarf/scarf': false
+  sharp: false
+  unrs-resolver: false

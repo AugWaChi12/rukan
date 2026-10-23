@@ -1,0 +1,2 @@
+# Prisma Client ที่ generate จาก schema (สร้างใหม่ด้วย `pnpm prisma generate`)
+/src/generated/prisma
