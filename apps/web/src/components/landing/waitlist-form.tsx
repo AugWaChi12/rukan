@@ -13,7 +13,8 @@ import type { Dictionary, Locale } from '@/i18n/dictionaries';
 import { createClient } from '@/lib/supabase/client';
 import { CheckIcon } from './icons';
 
-type Status = { kind: 'idle' } | { kind: 'sending' } | { kind: 'done' } | { kind: 'error'; message: string };
+type Status =
+  { kind: 'idle' } | { kind: 'sending' } | { kind: 'done' } | { kind: 'error'; message: string };
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref'] as const;
 
@@ -54,7 +55,8 @@ export function WaitlistForm({
       return;
     }
 
-    const areaValue = area === 'other' ? `other:${String(form.get('areaOther') ?? '').trim()}` : area;
+    const areaValue =
+      area === 'other' ? `other:${String(form.get('areaOther') ?? '').trim()}` : area;
     const parsed = waitlistFormSchema.safeParse({
       email: form.get('email'),
       area: area === 'other' && areaValue === 'other:' ? '' : areaValue,
@@ -65,7 +67,13 @@ export function WaitlistForm({
     if (!parsed.success) {
       const path = parsed.error.issues[0]?.path[0];
       const message =
-        path === 'email' ? t.errors.email : path === 'area' ? t.errors.area : path === 'consent' ? t.errors.consent : t.errors.generic;
+        path === 'email'
+          ? t.errors.email
+          : path === 'area'
+            ? t.errors.area
+            : path === 'consent'
+              ? t.errors.consent
+              : t.errors.generic;
       setStatus({ kind: 'error', message });
       return;
     }
@@ -122,7 +130,15 @@ export function WaitlistForm({
       <label htmlFor="wl-email" className="text-sm font-semibold">
         {t.email}
       </label>
-      <input id="wl-email" name="email" type="email" autoComplete="email" required placeholder={t.emailPlaceholder} className={fieldClass} />
+      <input
+        id="wl-email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        placeholder={t.emailPlaceholder}
+        className={fieldClass}
+      />
 
       <div className="flex flex-wrap gap-3">
         <div className="flex min-w-[240px] flex-1 flex-col gap-2">
@@ -181,7 +197,12 @@ export function WaitlistForm({
               key={intent}
               className="flex cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-cream px-4 py-2.5 text-sm has-[:checked]:border-rose-deep has-[:checked]:bg-rose-tint"
             >
-              <input type="checkbox" name="intents" value={intent} className="size-4 accent-rose-deep" />
+              <input
+                type="checkbox"
+                name="intents"
+                value={intent}
+                className="size-4 accent-rose-deep"
+              />
               {t.intentLabels[intent]}
             </label>
           ))}
@@ -197,17 +218,27 @@ export function WaitlistForm({
       </div>
 
       <label className="mt-1 flex items-start gap-2.5 text-[13px] leading-relaxed text-muted">
-        <input type="checkbox" name="consent" className="mt-0.5 size-[18px] shrink-0 accent-rose-deep" />
+        <input
+          type="checkbox"
+          name="consent"
+          className="mt-0.5 size-[18px] shrink-0 accent-rose-deep"
+        />
         <span>
           {t.consent}{' '}
-          <a href={privacyHref} className="font-semibold text-rose-deep no-underline hover:underline">
+          <a
+            href={privacyHref}
+            className="font-semibold text-rose-deep no-underline hover:underline"
+          >
             {t.privacy}
           </a>
         </span>
       </label>
 
       {status.kind === 'error' && (
-        <p role="alert" className="rounded-xl bg-rose-tint px-4 py-3 text-sm font-medium text-rose-deep">
+        <p
+          role="alert"
+          className="rounded-xl bg-rose-tint px-4 py-3 text-sm font-medium text-rose-deep"
+        >
           {status.message}
         </p>
       )}

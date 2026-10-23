@@ -29,7 +29,11 @@ const th = {
     space: 'Space',
     posts: [
       { alias: 'มะปราง', meta: '12 นาที', body: 'พรีเซนต์โปรเจคผ่านแล้ว ขอโม้หน่อยนะ ทำมาสามคืน' },
-      { alias: 'กาแฟเย็น', meta: '40 นาที', body: 'เลิกงานกลับห้องคนเดียว เงียบจนได้ยินเสียงตู้เย็น' },
+      {
+        alias: 'กาแฟเย็น',
+        meta: '40 นาที',
+        body: 'เลิกงานกลับห้องคนเดียว เงียบจนได้ยินเสียงตู้เย็น',
+      },
       { alias: 'ฟ้าหลังฝน', meta: '1 ชม.', body: 'ย้ายมากรุงเทพ 3 เดือน ยังไม่มีเพื่อนเลย' },
     ],
     sendBubble: 'ส่ง bubble',
@@ -54,7 +58,15 @@ const th = {
   },
   marquee: {
     title: 'มาหาอะไรก็ได้ ที่ทำให้ไม่เหงา',
-    rowA: ['เพื่อนกินข้าวหลังเลิกงาน', 'คนคุยก่อนนอน', 'บัดดี้ติวสอบ', 'เพื่อนตีแบด', 'เพื่อนคาเฟ่', 'คนดูหนังด้วย', 'คนพิเศษ'],
+    rowA: [
+      'เพื่อนกินข้าวหลังเลิกงาน',
+      'คนคุยก่อนนอน',
+      'บัดดี้ติวสอบ',
+      'เพื่อนตีแบด',
+      'เพื่อนคาเฟ่',
+      'คนดูหนังด้วย',
+      'คนพิเศษ',
+    ],
     rowB: [
       'ย้ายมาทำงานกรุงเทพ ยังไม่มีเพื่อน',
       'อยากระบาย แต่ไม่อยากให้ใครรู้',
@@ -75,7 +87,10 @@ const th = {
       sampleMeta: 'นักศึกษา',
       sampleBody: 'วันนี้สอบเสร็จแล้ว ใครว่างไปกินชาบูบ้าง',
     },
-    drop: { title: 'Daily Drop ทุกคืน 19:00', body: 'คัดคนที่น่าจะคุยกันถูกคอมาให้วันละไม่กี่คน ไม่ต้องปัดเป็นร้อย ไม่ต้องจ่ายเพิ่ม' },
+    drop: {
+      title: 'Daily Drop ทุกคืน 19:00',
+      body: 'คัดคนที่น่าจะคุยกันถูกคอมาให้วันละไม่กี่คน ไม่ต้องปัดเป็นร้อย ไม่ต้องจ่ายเพิ่ม',
+    },
     reveal: {
       title: 'รูปค่อยๆ เปิด ตามที่คุยกัน',
       body: 'ยิ่งคุยกันมาก ยิ่งเห็นกันชัด ต่างคนต่างต้องคุย พิมพ์รัวคนเดียวไม่ได้',
@@ -99,9 +114,18 @@ const th = {
     eyebrow: 'ใช้ยังไง',
     title: '3 ขั้น จากเหงาเป็นได้เจอกัน',
     steps: [
-      { title: 'สมัคร + ยืนยันตัวตน', body: 'Apple / Google / LINE แล้วยืนยันเบอร์ + selfie ไม่ถึง 2 นาที' },
-      { title: 'คุยใน Space หรือรอ Drop', body: 'ระบายแบบไม่ระบุตัวตน หรือปัดคนที่ระบบคัดมาให้ตอน 19:00' },
-      { title: 'คุยจนสนิท แล้วนัดเจอ', body: 'รูปเปิดตามที่คุย พร้อมนัดที่ปลอดภัย และแชร์นัดให้เพื่อนรู้' },
+      {
+        title: 'สมัคร + ยืนยันตัวตน',
+        body: 'Apple / Google / LINE แล้วยืนยันเบอร์ + selfie ไม่ถึง 2 นาที',
+      },
+      {
+        title: 'คุยใน Space หรือรอ Drop',
+        body: 'ระบายแบบไม่ระบุตัวตน หรือปัดคนที่ระบบคัดมาให้ตอน 19:00',
+      },
+      {
+        title: 'คุยจนสนิท แล้วนัดเจอ',
+        body: 'รูปเปิดตามที่คุย พร้อมนัดที่ปลอดภัย และแชร์นัดให้เพื่อนรู้',
+      },
     ],
   },
   safety: {
@@ -163,8 +187,14 @@ const th = {
         q: 'ไม่ระบุตัวตนจริงไหม',
         a: 'ใน Space คนอื่นเห็นแค่นามแฝง ระบบไม่ส่งตัวตนของคนโพสต์ออกไปให้ใครเลย จะเปิดดูได้เฉพาะทีมดูแลเมื่อมีการรายงานการทำผิดกติกา',
       },
-      { q: 'ใครใช้ได้บ้าง', a: 'ทุกคนอายุ 18 ปีขึ้นไป ทั้งนักศึกษาและวัยทำงาน — ป้ายมหาลัย / ที่ทำงานใส่เพิ่มได้ ไม่บังคับ' },
-      { q: 'เปิดให้ใช้เมื่อไหร่', a: 'เร็วๆ นี้ เริ่มที่กรุงเทพ ย่านที่ลงชื่อเยอะที่สุดได้ใช้ก่อน' },
+      {
+        q: 'ใครใช้ได้บ้าง',
+        a: 'ทุกคนอายุ 18 ปีขึ้นไป ทั้งนักศึกษาและวัยทำงาน — ป้ายมหาลัย / ที่ทำงานใส่เพิ่มได้ ไม่บังคับ',
+      },
+      {
+        q: 'เปิดให้ใช้เมื่อไหร่',
+        a: 'เร็วๆ นี้ เริ่มที่กรุงเทพ ย่านที่ลงชื่อเยอะที่สุดได้ใช้ก่อน',
+      },
     ],
   },
   footer: {
@@ -204,9 +234,21 @@ const en: Dictionary = {
   phones: {
     space: 'Space',
     posts: [
-      { alias: 'Mango', meta: '12m', body: 'Passed my project presentation — allow me to brag, three all-nighters!' },
-      { alias: 'Iced Coffee', meta: '40m', body: 'Home alone after work again. So quiet I can hear the fridge.' },
-      { alias: 'After Rain', meta: '1h', body: 'Moved to Bangkok 3 months ago and still no friends.' },
+      {
+        alias: 'Mango',
+        meta: '12m',
+        body: 'Passed my project presentation — allow me to brag, three all-nighters!',
+      },
+      {
+        alias: 'Iced Coffee',
+        meta: '40m',
+        body: 'Home alone after work again. So quiet I can hear the fridge.',
+      },
+      {
+        alias: 'After Rain',
+        meta: '1h',
+        body: 'Moved to Bangkok 3 months ago and still no friends.',
+      },
     ],
     sendBubble: 'Send bubble',
     dropTitle: 'Tonight’s Drop',
@@ -230,7 +272,15 @@ const en: Dictionary = {
   },
   marquee: {
     title: 'Whatever helps you feel less lonely',
-    rowA: ['After-work dinner buddy', 'Someone to talk to before bed', 'Study buddy', 'Badminton partner', 'Café friend', 'Movie buddy', 'Someone special'],
+    rowA: [
+      'After-work dinner buddy',
+      'Someone to talk to before bed',
+      'Study buddy',
+      'Badminton partner',
+      'Café friend',
+      'Movie buddy',
+      'Someone special',
+    ],
     rowB: [
       'New to Bangkok, no friends yet',
       'Want to vent without anyone knowing',
@@ -251,7 +301,10 @@ const en: Dictionary = {
       sampleMeta: 'Student',
       sampleBody: 'Exams are done! Anyone free for shabu tonight?',
     },
-    drop: { title: 'Daily Drop, every night at 19:00', body: 'A few people you’d likely click with, picked every day. No endless swiping, no paywall.' },
+    drop: {
+      title: 'Daily Drop, every night at 19:00',
+      body: 'A few people you’d likely click with, picked every day. No endless swiping, no paywall.',
+    },
     reveal: {
       title: 'Photos unlock as you chat',
       body: 'The more you talk, the more you see. Both of you have to chat — spamming alone won’t unlock anything.',
@@ -275,9 +328,18 @@ const en: Dictionary = {
     eyebrow: 'How it works',
     title: 'Three steps from lonely to meeting up',
     steps: [
-      { title: 'Sign up + verify', body: 'Apple / Google / LINE, then phone + selfie — under 2 minutes' },
-      { title: 'Chat in Space or wait for the Drop', body: 'Vent anonymously, or swipe on the people picked for you at 19:00' },
-      { title: 'Get close, then meet', body: 'Photos unlock as you chat; meet somewhere safe and share your plans with a friend' },
+      {
+        title: 'Sign up + verify',
+        body: 'Apple / Google / LINE, then phone + selfie — under 2 minutes',
+      },
+      {
+        title: 'Chat in Space or wait for the Drop',
+        body: 'Vent anonymously, or swipe on the people picked for you at 19:00',
+      },
+      {
+        title: 'Get close, then meet',
+        body: 'Photos unlock as you chat; meet somewhere safe and share your plans with a friend',
+      },
     ],
   },
   safety: {
@@ -305,7 +367,8 @@ const en: Dictionary = {
     optional: '(optional)',
     intents: 'Looking for',
     intentLabels: { friend: 'Friends', talk: 'Someone to talk to', date: 'Dating' },
-    consent: 'I agree that rukan may store my email to tell me about the launch. Unsubscribe anytime ·',
+    consent:
+      'I agree that rukan may store my email to tell me about the launch. Unsubscribe anytime ·',
     privacy: 'Privacy policy',
     submit: 'Join the waitlist →',
     submitting: 'Sending…',
@@ -334,13 +397,22 @@ const en: Dictionary = {
   faq: {
     title: 'FAQ',
     items: [
-      { q: 'Is it free?', a: 'Yes — and the core features are never locked. You don’t pay to see who likes you.' },
+      {
+        q: 'Is it free?',
+        a: 'Yes — and the core features are never locked. You don’t pay to see who likes you.',
+      },
       {
         q: 'Is it really anonymous?',
         a: 'In Space others only see your alias. The app never sends a poster’s identity to anyone; only our moderation team can look it up when a post is reported for breaking the rules.',
       },
-      { q: 'Who can join?', a: 'Anyone 18 or older — students and working people. University / workplace badges are optional.' },
-      { q: 'When does it launch?', a: 'Soon, starting in Bangkok. The areas with the most sign-ups go first.' },
+      {
+        q: 'Who can join?',
+        a: 'Anyone 18 or older — students and working people. University / workplace badges are optional.',
+      },
+      {
+        q: 'When does it launch?',
+        a: 'Soon, starting in Bangkok. The areas with the most sign-ups go first.',
+      },
     ],
   },
   footer: {

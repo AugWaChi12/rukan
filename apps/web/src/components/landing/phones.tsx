@@ -31,7 +31,10 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
         <Frame side className="translate-x-10 -rotate-6">
           <p className="mb-1 font-display text-base font-semibold">{t.space}</p>
           {t.posts.map((post, i) => (
-            <div key={post.alias} className="flex flex-col gap-1 rounded-2xl bg-white p-2.5 shadow-[0_3px_10px_rgba(46,34,56,0.06)]">
+            <div
+              key={post.alias}
+              className="flex flex-col gap-1 rounded-2xl bg-white p-2.5 shadow-[0_3px_10px_rgba(46,34,56,0.06)]"
+            >
               <p className="text-[10px]">
                 <b>{post.alias}</b> <span className="text-muted">· {post.meta}</span>
               </p>
@@ -65,7 +68,9 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
             </div>
           </div>
           <div className="flex justify-center gap-2.5">
-            <span className="flex size-10 items-center justify-center rounded-full bg-white text-muted shadow">✕</span>
+            <span className="flex size-10 items-center justify-center rounded-full bg-white text-muted shadow">
+              ✕
+            </span>
             <span className="flex items-center gap-1.5 rounded-full bg-rose px-5 py-2.5 font-display text-[13px] font-semibold">
               <HeartIcon size={14} /> {t.like}
             </span>
@@ -96,8 +101,20 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
         </Frame>
       </div>
 
-      <Toast className="top-[90px] left-[4%]" icon={<HeartIcon size={18} className="text-rose-deep" />} bg="bg-rose-tint" title={t.toastMatch} sub={t.toastMatchSub} />
-      <Toast className="top-[200px] right-[4%] [animation-delay:1.2s]" icon={<MoonIcon size={18} />} bg="bg-lilac-tint" title={t.toastDrop} sub={t.toastDropSub} />
+      <Toast
+        className="top-[90px] left-[4%]"
+        icon={<HeartIcon size={18} className="text-rose-deep" />}
+        bg="bg-rose-tint"
+        title={t.toastMatch}
+        sub={t.toastMatchSub}
+      />
+      <Toast
+        className="top-[200px] right-[4%] [animation-delay:1.2s]"
+        icon={<MoonIcon size={18} />}
+        bg="bg-lilac-tint"
+        title={t.toastDrop}
+        sub={t.toastDropSub}
+      />
       <div className="float absolute bottom-10 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-2 rounded-full bg-white px-[18px] py-2.5 whitespace-nowrap shadow-[0_14px_34px_rgba(46,34,56,0.12)] [animation-delay:2.4s] md:flex">
         <CheckIcon size={16} className="text-[#3E9A74]" />
         <p className="text-[13px] font-semibold">{t.toastVerified}</p>
@@ -123,7 +140,9 @@ function Toast({
     <div
       className={`float absolute z-20 hidden items-center gap-2.5 rounded-[18px] bg-white px-4 py-3 shadow-[0_14px_34px_rgba(46,34,56,0.12)] md:flex ${className}`}
     >
-      <span className={`flex size-[34px] items-center justify-center rounded-xl ${bg}`}>{icon}</span>
+      <span className={`flex size-[34px] items-center justify-center rounded-xl ${bg}`}>
+        {icon}
+      </span>
       <div>
         <p className="font-display text-sm font-semibold">{title}</p>
         <p className="text-xs text-muted">{sub}</p>

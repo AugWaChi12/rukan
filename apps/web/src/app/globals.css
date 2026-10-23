@@ -36,7 +36,8 @@ body {
 /* พื้นตารางบางๆ ทั้งหน้า */
 .bg-grid {
   background-image:
-    linear-gradient(#efeaee 1px, transparent 1px), linear-gradient(90deg, #efeaee 1px, transparent 1px);
+    linear-gradient(#efeaee 1px, transparent 1px),
+    linear-gradient(90deg, #efeaee 1px, transparent 1px);
   background-size: 56px 56px;
 }
 
