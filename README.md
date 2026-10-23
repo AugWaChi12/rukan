@@ -64,4 +64,5 @@ pnpm db:test   # ถ้าแก้ supabase/
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | สถาปัตยกรรม, RLS, auth, env vars, การ deploy                    |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md)   | กฎ git, การตั้งชื่อ, การเขียน migration/RLS, testing            |
 | [docs/DECISIONS.md](docs/DECISIONS.md)       | การตัดสินใจที่ทำแล้ว + คำถามที่ยังเปิดอยู่                      |
+| [docs/POLICY.md](docs/POLICY.md)             | (ร่าง) ยืนยันตัวตน, กติกาชุมชน, PDPA, การลงโทษ, ความปลอดภัย     |
 | [docs/prompts/](docs/prompts/)               | prompt สำเร็จรูปสำหรับสั่ง AI ทำงานแต่ละขั้น                    |
