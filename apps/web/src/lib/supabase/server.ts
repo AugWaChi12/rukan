@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import type { Database } from '@stumatch/shared';
+import type { Database } from '@rukan/shared';
 import { cookies } from 'next/headers';
 import { supabaseEnv } from './env';
 

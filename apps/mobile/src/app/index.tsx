@@ -6,7 +6,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>stuMatch</Text>
+      <Text style={[styles.title, { color: colors.text }]}>รู้กัน</Text>
       <SupabaseStatus />
     </View>
   );

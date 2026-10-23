@@ -1,4 +1,4 @@
-import { SUPABASE_RPC, healthResponseSchema, type HealthResponse } from '@stumatch/shared';
+import { SUPABASE_RPC, healthResponseSchema, type HealthResponse } from '@rukan/shared';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { supabase } from '@/lib/supabase';

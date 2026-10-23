@@ -1,4 +1,4 @@
-import type { Database } from '@stumatch/shared';
+import type { Database } from '@rukan/shared';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { LargeSecureStore } from './large-secure-store';
