@@ -1,6 +1,7 @@
 /** ชื่อ Postgres function ที่ client เรียกผ่าน `supabase.rpc(...)` (ต้องตรงกับ supabase/migrations) */
 export const SUPABASE_RPC = {
   health: 'health',
+  joinWaitlist: 'join_waitlist',
 } as const;
 
 /** ชื่อ Storage bucket (ต้องตรงกับ supabase/migrations) */

@@ -37,6 +37,18 @@ export type Database = {
     };
     Functions: {
       health: { Args: Record<PropertyKey, never>; Returns: Json };
+      join_waitlist: {
+        Args: {
+          p_age_band?: string;
+          p_area: string;
+          p_consent_version: string;
+          p_email: string;
+          p_intents?: string[];
+          p_locale?: string;
+          p_utm?: Json;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       [_ in never]: never;
