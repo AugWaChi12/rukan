@@ -79,7 +79,7 @@ stuMatch/
 
 ```bash
 pnpm install                     # ติดตั้งทุก package (รวม Supabase CLI)
-pnpm db:start                    # เปิด Supabase บนเครื่อง (ต้องเปิด Docker Desktop ก่อน)
+pnpm db:start                    # เปิด Supabase บนเครื่อง (ต้องเปิด Docker ก่อน · Windows ที่ Docker Desktop ใช้ไม่ได้: pnpm db:wsl start)
 pnpm db:status                   # ดู URL + publishable key สำหรับใส่ .env
 pnpm db:reset                    # ล้าง DB แล้วรัน migrations + seed.sql ใหม่ทั้งหมด
 pnpm db:migration <ชื่อ>         # สร้างไฟล์ migration ใหม่ใน supabase/migrations
@@ -188,4 +188,4 @@ URL ตอน dev:
 - **ฝั่ง server ของ Next.js เช็ค login ด้วย `supabase.auth.getClaims()`** — ห้ามใช้ `getSession()` ตัดสินสิทธิ์ (ไม่ได้ verify token)
 - **Supabase client ฝั่ง server ต้องสร้างใหม่ทุก request** (`await createClient()` จาก `src/lib/supabase/server.ts`) ห้ามเก็บไว้ใน global
 - `packages/shared` ต้อง build ก่อน app อื่นจะเห็น type ใหม่ — `pnpm dev` ของ turbo build ให้ตอนเริ่ม ถ้าแก้ shared ระหว่าง dev ให้รัน `pnpm --filter @stumatch/shared dev` คู่กันไป
-- Docker Desktop บนเครื่อง Windows นี้เคยพังเพราะไฟล์ socket เก่าใน `%LOCALAPPDATA%\Docker\run` — ถ้า start ไม่ขึ้นด้วย error "file cannot be accessed by the system" ให้ปิด Docker แล้ว rename โฟลเดอร์ `run` ทิ้ง
+- **Windows + Docker Desktop เปิดไม่ขึ้น** (เครื่องที่ socket file ลบไม่ได้: error "The file cannot be accessed by the system") → ใช้ Docker Engine ใน WSL Ubuntu แทน แล้วเรียก Supabase ด้วย `pnpm db:wsl <คำสั่ง>` แทน `pnpm db:*` — ขั้นตอนใน README หัวข้อ "Windows: ใช้ Docker ใน WSL"
