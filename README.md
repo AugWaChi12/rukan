@@ -49,6 +49,38 @@ pnpm db:test                      # รัน RLS tests
 pnpm db:types                     # อัปเดต type ใน packages/shared
 ```
 
+## Windows: ใช้ Docker ใน WSL แทน Docker Desktop
+
+ถ้า Docker Desktop เปิดไม่ขึ้น (เช่น error `The file cannot be accessed by the system` เรื่องไฟล์ `.sock`) ให้รัน Docker Engine ใน WSL Ubuntu แทน — Supabase จะรันใน Ubuntu ส่วน `pnpm dev` / เว็บ / แอป ยังรันบน Windows และต่อ `127.0.0.1:54321` ได้เหมือนเดิม
+
+ติดตั้งครั้งแรก (PowerShell ที่ root ของ repo):
+
+```bash
+wsl --install -d Ubuntu-24.04
+```
+
+ตั้งชื่อ user + รหัสผ่านของ Ubuntu ให้เสร็จ แล้ว:
+
+```bash
+wsl -d Ubuntu-24.04 -u root -- bash scripts/wsl/install-docker.sh <ชื่อ-user-ใน-ubuntu>
+```
+
+```bash
+wsl -d Ubuntu-24.04 -- bash scripts/wsl/install-node.sh
+```
+
+ใช้งาน — แทน `pnpm db:*` ด้วย `pnpm db:wsl <คำสั่ง supabase>`:
+
+| แทน             | ใช้                                                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `pnpm db:start` | `pnpm db:wsl start`                                                                                                   |
+| `pnpm db:stop`  | `pnpm db:wsl stop`                                                                                                    |
+| `pnpm db:reset` | `pnpm db:wsl db reset`                                                                                                |
+| `pnpm db:test`  | `pnpm db:wsl test db`                                                                                                 |
+| `pnpm db:types` | `pnpm db:wsl gen types typescript --local --schema public > packages/shared/src/database.types.ts` แล้ว `pnpm format` |
+
+> ถ้า distro ไม่ได้ชื่อ `Ubuntu-24.04` ให้เรียก `wsl -d <ชื่อ distro> -- bash scripts/wsl/supabase.sh <คำสั่ง>` ตรงๆ
+
 ## ก่อนเปิด Pull Request
 
 ```bash
