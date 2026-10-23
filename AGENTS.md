@@ -150,6 +150,8 @@ URL ตอน dev:
 - [x] ออกแบบระบบ (2026-10-24) → [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md) — ยังไม่ได้ implement
 - [ ] เฟส 1–5 ตาม SYSTEM_DESIGN.md หัวข้อ 14 (เริ่มที่เฟส 1 ตัวตน)
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
+- [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้
+  - [ ] หน้า `/rules` `/privacy` `/terms`, OG image, analytics, ซื้อโดเมน rukan.app (ดู `docs/WEBSITE.md`)
 
 > **AI ที่ทำงานเสร็จแต่ละขั้น: อัปเดต checklist นี้ และบันทึกการตัดสินใจใหม่ลง `docs/DECISIONS.md` ด้วย**
 
