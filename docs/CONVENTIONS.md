@@ -42,7 +42,7 @@ docs: describe supabase deploy flow
 - `strict: true` ทุก app
 - ห้ามใช้ `any` (ถ้าจำเป็นจริงๆ ใช้ `unknown` แล้ว narrow)
 - Format: Prettier (config กลางที่ root), Lint: ESLint
-- Import ข้าม package ใช้ชื่อ package เช่น `import { UserDto } from '@stumatch/shared'` ห้ามใช้ relative path ข้าม app (`../../packages/...`)
+- Import ข้าม package ใช้ชื่อ package เช่น `import { UserDto } from '@rukan/shared'` ห้ามใช้ relative path ข้าม app (`../../packages/...`)
 
 ### การตั้งชื่อ
 
@@ -74,7 +74,7 @@ docs: describe supabase deploy flow
 
 ### เรียกข้อมูลจาก client
 
-- ใช้ชื่อจาก `TABLES` / `SUPABASE_RPC` / `STORAGE_BUCKETS` ใน `@stumatch/shared`
+- ใช้ชื่อจาก `TABLES` / `SUPABASE_RPC` / `STORAGE_BUCKETS` ใน `@rukan/shared`
 - เช็ค `error` ทุกครั้งที่เรียก (`const { data, error } = await supabase...`)
 - select เฉพาะ column ที่ใช้ (`.select('id, display_name')`) ไม่ใช่ `*` ในหน้าที่ข้อมูลเยอะ
 - Pagination: `paginationQuerySchema` + `toRange()` → `.range(from, to)`

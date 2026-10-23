@@ -1,13 +1,13 @@
 # AGENTS.md — คู่มือสำหรับ AI / Developer ที่เข้ามาทำงานในโปรเจคนี้
 
-> ไฟล์นี้คือ "จุดเริ่มต้น" ของทุกคน (ทั้งคนและ AI) ที่เข้ามาแตะโปรเจค **stuMatch**
+> ไฟล์นี้คือ "จุดเริ่มต้น" ของทุกคน (ทั้งคนและ AI) ที่เข้ามาแตะโปรเจค **รู้กัน (rukan)**
 > อ่านไฟล์นี้ให้จบก่อนแก้โค้ดใดๆ แล้วค่อยไปอ่านเอกสารใน `docs/` ตามลิงก์ด้านล่าง
 
 ---
 
 ## 1. โปรเจคนี้คืออะไร
 
-**stuMatch** (ชื่อชั่วคราว) คือแอป "ไม่เหงา แค่เริ่มทัก" สำหรับคนวัย 18–30 (นักศึกษา + วัยทำงาน): match 1:1 + Space โพสต์แบบไม่ระบุตัวตน — ดู [`docs/PRODUCT.md`](docs/PRODUCT.md)
+**รู้กัน · rukan** ([rukan.app](https://rukan.app)) คือแอป "ไม่เหงา แค่เริ่มทัก" สำหรับคนวัย 18–30 (นักศึกษา + วัยทำงาน): match 1:1 + Space โพสต์แบบไม่ระบุตัวตน — ดู [`docs/PRODUCT.md`](docs/PRODUCT.md)
 มี 2 client ที่ใช้ **Supabase เป็น backend ทั้งหมด** (ไม่มี API server ของตัวเอง):
 
 | ส่วน           | เทคโนโลยี                                                            | โฟลเดอร์          | Deploy ที่                            |
@@ -27,7 +27,7 @@
 ## 2. โครงสร้าง Repo (Monorepo: pnpm workspaces + Turborepo)
 
 ```
-stuMatch/
+stuMatch/                     ← ชื่อ repo/โฟลเดอร์ยังเป็นชื่อเดิม (ชื่อแอปคือ รู้กัน · rukan)
 ├── AGENTS.md                 ← ไฟล์นี้ (context หลักสำหรับ AI ทุกตัว)
 ├── CLAUDE.md                 ← ชี้มาที่ AGENTS.md (สำหรับ Claude Code)
 ├── README.md                 ← วิธีเริ่มต้นสำหรับคน
@@ -58,13 +58,13 @@ stuMatch/
 │       ├── AGENTS.md         ← กฎของ Expo เอง (Expo สร้างให้ — อ่านก่อนแก้ mobile)
 │       └── .env.example
 ├── packages/
-│   ├── shared/               ← @stumatch/shared
+│   ├── shared/               ← @rukan/shared
 │   │   └── src/
 │   │       ├── database.types.ts ← generate จาก DB ด้วย `pnpm db:types` (ห้ามแก้มือ)
 │   │       ├── schemas/      ← zod schemas สำหรับ validate ฟอร์ม
 │   │       └── constants/    ← ชื่อตาราง / RPC / storage bucket
-│   ├── tsconfig/             ← @stumatch/tsconfig: base / nextjs
-│   └── eslint-config/        ← @stumatch/eslint-config: flat config กลาง (shared ใช้)
+│   ├── tsconfig/             ← @rukan/tsconfig: base / nextjs
+│   └── eslint-config/        ← @rukan/eslint-config: flat config กลาง (shared ใช้)
 ├── docs/
 │   ├── ARCHITECTURE.md       ← ภาพรวมระบบ, auth, RLS, env, deploy
 │   ├── CONVENTIONS.md        ← กฎการเขียนโค้ด, SQL, git, การตั้งชื่อ
@@ -106,7 +106,7 @@ URL ตอน dev:
 | Mailpit (อีเมลที่ Auth ส่ง เช่น ยืนยัน/reset password) | http://127.0.0.1:54324                                    |
 | Postgres ตรง                                           | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
 
-ผู้ใช้ทดสอบจาก `seed.sql`: `demo@stumatch.dev` / `password123` และ `demo2@stumatch.dev` / `password123`
+ผู้ใช้ทดสอบจาก `seed.sql`: `demo@rukan.dev` / `password123` และ `demo2@rukan.dev` / `password123`
 
 > Mobile บนมือถือจริง/emulator เรียก `127.0.0.1` ไม่ได้ ต้องใช้ IP เครื่อง dev (เช่น `http://192.168.1.10:54321`)
 > หรือ Android emulator ใช้ `http://10.0.2.2:54321`
@@ -129,7 +129,7 @@ URL ตอน dev:
    - ทุก policy ใหม่ต้องมี pgTAP test ใน `supabase/tests/database/`
 4. **เปลี่ยน database ต้องทำผ่าน migration เท่านั้น** (`pnpm db:migration <ชื่อ>`) — ห้ามแก้ schema ผ่าน Dashboard/Studio ของ project จริง
    - แก้ schema แล้วต้อง `pnpm db:types` และ commit `database.types.ts` ด้วย (CI เช็ค)
-5. **Type ที่ใช้ข้าม app ต้องอยู่ใน `packages/shared`** — ใช้ `Database`, `Tables<'...'>` จาก `@stumatch/shared` ห้ามเขียน type ของตารางเอง
+5. **Type ที่ใช้ข้าม app ต้องอยู่ใน `packages/shared`** — ใช้ `Database`, `Tables<'...'>` จาก `@rukan/shared` ห้ามเขียน type ของตารางเอง
 6. **ห้าม push ตรงเข้า `main`** — ทำผ่าน branch + Pull Request เสมอ
 7. ก่อนบอกว่างานเสร็จ ต้องผ่าน `pnpm lint && pnpm typecheck && pnpm test` และถ้าแตะ `supabase/` ต้องผ่าน `pnpm db:reset && pnpm db:test`
 
@@ -191,5 +191,5 @@ URL ตอน dev:
 - **Next.js 16**: middleware เปลี่ยนชื่อเป็น `proxy.ts` (export function `proxy`) — ถ้าเผลอตั้งชื่อ `middleware.ts` session จะไม่ refresh
 - **ฝั่ง server ของ Next.js เช็ค login ด้วย `supabase.auth.getClaims()`** — ห้ามใช้ `getSession()` ตัดสินสิทธิ์ (ไม่ได้ verify token)
 - **Supabase client ฝั่ง server ต้องสร้างใหม่ทุก request** (`await createClient()` จาก `src/lib/supabase/server.ts`) ห้ามเก็บไว้ใน global
-- `packages/shared` ต้อง build ก่อน app อื่นจะเห็น type ใหม่ — `pnpm dev` ของ turbo build ให้ตอนเริ่ม ถ้าแก้ shared ระหว่าง dev ให้รัน `pnpm --filter @stumatch/shared dev` คู่กันไป
+- `packages/shared` ต้อง build ก่อน app อื่นจะเห็น type ใหม่ — `pnpm dev` ของ turbo build ให้ตอนเริ่ม ถ้าแก้ shared ระหว่าง dev ให้รัน `pnpm --filter @rukan/shared dev` คู่กันไป
 - Docker Desktop บนเครื่อง Windows นี้เคยพังเพราะไฟล์ socket เก่าใน `%LOCALAPPDATA%\Docker\run` — ถ้า start ไม่ขึ้นด้วย error "file cannot be accessed by the system" ให้ปิด Docker แล้ว rename โฟลเดอร์ `run` ทิ้ง

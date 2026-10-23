@@ -1,4 +1,4 @@
-# System Design — stuMatch
+# System Design — รู้กัน (rukan)
 
 > ออกแบบระบบสำหรับฟีเจอร์ใน [`PRODUCT.md`](PRODUCT.md) บน Supabase (Postgres + Auth + Storage + Realtime + Edge Functions)
 > อ่าน [`ARCHITECTURE.md`](ARCHITECTURE.md) ก่อน (ภาพรวม stack) — ไฟล์นี้ลงรายละเอียด **data model, สิทธิ์, flow, งานเบื้องหลัง**

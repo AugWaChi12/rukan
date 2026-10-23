@@ -2,19 +2,21 @@ import type { ExpoConfig } from 'expo/config';
 
 // ค่าที่ต่างกันตาม environment ให้ใส่ผ่าน EXPO_PUBLIC_* ใน .env หรือ env ของ eas.json
 const config: ExpoConfig = {
-  name: 'stuMatch',
-  slug: 'stumatch',
-  scheme: 'stumatch',
+  // ชื่อที่แสดงใต้ไอคอนบนมือถือ
+  name: 'รู้กัน',
+  slug: 'rukan',
+  scheme: 'rukan',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   userInterfaceStyle: 'automatic',
   ios: {
     icon: './assets/expo.icon',
-    bundleIdentifier: 'com.stumatch.app',
+    // reverse-domain ของ rukan.app — เปลี่ยนไม่ได้หลังส่งขึ้น store ครั้งแรก
+    bundleIdentifier: 'app.rukan',
   },
   android: {
-    package: 'com.stumatch.app',
+    package: 'app.rukan',
     adaptiveIcon: {
       backgroundColor: '#E6F4FE',
       foregroundImage: './assets/images/android-icon-foreground.png',

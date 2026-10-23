@@ -1,4 +1,4 @@
-# stuMatch
+# รู้กัน (rukan)
 
 แอปสำหรับ match / นัดเจอ — Mobile (Expo) · Web (Next.js) · Backend (Supabase)
 
@@ -34,7 +34,7 @@ pnpm dev          # รันทุก app
 | Mailpit (อีเมลจาก Auth)        | http://127.0.0.1:54324 |
 | Expo (Metro)                   | http://localhost:8081  |
 
-ผู้ใช้ทดสอบ: `demo@stumatch.dev` / `password123`
+ผู้ใช้ทดสอบ: `demo@rukan.dev` / `password123`
 
 ทำงานเฉพาะส่วน: `pnpm dev --filter=web` / `--filter=mobile`
 

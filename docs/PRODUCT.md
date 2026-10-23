@@ -1,4 +1,4 @@
-# Product — stuMatch (ชื่อชั่วคราว)
+# Product — รู้กัน (rukan)
 
 > แอปนี้คืออะไร ทำให้ใคร ทำไมถึงดีกว่าคู่แข่ง และ MVP มีอะไร
 > วิธีสร้าง (database, สิทธิ์, flow) อยู่ใน [`SYSTEM_DESIGN.md`](SYSTEM_DESIGN.md) · กติกา/ความเป็นส่วนตัวอยู่ใน [`POLICY.md`](POLICY.md)

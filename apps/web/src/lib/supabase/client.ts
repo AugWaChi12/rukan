@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
-import type { Database } from '@stumatch/shared';
+import type { Database } from '@rukan/shared';
 import { supabaseEnv } from './env';
 
 /** Supabase client สำหรับ Client Component ('use client') */
