@@ -30,6 +30,14 @@
 | D29 | 2026-10-23 | Local dev                | `supabase start` (Supabase ทั้งชุดใน Docker) — ปิด analytics ใน config.toml                                            | analytics บน Windows ต้องเปิด Docker daemon ผ่าน TCP และไม่จำเป็นตอน dev                                                   |
 | D30 | 2026-10-23 | Health check             | Postgres function `public.health()` เรียกผ่าน `supabase.rpc('health')`                                                 | ไม่มี API server แล้ว แต่ยังอยากให้หน้าแรกบอกได้ว่าต่อ Supabase + DB ได้                                                   |
 | D31 | 2026-10-23 | Supabase CLI             | ติดตั้งเป็น devDependency ที่ root (`supabase` บน npm)                                                                 | ทุกคนได้ CLI เวอร์ชันเดียวกันจาก `pnpm install` ไม่ต้องติดตั้งแยก                                                          |
+| D32 | 2026-10-24 | ขอบเขต MVP (ตอบ Q9)      | Match **1:1** (ไม่ใช่กลุ่ม) + **Space ไม่ระบุตัวตน** แบบ X + Bubble + Daily Drop + แชท — รายละเอียดใน `PRODUCT.md`     | ทีมเลือก                                                                                                                   |
+| D33 | 2026-10-24 | กลุ่มผู้ใช้              | อายุ 18–30 ทั้ง **นักศึกษาและวัยทำงาน** ขายเรื่อง "ไม่เหงา" — ไม่จำกัดเฉพาะมหาลัย                                      | ตลาดใหญ่กว่า, ไม่ต้องอายที่ใช้แอป                                                                                          |
+| D34 | 2026-10-24 | ยืนยันตัวตน              | social/email → **เบอร์ OTP → selfie liveness** (บังคับ) → ป้ายมหาลัย/ที่ทำงาน (ไม่บังคับ)                              | กันบัญชีปลอม แต่ไม่บังคับให้ต้องเป็นนักศึกษา — ดู `POLICY.md`                                                              |
+| D35 | 2026-10-24 | ข้อมูลอ่อนไหว            | อยู่ใน schema **`private`** (API ไม่เปิด) เข้าถึงผ่าน **RPC security definer** เท่านั้น                                | ทำให้ "ไม่ระบุตัวตน" ปลอดภัยในระดับ database — ดู `SYSTEM_DESIGN.md` หัวข้อ 4                                              |
+| D36 | 2026-10-24 | Realtime                 | **Broadcast แบบ private channel** ส่งแค่สัญญาณ แล้วดึงข้อมูลผ่าน RPC (ไม่ใช้ postgres_changes)                         | payload ของ postgres_changes มีทุกคอลัมน์ → user id ในแชทนามแฝงจะหลุด                                                      |
+| D37 | 2026-10-24 | รูปโปรไฟล์               | bucket **private** `photos` + signed URL ตามขั้นเปิดรูป (แทน D25 bucket `avatars` แบบ public)                          | bucket public ใครรู้ path ก็เปิดรูปได้ ขัดกับฟีเจอร์เปิดรูปทีละขั้น                                                        |
+| D38 | 2026-10-24 | ดีไซน์                   | **Soft Bubble**: พื้นขาวอุ่น, พาสเทลหม่น, Prompt + Anuphan, ธีมสว่าง + **ดำทอง**, ภาษาไทย + English                    | ผ่านมา 4 รอบ: น่ารักเกิน → แข็งเกิน → น่ารักเกิน → ลงตัวตรงกลาง                                                            |
+| D39 | 2026-10-24 | "ว่างตอนนี้"             | ย้ายไป **หลัง MVP**                                                                                                    | ต้องมีผู้ใช้หนาแน่นในย่านเดียวกันก่อนถึงจะมีประโยชน์ + เรื่องตำแหน่งต้องระวังมาก                                           |
 
 ## ⛔ ยกเลิกแล้ว
 
@@ -44,6 +52,8 @@
 | D18                          | Migration แรกด้วย `prisma migrate diff`         | 2026-10-23  | D22                                                                                          |
 | D19                          | Postgres ตอน dev ที่ port 5433 (docker-compose) | 2026-10-23  | D29 `supabase start` ใช้ port 54321–54324 ไม่ชนกับ Postgres ที่ติดตั้งบนเครื่อง              |
 | T1, T2, T4 (class-validator) | Prisma / Dockerfile บน DO / class-validator     | 2026-10-23  | D20, D22                                                                                     |
+| D25                          | bucket `avatars` แบบ public                     | 2026-10-24  | D37 bucket `photos` แบบ private (ยังไม่ได้ทำ migration — อยู่ในเฟส 1)                        |
+| T3                           | login ด้วย email + password อย่างเดียว          | 2026-10-24  | D34 (Apple / Google / LINE / Facebook / email)                                               |
 
 ## 🟡 Default ชั่วคราว (ใช้ไปก่อน ทีมยังไม่ยืนยัน)
 
@@ -68,8 +78,13 @@
 | Q3  | GitHub repo                                           | ตอนนี้อยู่ที่ `AugWaChi12/stuMatch` — ย้ายเข้า Organization ไหม                                                |
 | Q4  | ชื่อ domain                                           | ใช้กับ web + Site URL ของ Supabase Auth                                                                        |
 | Q5  | Vercel Pro: สมาชิกทีมที่ push โค้ดต้องมี seat หรือไม่ | เช็คการตั้งค่า team ของเพื่อนที่มี Pro                                                                         |
-| Q6  | รูปแบบการ login                                       | ดู T3                                                                                                          |
-| Q9  | ขอบเขตฟีเจอร์ของ MVP                                  | match แบบไหน (1:1, กลุ่ม, กิจกรรม), นัดเวลา/สถานที่, แชท (Realtime)?                                           |
+| Q6  | LINE login ทำแบบไหน                                   | Supabase ไม่มี provider ในตัว (ต้องเช็คเอกสารล่าสุด) → custom OIDC หรือ Edge Function                          |
 | Q10 | Supabase plan                                         | Free จะ pause project ถ้าไม่มีการใช้งาน 1 สัปดาห์ และไม่มี backup อัตโนมัติ — Pro ~$25/เดือน เมื่อมีผู้ใช้จริง |
 | Q11 | แยก Supabase project dev/staging กับ prod ไหม         | แนะนำแยก: Preview ของ Vercel ชี้ไป project dev, Production ชี้ project prod                                    |
 | Q12 | ใครเป็นคนรัน `supabase db push` ขึ้น prod             | หรือทำ GitHub Action อัตโนมัติหลัง merge                                                                       |
+| Q13 | web ทำอะไรใน MVP                                      | แนะนำ: landing + เอกสารกฎหมาย + moderation console (`/admin`) ก่อน, แอปเต็มบนเว็บทีหลัง                        |
+| Q14 | ผู้ให้บริการ SMS OTP และ selfie liveness              | เทียบราคาต่อครั้ง, ความแม่นยำ, ที่ตั้ง server ของข้อมูล                                                        |
+| Q15 | เก็บ face hash เพื่อกันคนถูกแบนสมัครใหม่ไหม           | ข้อมูลชีวภาพ — ต้องถามทนายเรื่อง PDPA                                                                          |
+| Q16 | โหมดเดท: ถามเพศ / สนใจเพศไหน แบบไหน                   | บังคับไหม, ตัวเลือกมีอะไรบ้าง                                                                                  |
+| Q17 | ย่าน (`areas`) เริ่มต้น                               | ย่านไหนบ้างในกรุงเทพ (ใช้กับแท็บ ใกล้ฉัน + การคัด Drop)                                                        |
+| Q18 | ชื่อแอป                                               | "stuMatch" มาจาก student แต่กลุ่มผู้ใช้กว้างขึ้นแล้ว (D33)                                                     |

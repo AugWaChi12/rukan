@@ -7,7 +7,7 @@
 
 ## 1. โปรเจคนี้คืออะไร
 
-**stuMatch** คือแอปสำหรับ "match / นัดเจอ / รวมกลุ่ม" ระหว่างผู้ใช้
+**stuMatch** (ชื่อชั่วคราว) คือแอป "ไม่เหงา แค่เริ่มทัก" สำหรับคนวัย 18–30 (นักศึกษา + วัยทำงาน): match 1:1 + Space โพสต์แบบไม่ระบุตัวตน — ดู [`docs/PRODUCT.md`](docs/PRODUCT.md)
 มี 2 client ที่ใช้ **Supabase เป็น backend ทั้งหมด** (ไม่มี API server ของตัวเอง):
 
 | ส่วน           | เทคโนโลยี                                                            | โฟลเดอร์          | Deploy ที่                            |
@@ -69,6 +69,9 @@ stuMatch/
 │   ├── ARCHITECTURE.md       ← ภาพรวมระบบ, auth, RLS, env, deploy
 │   ├── CONVENTIONS.md        ← กฎการเขียนโค้ด, SQL, git, การตั้งชื่อ
 │   ├── DECISIONS.md          ← บันทึกการตัดสินใจ + เรื่องที่ยังเปิดอยู่
+│   ├── PRODUCT.md            ← แอปนี้คืออะไร, กลุ่มผู้ใช้, ฟีเจอร์ MVP
+│   ├── SYSTEM_DESIGN.md      ← data model, schema private + RPC, flow, cron, Edge Functions, ลำดับการสร้าง
+│   ├── POLICY.md             ← (ร่าง) ยืนยันตัวตน, กติกาชุมชน, PDPA
 │   └── prompts/              ← prompt สำเร็จรูปสำหรับสั่ง AI ทำงานแต่ละขั้น
 └── .github/workflows/ci.yml  ← CI: lint/typecheck/test/build + pgTAP + เช็ค types
 ```
@@ -144,7 +147,8 @@ URL ตอน dev:
   - [x] ทดสอบบนเครื่องแล้ว: db:reset, db:test (9/9), login/signup ผ่าน Supabase API, web + mobile (web build) ต่อ Supabase ได้
 - [ ] สร้าง Supabase project จริง + ผูก Vercel (ดู ARCHITECTURE.md หัวข้อ 6)
 - [ ] ตั้ง branch protection ให้ `main` + เช็คว่า CI บน GitHub ผ่าน
-- [ ] ออกแบบ data model ของการ match / นัด (รอ Q9 ใน DECISIONS.md)
+- [x] ออกแบบระบบ (2026-10-24) → [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md) — ยังไม่ได้ implement
+- [ ] เฟส 1–5 ตาม SYSTEM_DESIGN.md หัวข้อ 14 (เริ่มที่เฟส 1 ตัวตน)
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 
 > **AI ที่ทำงานเสร็จแต่ละขั้น: อัปเดต checklist นี้ และบันทึกการตัดสินใจใหม่ลง `docs/DECISIONS.md` ด้วย**
@@ -155,7 +159,7 @@ URL ตอน dev:
 
 ## 6. วิธีทำงานสำหรับ AI
 
-- อ่าน `AGENTS.md` → `docs/ARCHITECTURE.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม
+- อ่าน `AGENTS.md` → `docs/PRODUCT.md` → `docs/ARCHITECTURE.md` → `docs/SYSTEM_DESIGN.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม (งานที่แตะผู้ใช้/ข้อมูลส่วนตัว อ่าน `docs/POLICY.md` ด้วย)
 - ฟีเจอร์ที่แตะข้อมูล ทำตามลำดับ: **migration (ตาราง + RLS) → pgTAP test → `pnpm db:types` → zod schema ใน shared → UI**
 - logic ที่ client ไม่ควรทำเอง (เช่น จับคู่ match, ตรวจสิทธิ์ซับซ้อน, เรียก service ภายนอกด้วย secret) ให้ทำเป็น **Postgres function (`security definer` อย่างระวัง)** หรือ **Edge Function** — ห้ามเชื่อข้อมูลจาก client
 - ใช้เวอร์ชัน stable ล่าสุดของ library ณ วันที่ทำงาน และเช็คเอกสารทางการถ้าไม่แน่ใจ (Next.js / Expo / Supabase เปลี่ยนบ่อย)
