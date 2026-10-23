@@ -8,10 +8,7 @@ nodeLinker: hoisted
 # package ที่อนุญาต (true) / ไม่อนุญาต (false) ให้รัน install script — pnpm บล็อกเป็นค่าเริ่มต้น
 allowBuilds:
   esbuild: true
-  argon2: true
-  prisma: true
-  '@prisma/engines': true
+  supabase: true
   '@swc/core': true
-  '@scarf/scarf': false
   sharp: false
   unrs-resolver: false

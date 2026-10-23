@@ -9,22 +9,22 @@
 
 | ประเภท           | รูปแบบ                    | ตัวอย่าง                     |
 | ---------------- | ------------------------- | ---------------------------- |
-| ฟีเจอร์ใหม่      | `feature/<scope>-<สั้นๆ>` | `feature/api-auth-login`     |
+| ฟีเจอร์ใหม่      | `feature/<scope>-<สั้นๆ>` | `feature/db-match-requests`  |
 | แก้บั๊ก          | `fix/<scope>-<สั้นๆ>`     | `fix/mobile-crash-on-logout` |
 | งานจุกจิก/config | `chore/<สั้นๆ>`           | `chore/update-deps`          |
 | เอกสาร           | `docs/<สั้นๆ>`            | `docs/architecture-auth`     |
 
-`<scope>` = `api` | `web` | `mobile` | `shared` | `infra` | `repo`
+`<scope>` = `db` (supabase/) | `web` | `mobile` | `shared` | `repo`
 
 ### Commit message (Conventional Commits)
 
 ```
 <type>(<scope>): <สรุปสั้นๆ>
 
-feat(api): add login endpoint
-fix(mobile): handle expired token on startup
+feat(db): add match_requests table with RLS
+fix(mobile): handle expired session on startup
 chore(repo): add turbo pipeline for typecheck
-docs: describe deploy flow for DigitalOcean
+docs: describe supabase deploy flow
 ```
 
 `type` = `feat` | `fix` | `refactor` | `chore` | `docs` | `test` | `style` | `perf`
@@ -34,8 +34,8 @@ docs: describe deploy flow for DigitalOcean
 - 1 PR = 1 เรื่อง, เล็กพอให้ review ได้ใน 15 นาที
 - ต้องมีเพื่อน approve อย่างน้อย 1 คน + CI เขียว ก่อน merge
 - ใช้ **Squash merge** เข้า `main`
-- ถ้าเปลี่ยน DB schema ให้เขียนใน PR ว่ามี migration อะไร
-- ถ้าเพิ่ม env var ให้เขียนใน PR + อัปเดต `.env.example` + แจ้งทีมให้ตั้งค่าใน Vercel/DigitalOcean
+- ถ้าเปลี่ยน DB schema ให้เขียนใน PR ว่ามี migration อะไร + RLS policy อะไร — หลัง merge ต้องมีคน `supabase db push`
+- ถ้าเพิ่ม env var ให้เขียนใน PR + อัปเดต `.env.example` + แจ้งทีมให้ตั้งค่าใน Vercel / EAS
 
 ## 2. TypeScript / โค้ด
 
@@ -46,39 +46,57 @@ docs: describe deploy flow for DigitalOcean
 
 ### การตั้งชื่อ
 
-| สิ่ง                     | รูปแบบ                   | ตัวอย่าง                            |
-| ------------------------ | ------------------------ | ----------------------------------- |
-| ไฟล์ทั่วไป               | kebab-case               | `match-card.tsx`, `auth.service.ts` |
-| React component          | PascalCase (ชื่อ export) | `export function MatchCard()`       |
-| ตัวแปร/ฟังก์ชัน          | camelCase                | `getUserById`                       |
-| Type / Interface / Class | PascalCase               | `UserDto`, `MatchService`           |
-| Constant                 | UPPER_SNAKE_CASE         | `MAX_GROUP_SIZE`                    |
-| Zod schema               | camelCase + `Schema`     | `createMatchSchema`                 |
-| Env var                  | UPPER_SNAKE_CASE         | `JWT_ACCESS_SECRET`                 |
-| API path                 | kebab-case, พหูพจน์      | `/api/v1/match-requests`            |
-| DB table / column        | snake_case               | `match_requests.created_at`         |
+| สิ่ง                 | รูปแบบ                         | ตัวอย่าง                               |
+| -------------------- | ------------------------------ | -------------------------------------- |
+| ไฟล์ทั่วไป           | kebab-case                     | `match-card.tsx`, `use-profile.ts`     |
+| React component      | PascalCase (ชื่อ export)       | `export function MatchCard()`          |
+| ตัวแปร/ฟังก์ชัน      | camelCase                      | `getProfileById`                       |
+| Type / Interface     | PascalCase                     | `Profile`, `MatchRequest`              |
+| Constant             | UPPER_SNAKE_CASE               | `MAX_GROUP_SIZE`                       |
+| Zod schema           | camelCase + `Schema`           | `createMatchSchema`                    |
+| Env var              | UPPER_SNAKE_CASE               | `NEXT_PUBLIC_SUPABASE_URL`             |
+| DB table             | snake_case, พหูพจน์            | `match_requests`                       |
+| DB column / function | snake_case                     | `created_at`, `accept_match()`         |
+| RLS policy           | `"<ตาราง>: <ใครทำอะไรได้>"`    | `"profiles: แก้ได้เฉพาะโปรไฟล์ตัวเอง"` |
+| Migration file       | สร้างด้วย CLI, ชื่อ snake_case | `20261023033015_init_profiles.sql`     |
 
-## 3. API Contract
+## 3. Database / Supabase
 
-- REST + JSON, prefix `/api/v1`
-- ทุก endpoint ใหม่: กำหนด request/response schema ใน `packages/shared` **ก่อน** แล้วค่อยเขียน controller และ client
-- Pagination: `?page=1&limit=20` → response `{ data: [...], meta: { page, limit, total } }`
-- วันเวลา: ส่งเป็น ISO 8601 UTC (`2026-10-23T09:00:00.000Z`) แปลงเป็นเวลาไทยที่ client
-- Status code: 200 อ่าน/แก้, 201 สร้าง, 204 ลบ, 400 ข้อมูลผิด, 401 ไม่ได้ login, 403 ไม่มีสิทธิ์, 404 ไม่พบ, 409 ชนกัน, 500 error ฝั่ง server
+### เขียน migration
+
+- 1 migration = 1 เรื่อง; **ห้ามแก้ migration ที่ merge เข้า `main` แล้ว** — ถ้าผิด ให้สร้าง migration ใหม่มาแก้
+- สร้างตารางใน `public` → ต้องมีใน migration เดียวกัน: `enable row level security` + policy ครบทุก operation ที่ต้องการ
+- policy ระบุ role เสมอ (`to authenticated` / `to anon`) และใช้ `(select auth.uid())` ไม่ใช่ `auth.uid()` ตรงๆ
+- function ทุกตัวใส่ `set search_path = ''` และอ้างชื่อแบบเต็ม (`public.profiles`)
+- `security definer` ใช้เมื่อจำเป็นเท่านั้น + `revoke execute ... from public, anon, authenticated` ถ้าไม่ได้ตั้งใจให้ client เรียก
+- ข้อมูลส่วนตัว (email, เบอร์โทร, ตำแหน่ง) ห้ามอยู่ในตารางที่คนอื่นอ่านได้ — แยกตาราง + policy เฉพาะเจ้าของ
+- ใส่ check constraint ใน DB ด้วย (ไม่พึ่ง zod ฝั่ง client อย่างเดียว)
+
+### เรียกข้อมูลจาก client
+
+- ใช้ชื่อจาก `TABLES` / `SUPABASE_RPC` / `STORAGE_BUCKETS` ใน `@stumatch/shared`
+- เช็ค `error` ทุกครั้งที่เรียก (`const { data, error } = await supabase...`)
+- select เฉพาะ column ที่ใช้ (`.select('id, display_name')`) ไม่ใช่ `*` ในหน้าที่ข้อมูลเยอะ
+- Pagination: `paginationQuerySchema` + `toRange()` → `.range(from, to)`
+- วันเวลาใน DB เป็น `timestamptz` (UTC) แปลงเป็นเวลาไทยที่ client
+- logic ที่ต้องทำหลายตารางพร้อมกัน (transaction) หรือห้ามให้ client โกงได้ → เขียนเป็น Postgres function แล้วเรียกด้วย `.rpc()`
 
 ## 4. Environment Variables / Secrets
 
-- เพิ่มตัวแปรใหม่ = แก้ 3 ที่: โค้ดที่ validate env, `.env.example`, และแจ้งทีม/ตั้งค่าใน Vercel หรือ DigitalOcean
-- Client (`web`, `mobile`) ใส่ได้เฉพาะตัวแปร `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` และต้องเป็นค่าที่เปิดเผยได้
+- เพิ่มตัวแปรใหม่ = แก้ `.env.example` + แจ้งทีม/ตั้งค่าใน Vercel หรือ EAS
+- Client (`web`, `mobile`) ใส่ได้เฉพาะ `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` และต้องเป็นค่าที่เปิดเผยได้ — Supabase ใช้ได้แค่ **publishable key**
+- secret key ของ Supabase ใช้ได้ใน Edge Functions เท่านั้น (`supabase secrets set`)
 - ห้าม log ค่า secret, token, password ลง console
-- ถ้าเผลอ commit secret: **เปลี่ยน (rotate) key นั้นทันที** — แค่ลบ commit ไม่พอ เพราะ repo เป็น public
+- ถ้าเผลอ commit secret: **เปลี่ยน (rotate) key นั้นทันที** ใน Supabase Dashboard — แค่ลบ commit ไม่พอ เพราะ repo เป็น public
 
 ## 5. Testing
 
-- API: unit test (Jest) สำหรับ service, e2e test สำหรับ endpoint สำคัญ
-- shared: unit test สำหรับ zod schema ที่มี logic
+- **Database (สำคัญที่สุด)**: pgTAP ใน `supabase/tests/database/<ตาราง>.test.sql` — ทุก policy ต้องทดสอบทั้งกรณีที่ "ทำได้" และ "ทำไม่ได้" (anon, เจ้าของ, คนอื่น)
+  - สลับ role ใน test: `set local role authenticated; set local request.jwt.claims = '{"sub": "<uuid>", "role": "authenticated"}';`
+  - รัน: `pnpm db:reset && pnpm db:test`
+- shared: unit test (Vitest) สำหรับ zod schema / helper
 - web/mobile: เริ่มจาก test ฟังก์ชันใน `src/lib` ก่อน UI test ค่อยเพิ่มทีหลัง
-- ตั้งชื่อไฟล์ test: `<name>.spec.ts` (API), `<name>.test.ts(x)` (web/mobile/shared)
+- ตั้งชื่อไฟล์ test: `<name>.test.ts(x)` (TS), `<name>.test.sql` (pgTAP)
 
 ## 6. เอกสาร
 

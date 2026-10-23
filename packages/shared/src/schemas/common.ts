@@ -7,33 +7,8 @@ export const paginationQuerySchema = z.object({
 
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>;
 
-export const paginationMetaSchema = z.object({
-  page: z.number().int(),
-  limit: z.number().int(),
-  total: z.number().int(),
-});
-
-export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
-
-/** สร้าง schema ของ response แบบแบ่งหน้า: `{ data: T[], meta: {...} }` */
-export function paginatedResponseSchema<T extends z.ZodType>(item: T) {
-  return z.object({
-    data: z.array(item),
-    meta: paginationMetaSchema,
-  });
+/** แปลง page/limit เป็นช่วง index สำหรับ `supabase.from(...).range(from, to)` */
+export function toRange({ page, limit }: PaginationQuery): { from: number; to: number } {
+  const from = (page - 1) * limit;
+  return { from, to: from + limit - 1 };
 }
-
-export type PaginatedResponse<T> = {
-  data: T[];
-  meta: PaginationMeta;
-};
-
-/** รูปแบบ error มาตรฐานที่ API ส่งกลับ (ดู docs/ARCHITECTURE.md) */
-export const apiErrorSchema = z.object({
-  statusCode: z.number().int(),
-  error: z.string(),
-  message: z.string(),
-  details: z.array(z.unknown()).default([]),
-});
-
-export type ApiError = z.infer<typeof apiErrorSchema>;

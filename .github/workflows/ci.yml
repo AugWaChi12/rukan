@@ -10,34 +10,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  apps:
+    name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_USER: stumatch
-          POSTGRES_PASSWORD: stumatch
-          POSTGRES_DB: stumatch_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U stumatch -d stumatch_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    # ค่า dummy สำหรับ CI เท่านั้น — ไม่ใช่ secret จริง
+    # ค่า dummy สำหรับ build เท่านั้น — เป็นค่า public อยู่แล้ว ไม่ใช่ secret
     env:
-      NODE_ENV: test
-      DATABASE_URL: postgresql://stumatch:stumatch@localhost:5432/stumatch_test?schema=public
-      CORS_ORIGINS: http://localhost:3000
-      JWT_ACCESS_SECRET: ci-access-secret-not-used-in-production-000
-      JWT_REFRESH_SECRET: ci-refresh-secret-not-used-in-production-00
-      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
-      EXPO_PUBLIC_API_URL: http://localhost:4000/api/v1
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-dummy-publishable-key
+      EXPO_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-dummy-publishable-key
 
     steps:
       - uses: actions/checkout@v4
@@ -51,10 +34,33 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint, typecheck, test, build
-        run: pnpm turbo run lint typecheck test build
+      - run: pnpm turbo run lint typecheck test build
 
-      - name: API migrations + e2e
+  database:
+    name: Migrations, RLS tests, types
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # รันแค่ Postgres (ไม่ต้องเปิด Supabase ทั้งชุด) แล้ว apply migrations + seed.sql
+      - run: pnpm exec supabase db start
+
+      - name: RLS / database tests (pgTAP)
+        run: pnpm db:test
+
+      - name: database.types.ts ต้องตรงกับ migrations
         run: |
-          pnpm --filter api prisma migrate deploy
-          pnpm --filter api test:e2e
+          pnpm db:types
+          git diff --exit-code packages/shared/src/database.types.ts \
+            || (echo "::error::database.types.ts ไม่ตรงกับ schema — รัน pnpm db:types แล้ว commit" && exit 1)

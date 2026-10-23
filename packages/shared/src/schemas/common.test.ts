@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { apiErrorSchema, paginationQuerySchema } from './common';
+import { paginationQuerySchema, toRange } from './common';
 
 describe('paginationQuerySchema', () => {
   it('ใส่ค่า default เมื่อไม่ส่ง page/limit', () => {
@@ -15,9 +15,12 @@ describe('paginationQuerySchema', () => {
   });
 });
 
-describe('apiErrorSchema', () => {
-  it('ใส่ details เป็น array ว่างเมื่อไม่ส่งมา', () => {
-    const parsed = apiErrorSchema.parse({ statusCode: 404, error: 'Not Found', message: 'x' });
-    expect(parsed.details).toEqual([]);
+describe('toRange', () => {
+  it('หน้าแรกเริ่มที่ index 0', () => {
+    expect(toRange({ page: 1, limit: 20 })).toEqual({ from: 0, to: 19 });
+  });
+
+  it('หน้าถัดไปต่อจากหน้าก่อน', () => {
+    expect(toRange({ page: 3, limit: 10 })).toEqual({ from: 20, to: 29 });
   });
 });

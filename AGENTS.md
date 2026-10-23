@@ -8,15 +8,17 @@
 ## 1. โปรเจคนี้คืออะไร
 
 **stuMatch** คือแอปสำหรับ "match / นัดเจอ / รวมกลุ่ม" ระหว่างผู้ใช้
-มี 3 ช่องทางใช้งาน (client) ที่คุยกับ backend ตัวเดียวกัน:
+มี 2 client ที่ใช้ **Supabase เป็น backend ทั้งหมด** (ไม่มี API server ของตัวเอง):
 
-| ส่วน           | เทคโนโลยี                             | โฟลเดอร์                         | Deploy ที่                            |
-| -------------- | ------------------------------------- | -------------------------------- | ------------------------------------- |
-| Mobile app     | React Native (**Expo**) + TypeScript  | `apps/mobile`                    | App Store / Play Store ผ่าน EAS Build |
-| Web app        | **Next.js** (App Router) + TypeScript | `apps/web`                       | **Vercel** (Pro plan ของทีม)          |
-| API            | **NestJS** + TypeScript               | `apps/api`                       | **DigitalOcean** (Docker)             |
-| Database       | **PostgreSQL** + **Prisma** ORM       | schema อยู่ที่ `apps/api/prisma` | DigitalOcean (Managed DB หรือ Docker) |
-| โค้ดที่ใช้ร่วม | TypeScript types + Zod schemas        | `packages/shared`                | — (เป็น library ภายใน)                |
+| ส่วน           | เทคโนโลยี                                                            | โฟลเดอร์          | Deploy ที่                            |
+| -------------- | -------------------------------------------------------------------- | ----------------- | ------------------------------------- |
+| Mobile app     | React Native (**Expo**) + TypeScript                                 | `apps/mobile`     | App Store / Play Store ผ่าน EAS Build |
+| Web app        | **Next.js** (App Router) + TypeScript                                | `apps/web`        | **Vercel** (Pro plan ของทีม)          |
+| Backend        | **Supabase** — Postgres + Auth + Storage + Realtime + Edge Functions | `supabase/`       | Supabase Cloud                        |
+| โค้ดที่ใช้ร่วม | Database types (generate) + zod schemas + constants                  | `packages/shared` | — (library ภายใน)                     |
+
+**หัวใจของระบบนี้คือ RLS (Row Level Security)** — client ต่อ database ตรงผ่าน Supabase
+ดังนั้นสิทธิ์ทุกอย่าง (ใครอ่าน/แก้แถวไหนได้) ต้องเขียนเป็น RLS policy ใน migration ไม่ใช่เช็คในโค้ด client
 
 รายละเอียดสถาปัตยกรรม → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
@@ -29,55 +31,46 @@ stuMatch/
 ├── AGENTS.md                 ← ไฟล์นี้ (context หลักสำหรับ AI ทุกตัว)
 ├── CLAUDE.md                 ← ชี้มาที่ AGENTS.md (สำหรับ Claude Code)
 ├── README.md                 ← วิธีเริ่มต้นสำหรับคน
-├── package.json              ← root: scripts รวม + devDependencies กลาง
+├── package.json              ← root: scripts รวม (รวม db:*) + Supabase CLI
 ├── pnpm-workspace.yaml       ← ประกาศ workspace + nodeLinker: hoisted + allowBuilds
 ├── turbo.json                ← pipeline: dev / build / lint / typecheck / test
-├── .gitignore
-├── .editorconfig / .prettierrc
 ├── .nvmrc                    ← เวอร์ชัน Node ที่ทีมใช้
-├── .dockerignore             ← ใช้ตอน build image ของ API (context = root)
+├── supabase/                 ← backend ทั้งหมด (จัดการด้วย Supabase CLI)
+│   ├── config.toml           ← config ของ Supabase ตอนรันบนเครื่อง (auth, storage, ports)
+│   ├── migrations/           ← SQL: ตาราง, RLS policy, function, trigger, storage bucket
+│   ├── seed.sql              ← ข้อมูลทดสอบ (ผู้ใช้ demo) — ใช้แค่บนเครื่อง
+│   ├── tests/database/       ← pgTAP tests (ทดสอบ RLS)
+│   └── functions/            ← Edge Functions (Deno) — ยังไม่มี, ใช้เมื่อต้องการ logic ฝั่ง server
 ├── apps/
-│   ├── api/                  ← NestJS (ESM, "type": "module")
-│   │   ├── prisma/           ← schema.prisma + migrations/ + seed.ts
-│   │   ├── prisma.config.ts  ← config ของ Prisma 7 (DATABASE_URL, seed command)
-│   │   ├── src/
-│   │   │   ├── main.ts       ← bootstrap
-│   │   │   ├── app.setup.ts  ← prefix, helmet, CORS, error filter, Swagger (ใช้ร่วมกับ e2e test)
-│   │   │   ├── app.module.ts
-│   │   │   ├── config/       ← env.ts: zod schema + validate env ตอน start
-│   │   │   ├── prisma/       ← PrismaService / PrismaModule (global)
-│   │   │   ├── common/       ← filters/ (AllExceptionsFilter), pipes/ (ZodValidationPipe)
-│   │   │   ├── modules/      ← 1 feature = 1 โฟลเดอร์ (ตอนนี้มี health)
-│   │   │   └── generated/    ← Prisma Client (generate อัตโนมัติ, ไม่ commit)
-│   │   ├── test/             ← e2e tests (ต้องมี DB)
-│   │   ├── Dockerfile
-│   │   └── .env.example
 │   ├── web/                  ← Next.js 16
 │   │   ├── src/app/          ← App Router
+│   │   ├── src/proxy.ts      ← refresh session ของ Supabase ทุก request (Next 16 เรียก middleware ว่า proxy)
+│   │   ├── src/lib/supabase/ ← client.ts (browser), server.ts (server), proxy.ts, env.ts
 │   │   ├── src/components/
-│   │   ├── src/lib/api.ts    ← fetch wrapper กลาง
 │   │   ├── AGENTS.md         ← กฎของ Next.js เอง (Next สร้างให้ — อ่านก่อนแก้ web)
 │   │   └── .env.example
 │   └── mobile/               ← Expo SDK 58 (expo-router)
 │       ├── src/app/          ← หน้าจอ (file-based routing)
+│       ├── src/lib/supabase.ts         ← Supabase client ตัวเดียวของแอป
+│       ├── src/lib/large-secure-store.ts ← เก็บ session แบบเข้ารหัส
 │       ├── src/components/
-│       ├── src/lib/api.ts    ← fetch wrapper กลาง
-│       ├── app.config.ts     ← config ของแอป (แทน app.json)
-│       ├── eas.json          ← profile ของ EAS Build
+│       ├── app.config.ts / eas.json
 │       ├── AGENTS.md         ← กฎของ Expo เอง (Expo สร้างให้ — อ่านก่อนแก้ mobile)
 │       └── .env.example
 ├── packages/
-│   ├── shared/               ← @stumatch/shared: zod schemas / types / constants ที่ใช้ร่วม
-│   ├── tsconfig/             ← @stumatch/tsconfig: base / nestjs / nextjs
-│   └── eslint-config/        ← @stumatch/eslint-config: flat config กลาง (shared + api ใช้)
-├── infra/
-│   └── docker-compose.yml    ← PostgreSQL 18 สำหรับ dev บนเครื่อง
+│   ├── shared/               ← @stumatch/shared
+│   │   └── src/
+│   │       ├── database.types.ts ← generate จาก DB ด้วย `pnpm db:types` (ห้ามแก้มือ)
+│   │       ├── schemas/      ← zod schemas สำหรับ validate ฟอร์ม
+│   │       └── constants/    ← ชื่อตาราง / RPC / storage bucket
+│   ├── tsconfig/             ← @stumatch/tsconfig: base / nextjs
+│   └── eslint-config/        ← @stumatch/eslint-config: flat config กลาง (shared ใช้)
 ├── docs/
-│   ├── ARCHITECTURE.md       ← ภาพรวมระบบ, การไหลของข้อมูล, deploy
-│   ├── CONVENTIONS.md        ← กฎการเขียนโค้ด, git, env, การตั้งชื่อ
+│   ├── ARCHITECTURE.md       ← ภาพรวมระบบ, auth, RLS, env, deploy
+│   ├── CONVENTIONS.md        ← กฎการเขียนโค้ด, SQL, git, การตั้งชื่อ
 │   ├── DECISIONS.md          ← บันทึกการตัดสินใจ + เรื่องที่ยังเปิดอยู่
 │   └── prompts/              ← prompt สำเร็จรูปสำหรับสั่ง AI ทำงานแต่ละขั้น
-└── .github/workflows/        ← CI (lint, typecheck, test, build)
+└── .github/workflows/ci.yml  ← CI: lint/typecheck/test/build + pgTAP + เช็ค types
 ```
 
 ---
@@ -85,51 +78,57 @@ stuMatch/
 ## 3. คำสั่งที่ใช้บ่อย (รันจาก root)
 
 ```bash
-pnpm install                     # ติดตั้งทุก package
-pnpm db:up                       # เปิด PostgreSQL ใน Docker (infra/docker-compose.yml)
-pnpm db:migrate                  # prisma migrate dev (สร้าง/apply migration)
-pnpm db:seed                     # ใส่ข้อมูลทดสอบ (demo@stumatch.dev / password123)
-pnpm db:studio                   # เปิด Prisma Studio
-pnpm db:down                     # ปิด PostgreSQL
+pnpm install                     # ติดตั้งทุก package (รวม Supabase CLI)
+pnpm db:start                    # เปิด Supabase บนเครื่อง (ต้องเปิด Docker Desktop ก่อน)
+pnpm db:status                   # ดู URL + publishable key สำหรับใส่ .env
+pnpm db:reset                    # ล้าง DB แล้วรัน migrations + seed.sql ใหม่ทั้งหมด
+pnpm db:migration <ชื่อ>         # สร้างไฟล์ migration ใหม่ใน supabase/migrations
+pnpm db:types                    # generate packages/shared/src/database.types.ts จาก DB
+pnpm db:test                     # รัน pgTAP tests (ทดสอบ RLS)
+pnpm db:stop                     # ปิด Supabase
 pnpm dev                         # รันทุก app พร้อมกัน
-pnpm dev --filter=api            # รันเฉพาะ API
 pnpm dev --filter=web            # รันเฉพาะ web
 pnpm dev --filter=mobile         # รันเฉพาะ mobile (Expo)
 pnpm lint | pnpm typecheck | pnpm test | pnpm build
-pnpm --filter api test:e2e       # e2e ของ API (ต้อง db:up ก่อน)
 pnpm format                      # จัด format ทั้ง repo ด้วย Prettier
 ```
 
+URL ตอน dev:
+
+| Service                                                | URL                                                       |
+| ------------------------------------------------------ | --------------------------------------------------------- |
+| Web                                                    | http://localhost:3000                                     |
+| Supabase API                                           | http://127.0.0.1:54321                                    |
+| Supabase Studio (ดู/แก้ข้อมูล)                         | http://127.0.0.1:54323                                    |
+| Mailpit (อีเมลที่ Auth ส่ง เช่น ยืนยัน/reset password) | http://127.0.0.1:54324                                    |
+| Postgres ตรง                                           | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+
+ผู้ใช้ทดสอบจาก `seed.sql`: `demo@stumatch.dev` / `password123` และ `demo2@stumatch.dev` / `password123`
+
+> Mobile บนมือถือจริง/emulator เรียก `127.0.0.1` ไม่ได้ ต้องใช้ IP เครื่อง dev (เช่น `http://192.168.1.10:54321`)
+> หรือ Android emulator ใช้ `http://10.0.2.2:54321`
+
 เพิ่ม package ใน app ไหน ให้ `cd apps/<app>` แล้ว `pnpm add <pkg>`
 (**mobile ให้ใช้ `npx expo install <pkg>`** เพื่อได้เวอร์ชันที่เข้ากับ Expo SDK)
-
-Port มาตรฐานตอน dev:
-
-| Service            | URL                            |
-| ------------------ | ------------------------------ |
-| Web                | http://localhost:3000          |
-| API                | http://localhost:4000/api/v1   |
-| API docs (Swagger) | http://localhost:4000/api/docs |
-| PostgreSQL         | localhost:5433 (Docker)        |
-
-> Mobile บนมือถือจริง/emulator เรียก `localhost` ไม่ได้ ต้องใช้ IP เครื่อง dev (เช่น `http://192.168.1.10:4000/api/v1`)
-> หรือ Android emulator ใช้ `http://10.0.2.2:4000/api/v1`
 
 ---
 
 ## 4. กฎเหล็ก (ห้ามฝ่าฝืน)
 
 1. **ห้าม commit secret/key ใดๆ** — repo เป็น **Public** บน GitHub
-   - ไฟล์ `.env`, `.env.local`, `.env.*.local` ต้องอยู่ใน `.gitignore` เสมอ
-   - เพิ่มตัวแปรใหม่ → เพิ่มชื่อ (ไม่ใส่ค่าจริง) ใน `.env.example` ของ app นั้นทุกครั้ง
-2. **Secret จริงอยู่ที่ `apps/api` เท่านั้น** — โค้ดใน `apps/web` (ฝั่ง browser) และ `apps/mobile` ถือว่าเป็นสาธารณะ
-   - ตัวแปรที่ขึ้นต้น `NEXT_PUBLIC_` / `EXPO_PUBLIC_` จะถูกฝังลงใน client → ใส่ได้เฉพาะค่าที่เปิดเผยได้ (เช่น URL ของ API)
-3. **Client ห้ามต่อ database ตรง** — ทุกอย่างผ่าน API (`apps/api`) เท่านั้น
-4. **Type ที่ใช้ข้าม app ต้องอยู่ใน `packages/shared`** — ห้าม copy type ไปวางซ้ำใน app
-   - ห้าม export type ของ Prisma ออกไปให้ client ใช้ตรงๆ ให้แปลงเป็น DTO ใน `packages/shared`
-5. **เปลี่ยน database schema → ต้องมี Prisma migration** (`prisma migrate dev --name <ชื่อ>`) ห้ามแก้ DB มือ
+   - ไฟล์ `.env`, `.env.local`, `.env.*.local` อยู่ใน `.gitignore` แล้ว เพิ่มตัวแปรใหม่ → เพิ่มชื่อใน `.env.example`
+2. **Client ใช้ได้แค่ publishable key** (`sb_publishable_...`)
+   - **ห้ามใส่ secret key / service_role key** ใน `apps/web` หรือ `apps/mobile` เด็ดขาด (key นี้ข้าม RLS ได้ทั้งหมด)
+   - ตัวแปร `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` ถูกฝังลง client → ใส่ได้เฉพาะค่าที่เปิดเผยได้
+   - secret key ใช้ได้เฉพาะใน Edge Functions (ตั้งผ่าน `supabase secrets set`)
+3. **ทุกตารางใน schema `public` ต้อง `enable row level security` + มี policy ครบ** ใน migration เดียวกับที่สร้างตาราง
+   - ตารางที่เปิด RLS แต่ไม่มี policy = ไม่มีใครเข้าถึงได้ (ปลอดภัย) / ตารางที่ไม่เปิด RLS = **ทุกคนบนโลกอ่าน/แก้ได้**
+   - ทุก policy ใหม่ต้องมี pgTAP test ใน `supabase/tests/database/`
+4. **เปลี่ยน database ต้องทำผ่าน migration เท่านั้น** (`pnpm db:migration <ชื่อ>`) — ห้ามแก้ schema ผ่าน Dashboard/Studio ของ project จริง
+   - แก้ schema แล้วต้อง `pnpm db:types` และ commit `database.types.ts` ด้วย (CI เช็ค)
+5. **Type ที่ใช้ข้าม app ต้องอยู่ใน `packages/shared`** — ใช้ `Database`, `Tables<'...'>` จาก `@stumatch/shared` ห้ามเขียน type ของตารางเอง
 6. **ห้าม push ตรงเข้า `main`** — ทำผ่าน branch + Pull Request เสมอ
-7. ก่อนบอกว่างานเสร็จ ต้องผ่าน `pnpm lint && pnpm typecheck && pnpm test` อย่างน้อยใน app ที่แก้
+7. ก่อนบอกว่างานเสร็จ ต้องผ่าน `pnpm lint && pnpm typecheck && pnpm test` และถ้าแตะ `supabase/` ต้องผ่าน `pnpm db:reset && pnpm db:test`
 
 รายละเอียดกฎทั้งหมด → [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)
 
@@ -139,13 +138,14 @@ Port มาตรฐานตอน dev:
 
 - [x] ตกลง tech stack และโครงสร้าง monorepo
 - [x] เขียนเอกสาร AGENTS.md / docs/
-- [x] Scaffold monorepo (2026-10-23, ตาม [`docs/prompts/01-scaffold-monorepo.md`](docs/prompts/01-scaffold-monorepo.md))
-  - [x] ทดสอบกับ DB จริงแล้ว (2026-10-23): db:up, db:migrate, db:seed, test:e2e, docker build + docker run ของ API ผ่านทั้งหมด
-- [x] push ขึ้น GitHub: https://github.com/AugWaChi12/stuMatch (2026-10-23)
+- [x] Scaffold monorepo (2026-10-23) แล้ว push ขึ้น https://github.com/AugWaChi12/stuMatch
+- [x] ย้าย backend จาก NestJS + DigitalOcean → **Supabase** (2026-10-23, branch `feature/supabase-backend`)
+  - [x] ตาราง `profiles` + RLS + trigger สร้าง profile ตอนสมัคร, function `health()`, bucket `avatars`
+  - [x] ทดสอบบนเครื่องแล้ว: db:reset, db:test (9/9), login/signup ผ่าน Supabase API, web + mobile (web build) ต่อ Supabase ได้
+- [ ] สร้าง Supabase project จริง + ผูก Vercel (ดู ARCHITECTURE.md หัวข้อ 6)
 - [ ] ตั้ง branch protection ให้ `main` + เช็คว่า CI บน GitHub ผ่าน
-- [ ] ออกแบบ data model (User, Profile, Match, Event ฯลฯ)
-- [ ] ระบบ Auth
-- [ ] Deploy web ขึ้น Vercel / API ขึ้น DigitalOcean
+- [ ] ออกแบบ data model ของการ match / นัด (รอ Q9 ใน DECISIONS.md)
+- [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 
 > **AI ที่ทำงานเสร็จแต่ละขั้น: อัปเดต checklist นี้ และบันทึกการตัดสินใจใหม่ลง `docs/DECISIONS.md` ด้วย**
 
@@ -156,33 +156,36 @@ Port มาตรฐานตอน dev:
 ## 6. วิธีทำงานสำหรับ AI
 
 - อ่าน `AGENTS.md` → `docs/ARCHITECTURE.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม
-- ทำงานทีละ app ตาม scope ที่ได้รับ ถ้าต้องแก้ข้าม app (เช่น เพิ่ม endpoint + หน้าจอ) ให้แก้ `packages/shared` ก่อน แล้วค่อย API แล้วค่อย client
-- ใช้เวอร์ชัน stable ล่าสุดของ library ณ วันที่ทำงาน และเช็คเอกสารทางการถ้าไม่แน่ใจ (API ของ Next.js / Expo / Prisma เปลี่ยนบ่อย)
+- ฟีเจอร์ที่แตะข้อมูล ทำตามลำดับ: **migration (ตาราง + RLS) → pgTAP test → `pnpm db:types` → zod schema ใน shared → UI**
+- logic ที่ client ไม่ควรทำเอง (เช่น จับคู่ match, ตรวจสิทธิ์ซับซ้อน, เรียก service ภายนอกด้วย secret) ให้ทำเป็น **Postgres function (`security definer` อย่างระวัง)** หรือ **Edge Function** — ห้ามเชื่อข้อมูลจาก client
+- ใช้เวอร์ชัน stable ล่าสุดของ library ณ วันที่ทำงาน และเช็คเอกสารทางการถ้าไม่แน่ใจ (Next.js / Expo / Supabase เปลี่ยนบ่อย)
 - อย่าเพิ่ม library ใหม่ถ้าของที่มีอยู่ทำได้แล้ว ถ้าจำเป็นต้องเพิ่ม ให้บันทึกเหตุผลใน `docs/DECISIONS.md`
 - สรุปสิ่งที่ทำ + สิ่งที่ยังไม่ได้ทำ/ไม่ได้ทดสอบ ให้ชัดเจนเมื่อจบงาน
 
 ---
 
-## 7. เวอร์ชันที่ใช้ + จุดที่ต้องระวัง (ณ วันที่ scaffold 2026-10-23)
+## 7. เวอร์ชันที่ใช้ + จุดที่ต้องระวัง (ณ 2026-10-23)
 
-| เครื่องมือ | เวอร์ชัน                                                               |
-| ---------- | ---------------------------------------------------------------------- |
-| Node       | 22 (`.nvmrc`)                                                          |
-| pnpm       | 12.15 (`packageManager` ใน package.json)                               |
-| TypeScript | ~6.0 (**ไม่ใช่ 7** — typescript-eslint และ Nest CLI ยังไม่รองรับ TS 7) |
-| Turborepo  | 2.11                                                                   |
-| NestJS     | 12                                                                     |
-| Prisma     | 7.10 (ไม่ใช้ 8 เพราะยังเป็น RC)                                        |
-| Next.js    | 16.4                                                                   |
-| Expo SDK   | 58 (React Native 0.88, React 19.3)                                     |
-| zod        | 4                                                                      |
-| ESLint     | 9 (eslint-config-next ยังไม่รองรับ 10)                                 |
+| เครื่องมือ                            | เวอร์ชัน                                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| Node                                  | 22 (`.nvmrc`)                                                                    |
+| pnpm                                  | 12.15 (`packageManager` ใน package.json)                                         |
+| TypeScript                            | ~6.0 (**ไม่ใช่ 7** — typescript-eslint ยังไม่รองรับ TS 7)                        |
+| Turborepo                             | 2.11                                                                             |
+| Supabase CLI                          | 2.121 (devDependency ที่ root — เรียกผ่าน `pnpm db:*` หรือ `pnpm exec supabase`) |
+| Postgres (local)                      | 17 (`supabase/config.toml`)                                                      |
+| @supabase/supabase-js / @supabase/ssr | 2.118 / 0.12                                                                     |
+| Next.js                               | 16.4                                                                             |
+| Expo SDK                              | 58 (React Native 0.88, React 19.3)                                               |
+| zod                                   | 4                                                                                |
+| ESLint                                | 9 (eslint-config-next ยังไม่รองรับ 10)                                           |
 
 จุดที่มักพลาด:
 
-- **pnpm 12 ไม่อ่าน setting จาก `.npmrc`** (ยกเว้น auth) — setting อยู่ใน `pnpm-workspace.yaml`
+- **pnpm 12 ไม่อ่าน setting จาก `.npmrc`** — setting อยู่ใน `pnpm-workspace.yaml`
   - package ที่มี install script ต้องอนุญาตใน `allowBuilds` ไม่งั้น `pnpm add` จะ error `ERR_PNPM_IGNORED_BUILDS`
-- **NestJS 12 เป็น ESM** — import ไฟล์ในโปรเจคต้องลงท้าย `.js` เช่น `import { X } from './x.js'`
-- **Prisma 7**: ต้องใช้ driver adapter (`@prisma/adapter-pg`), client generate ไปที่ `apps/api/src/generated/prisma` (import จาก `../generated/prisma/client.js`), URL ของ DB ตั้งใน `prisma.config.ts`
-- `packages/shared` ต้อง build ก่อน app อื่นจะเห็น type ใหม่ — `pnpm dev` ของ turbo build ให้ตอนเริ่ม ถ้าแก้ shared ระหว่าง dev ให้รัน `pnpm --filter @stumatch/shared dev` (tsup watch) คู่กันไป
-- Unit test ของ API ใช้ **Vitest** (Nest 12 default) ไม่ใช่ Jest
+- **Next.js 16**: middleware เปลี่ยนชื่อเป็น `proxy.ts` (export function `proxy`) — ถ้าเผลอตั้งชื่อ `middleware.ts` session จะไม่ refresh
+- **ฝั่ง server ของ Next.js เช็ค login ด้วย `supabase.auth.getClaims()`** — ห้ามใช้ `getSession()` ตัดสินสิทธิ์ (ไม่ได้ verify token)
+- **Supabase client ฝั่ง server ต้องสร้างใหม่ทุก request** (`await createClient()` จาก `src/lib/supabase/server.ts`) ห้ามเก็บไว้ใน global
+- `packages/shared` ต้อง build ก่อน app อื่นจะเห็น type ใหม่ — `pnpm dev` ของ turbo build ให้ตอนเริ่ม ถ้าแก้ shared ระหว่าง dev ให้รัน `pnpm --filter @stumatch/shared dev` คู่กันไป
+- Docker Desktop บนเครื่อง Windows นี้เคยพังเพราะไฟล์ socket เก่าใน `%LOCALAPPDATA%\Docker\run` — ถ้า start ไม่ขึ้นด้วย error "file cannot be accessed by the system" ให้ปิด Docker แล้ว rename โฟลเดอร์ `run` ทิ้ง

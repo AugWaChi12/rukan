@@ -3,155 +3,146 @@
 ## 1. ภาพรวมระบบ
 
 ```
-┌──────────────────────┐
-│ Mobile (Expo / RN)   │──┐
-│ apps/mobile          │  │   HTTPS (REST, JSON)
-└──────────────────────┘  │   Authorization: Bearer <JWT>
-                          ├────────────────────────────►┌──────────────────────────┐      ┌──────────────┐
-┌──────────────────────┐  │                             │ API (NestJS)             │─────►│ PostgreSQL   │
-│ Web (Next.js)        │──┘                             │ apps/api                 │Prisma│              │
-│ apps/web  @ Vercel   │                                │ @ DigitalOcean (Docker)  │      │ @ DigitalOcean│
-└──────────────────────┘                                └──────────────────────────┘      └──────────────┘
-        ▲                                                          ▲
-        └──────────── import types/zod จาก packages/shared ────────┘
+┌──────────────────────┐   supabase-js (publishable key + JWT ของผู้ใช้)
+│ Mobile (Expo / RN)   │──────────────┐
+│ apps/mobile          │              │
+└──────────────────────┘              ▼
+                              ┌────────────────────────────────────────────┐
+┌──────────────────────┐      │ Supabase                                   │
+│ Web (Next.js)        │─────►│  ├─ Auth      (สมัคร / login / OAuth)      │
+│ apps/web  @ Vercel   │      │  ├─ PostgREST (REST อัตโนมัติจากตาราง)      │
+│  ├─ browser          │      │  ├─ Postgres  + RLS  ← สิทธิ์ทั้งหมดอยู่ที่นี่ │
+│  └─ server (SSR)     │      │  ├─ Storage   (bucket: avatars)            │
+└──────────────────────┘      │  ├─ Realtime  (แชท / แจ้งเตือน — อนาคต)    │
+        ▲                     │  └─ Edge Functions (logic ที่ใช้ secret)    │
+        │                     └────────────────────────────────────────────┘
+        └── import types (Database) + zod schemas จาก packages/shared
 ```
 
-| ส่วน | Domain (production, ตัวอย่าง) | หมายเหตุ                                            |
-| ---- | ----------------------------- | --------------------------------------------------- |
-| Web  | `https://<domain>`            | Vercel จัดการ SSL + CDN ให้                         |
-| API  | `https://api.<domain>`        | DigitalOcean, ชี้ DNS มาที่ App Platform / Droplet  |
-| DB   | private network เท่านั้น      | ห้ามเปิด public ถ้าไม่จำเป็น, จำกัด trusted sources |
+**ไม่มี API server ของเราเอง** — client คุยกับ Supabase ตรง ทุกการเข้าถึงข้อมูลผ่าน RLS
 
-> ยังไม่ได้เลือกชื่อ domain — ดู `docs/DECISIONS.md`
+| ส่วน    | Production                          | หมายเหตุ                                                  |
+| ------- | ----------------------------------- | --------------------------------------------------------- |
+| Web     | `https://<domain>`                  | Vercel                                                    |
+| Backend | `https://<project-ref>.supabase.co` | Supabase Cloud (region แนะนำ: Singapore `ap-southeast-1`) |
 
 ---
 
 ## 2. หน้าที่ของแต่ละส่วน
 
-### `apps/api` — NestJS (แหล่งความจริงเดียวของ business logic)
+### `supabase/` — backend
 
-- เป็นที่เดียวที่ต่อ database และถือ secret
-- REST API, prefix ทุก route ด้วย `/api/v1`
-- โครงสร้างแบบ feature module: `src/modules/<feature>/{<feature>.module.ts, .controller.ts, .service.ts, dto/}`
-- เป็น **ESM** (`"type": "module"`, NestJS 12) — import ไฟล์ในโปรเจคต้องลงท้าย `.js`
-- Validation: ใช้ zod schema จาก `packages/shared` ผ่าน `ZodValidationPipe` (`src/common/pipes/`) เพื่อให้ client กับ server ใช้กฎเดียวกัน
-- การตั้งค่า app (prefix, helmet, CORS, filter, Swagger) อยู่ที่ `src/app.setup.ts` ที่เดียว — e2e test เรียกฟังก์ชันเดียวกัน
-- Rate limit: `@nestjs/throttler` 100 req/นาที/IP (health ยกเว้น)
-- เอกสาร API: Swagger ที่ `/api/docs` (ปิดอัตโนมัติเมื่อ `NODE_ENV=production`)
-- Health check: `GET /api/v1/health` → `{ status: "ok", database: "up", timestamp }` ถ้าต่อ DB ไม่ได้ตอบ **503** + `status: "error"` (ใช้กับ DigitalOcean health check)
-- Error format มาตรฐาน (ผ่าน global exception filter):
-  ```json
-  { "statusCode": 400, "error": "Bad Request", "message": "...", "details": [] }
-  ```
-- Realtime (อนาคต เช่น แชท/แจ้งเตือน): ใช้ NestJS WebSocket Gateway (Socket.IO) — เป็นเหตุผลหลักที่ API **ไม่** ไปอยู่บน Vercel (serverless ไม่รองรับ WebSocket ค้างการเชื่อมต่อ)
+- **migrations/**: SQL ทั้งหมดของ database — ตาราง, index, RLS policy, function, trigger, storage bucket/policy
+  - deploy ขึ้น project จริงด้วย `supabase db push` (ดูหัวข้อ 6)
+- **seed.sql**: ข้อมูลทดสอบ ใช้แค่ตอน `pnpm db:reset` บนเครื่อง
+- **tests/database/**: pgTAP tests — ทดสอบว่า RLS ทำงานถูก (anon / ผู้ใช้เจ้าของ / ผู้ใช้อื่น)
+- **functions/** (ยังไม่มี): Edge Functions (Deno) สำหรับงานที่ต้องใช้ secret หรือเรียก service ภายนอก เช่น ส่ง push notification
+- **config.toml**: config ตอนรันบนเครื่อง (port, auth redirect URL, storage) — ไม่ได้ sync ขึ้น project จริงอัตโนมัติ
 
 ### `apps/web` — Next.js @ Vercel
 
-- App Router (`src/app`)
-- เรียก API ผ่าน client กลางใน `src/lib/api.ts` (base URL จาก `NEXT_PUBLIC_API_URL`)
-- ไม่มี database / secret ของตัวเอง ถ้าต้องใช้ secret ให้ทำผ่าน API หรือ Route Handler ฝั่ง server เท่านั้น
-- Vercel ตั้ง **Root Directory = `apps/web`** และเปิด "Include files outside the root directory" เพื่อให้ใช้ `packages/shared` ได้
-- ทุก Pull Request ได้ Preview URL อัตโนมัติ
+- `src/lib/supabase/client.ts` — ใช้ใน Client Component (`'use client'`)
+- `src/lib/supabase/server.ts` — ใช้ใน Server Component / Server Action / Route Handler (`await createClient()` ทุก request)
+- `src/proxy.ts` + `src/lib/supabase/proxy.ts` — refresh token ทุก request แล้วเขียน cookie กลับ (Next.js 16 เรียก middleware ว่า proxy)
+- Auth เก็บใน **cookie** (จัดการโดย `@supabase/ssr`) — Server Component รู้ว่าใคร login
+- เช็คสิทธิ์ฝั่ง server ด้วย `supabase.auth.getClaims()` เท่านั้น
+- Vercel ตั้ง **Root Directory = `apps/web`** (Vercel ตรวจจับ Turborepo + `packages/shared` ให้)
 
 ### `apps/mobile` — Expo
 
-- ใช้ `expo-router` (file-based routing ใน `src/app/`)
-- config ของแอปอยู่ใน `app.config.ts` (bundle id `com.stumatch.app`, scheme `stumatch`)
-- เรียก API ผ่าน `src/lib/api.ts` (base URL จาก `EXPO_PUBLIC_API_URL`)
-- เก็บ token ด้วย `expo-secure-store` (ห้ามใช้ AsyncStorage สำหรับ token)
+- `src/lib/supabase.ts` — client ตัวเดียวของทั้งแอป
+- Session เก็บด้วย `LargeSecureStore`: key AES อยู่ใน SecureStore (Keychain/Keystore), session ที่เข้ารหัสแล้วอยู่ใน AsyncStorage
+- refresh token เฉพาะตอนแอปอยู่ foreground (AppState listener)
+- OAuth / magic link ใช้ deep link scheme `stumatch://` (อยู่ใน `additional_redirect_urls` ของ config.toml แล้ว)
 - Build/ส่ง store ด้วย EAS (`eas build`, `eas submit`)
 
 ### `packages/shared`
 
-- สิ่งที่อยู่ที่นี่: zod schemas, TypeScript types ที่ derive จาก zod (`z.infer`), enum/constants, API route constants
-- สิ่งที่ **ห้าม** อยู่ที่นี่: โค้ดที่ใช้ Node-only API, React component, Prisma client, secret
-- Build ด้วย `tsup` ออกทั้ง ESM + CJS + `.d.ts` (ทุก app ตอนนี้เป็น ESM แต่เก็บ CJS ไว้เผื่อ tool ที่ยัง `require`)
-- ชื่อ package: `@stumatch/shared`
-
-### `packages/tsconfig` / `packages/eslint-config`
-
-- `@stumatch/tsconfig`: `base.json`, `nestjs.json`, `nextjs.json` (shared, api, web extends) — mobile ใช้ `expo/tsconfig.base` ตามที่ Expo แนะนำ
-- `@stumatch/eslint-config`: flat config กลาง (shared, api ใช้) — web ใช้ `eslint-config-next`, mobile ใช้ `eslint-config-expo`
+- `database.types.ts` — **generate** จาก DB ด้วย `pnpm db:types` (ห้ามแก้มือ, CI เช็คว่าตรงกับ migrations)
+- `index.ts` export: `Database`, `Tables`, `TablesInsert`, `TablesUpdate`, `Json`, `Profile`
+- `schemas/` — zod สำหรับ validate ฟอร์มก่อนส่ง (กฎต้องตรงกับ check constraint ใน DB — DB คือด่านสุดท้ายเสมอ)
+- `constants/supabase.ts` — ชื่อตาราง (`TABLES`), RPC (`SUPABASE_RPC`), bucket (`STORAGE_BUCKETS`)
+- ห้ามมี: React component, โค้ดที่ใช้ Node-only API, secret
+- Build ด้วย `tsup` ออก ESM + CJS + `.d.ts`
 
 ---
 
 ## 3. Database
 
-- PostgreSQL, จัดการ schema ด้วย **Prisma** (`apps/api/prisma/schema.prisma`)
-- ตอน dev: รันผ่าน `infra/docker-compose.yml` (image `postgres:18-alpine`)
-- **Prisma 7**: ต่อ DB ผ่าน driver adapter `@prisma/adapter-pg`, URL อยู่ใน `apps/api/prisma.config.ts` (อ่านจาก `DATABASE_URL`), client generate ไปที่ `apps/api/src/generated/prisma` (ไม่ commit — `build`/`typecheck` generate ให้อัตโนมัติ)
-- ตาราง: ชื่อ model เป็น PascalCase เอกพจน์ (`User`), map เป็น snake_case พหูพจน์ใน DB (`@@map("users")`), column เป็น snake_case (`@map("created_at")`)
-- ทุกตารางมี `id` (uuid หรือ cuid), `createdAt`, `updatedAt`
-- Migration: `prisma migrate dev` ตอน dev, `prisma migrate deploy` ตอน deploy (รันก่อน start API)
-- Seed: `apps/api/prisma/seed.ts` สำหรับข้อมูลทดสอบ
+- Postgres ของ Supabase, schema หลักคือ `public` (ตารางของเรา) — `auth`, `storage` เป็นของ Supabase ห้ามสร้างตารางเองในนั้น
+- ตาราง: ชื่อ **snake_case พหูพจน์** (`profiles`, `match_requests`), column snake_case
+- ทุกตารางมี `id`, `created_at`, `updated_at` (ใช้ trigger `public.set_updated_at()` ที่มีอยู่แล้ว)
+- ข้อมูลผู้ใช้: `auth.users` (Supabase จัดการ) ↔ `public.profiles` (1:1, `id` เดียวกัน) — ตารางอื่นอ้าง `profiles.id`
+- Migration: `pnpm db:migration <ชื่อ>` → เขียน SQL → `pnpm db:reset` → `pnpm db:test` → `pnpm db:types`
+
+### ตารางที่มีตอนนี้
+
+| ตาราง / object                                                            | สิทธิ์ (RLS)                                                                                                                                                     |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public.profiles` (`id`, `display_name`, `avatar_url`, `bio`, timestamps) | anon: ไม่มีสิทธิ์ · authenticated: อ่านได้ทุกแถว, แก้ได้เฉพาะของตัวเอง · insert ผ่าน trigger `on_auth_user_created` เท่านั้น · delete ตาม `auth.users` (cascade) |
+| function `public.health()`                                                | anon + authenticated เรียกได้ — คืน `{ status, database, timestamp }`                                                                                            |
+| storage bucket `avatars` (public, ≤5MB, jpeg/png/webp)                    | ทุกคนดูได้ · อัปโหลด/แก้/ลบได้เฉพาะ path `<user id>/...` ของตัวเอง                                                                                               |
 
 ---
 
-## 4. Authentication (แผนตั้งต้น — ยืนยันใน DECISIONS.md)
+## 4. Authentication
 
-- API ออก **JWT access token** (อายุสั้น เช่น 15 นาที) + **refresh token** (อายุยาว เก็บ hash ใน DB เพื่อ revoke ได้)
-- Web: เก็บ token ใน httpOnly cookie (ผ่าน Next.js Route Handler) หรือ memory + refresh
-- Mobile: เก็บใน `expo-secure-store`
-- รหัสผ่าน hash ด้วย `argon2` (หรือ `bcrypt`)
-- Social login (Google/Apple) — ยังไม่ตัดสินใจ
+- **Supabase Auth** — ตอนนี้เปิด email + password (local ปิดการยืนยันอีเมลไว้ อีเมลที่ส่งดูได้ที่ Mailpit)
+- สมัคร: `supabase.auth.signUp({ email, password, options: { data: { display_name } } })` → trigger สร้าง `profiles` ให้
+- Social login (Google / Apple) — ยังไม่ตัดสินใจ (Q6) เปิดได้ใน `config.toml` (`[auth.external.google]`) + Dashboard
+- ใน SQL ใช้ `(select auth.uid())` ใน policy (ห่อด้วย select เพื่อให้ Postgres cache ค่า — เร็วกว่า)
 
 ---
 
 ## 5. Environment Variables
 
-| App    | ไฟล์ตอน dev             | ตัวแปร                                                                                                                                    | Public?               |
-| ------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| api    | `apps/api/.env`         | `DATABASE_URL`, `PORT=4000`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `CORS_ORIGINS` | ❌ secret             |
-| web    | `apps/web/.env.local`   | `NEXT_PUBLIC_API_URL`                                                                                                                     | ✅                    |
-| mobile | `apps/mobile/.env`      | `EXPO_PUBLIC_API_URL`                                                                                                                     | ✅                    |
-| infra  | `infra/.env` (optional) | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`                                                                                       | ❌ (ค่า dev เท่านั้น) |
+| App    | ไฟล์ตอน dev           | ตัวแปร                                                             |
+| ------ | --------------------- | ------------------------------------------------------------------ |
+| web    | `apps/web/.env.local` | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| mobile | `apps/mobile/.env`    | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 
-ที่เก็บค่าจริงของแต่ละ environment:
+- ค่าตอน dev: `pnpm db:status` (local publishable key เป็นค่า default เดียวกันทุกเครื่อง ไม่ใช่ความลับ)
+- ค่า production: Supabase Dashboard → Project Settings → API Keys → **Publishable key**
+- **Secret key (`sb_secret_...`) / service_role ห้ามอยู่ใน client** — ใช้ได้เฉพาะใน Edge Functions (`supabase secrets set`) หรือเครื่องมือ admin
 
-| Environment | web                                              | api                                |
-| ----------- | ------------------------------------------------ | ---------------------------------- |
-| Local dev   | `.env.local` บนเครื่อง (copy จาก `.env.example`) | `.env` บนเครื่อง                   |
-| Preview     | Vercel Env (Preview)                             | — (ชี้ไป staging API ถ้ามี)        |
-| Production  | Vercel Env (Production)                          | DigitalOcean App env / Droplet env |
-
-ถ้าต้องการคุม key ที่เดียว: ใช้ **Infisical** (หรือ Doppler) เป็น source of truth แล้ว sync ไป Vercel + DigitalOcean + GitHub Actions
-
-API ต้อง **validate env ตอน start** (zod) ถ้าตัวแปรขาด → crash ทันทีพร้อมข้อความบอกว่าขาดตัวไหน
+| Environment  | web                                                 | mobile                                                    |
+| ------------ | --------------------------------------------------- | --------------------------------------------------------- |
+| Local dev    | `.env.local` → local Supabase                       | `.env` → local Supabase (IP เครื่อง dev ถ้าใช้มือถือจริง) |
+| Preview (PR) | Vercel Env (Preview) → Supabase project dev/staging | EAS profile `preview`                                     |
+| Production   | Vercel Env (Production) → Supabase project prod     | EAS profile `production`                                  |
 
 ---
 
 ## 6. Deploy
 
+### Supabase (ครั้งแรก)
+
+1. สร้าง project ที่ supabase.com (region Singapore)
+2. `pnpm exec supabase login` แล้ว `pnpm exec supabase link --project-ref <ref>`
+3. `pnpm exec supabase db push` — apply migrations ทั้งหมดขึ้น project จริง (**seed.sql ไม่ถูก push**)
+4. Dashboard → Authentication → URL Configuration: ตั้ง Site URL = `https://<domain>` และ Redirect URLs เพิ่ม `https://<domain>/**`, `stumatch://**`
+
+### Supabase (หลัง merge PR ที่มี migration ใหม่)
+
+- `pnpm exec supabase db push` (ทำมือโดยคนที่มีสิทธิ์ project) — อนาคตทำเป็น GitHub Action ได้ (ต้องใช้ `SUPABASE_ACCESS_TOKEN` + DB password ใน GitHub Secrets)
+
 ### Web → Vercel
 
-- Import repo จาก GitHub, Framework = Next.js, Root Directory = `apps/web`
-- Build command ปล่อยให้ Vercel ตรวจจับ Turborepo เอง (หรือ `cd ../.. && pnpm turbo build --filter=web`)
-- Ignored Build Step: ใช้ `npx turbo-ignore` เพื่อไม่ build เมื่อ web ไม่ได้เปลี่ยน
+- Import repo, Framework = Next.js, Root Directory = `apps/web`
+- ใส่ `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ใน Vercel Env (หรือใช้ Supabase integration ใน Vercel Marketplace ที่ sync ให้อัตโนมัติ)
 - Merge เข้า `main` → Production, PR → Preview
-
-### API → DigitalOcean
-
-- `apps/api/Dockerfile` (multi-stage, build จาก **root ของ repo** เพราะต้องใช้ `packages/shared`)
-  - ใช้ `turbo prune api --docker` เพื่อตัดเฉพาะ package ที่ API ใช้
-- ใช้ Dockerfile เดียวกันได้ทั้ง 2 แบบ:
-  - **App Platform**: เชื่อม GitHub, source dir = root, Dockerfile path = `apps/api/Dockerfile`, auto deploy เมื่อ push `main`
-  - **Droplet**: `docker compose` + reverse proxy (Caddy/nginx) + SSL
-- Start command (อยู่ใน CMD ของ Dockerfile แล้ว): `prisma migrate deploy && node dist/main.js`
-- Health check path: `/api/v1/health`
 
 ### Mobile → EAS
 
-- `eas.json` มี profile `development`, `preview`, `production`
-- `EXPO_PUBLIC_API_URL` ตั้งตาม profile
+- ใส่ `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ใน `env` ของแต่ละ profile ใน `eas.json` หรือ EAS Environment Variables
 
 ---
 
 ## 7. CI (GitHub Actions)
 
-`.github/workflows/ci.yml` — รันทุก PR และ push เข้า `main`:
+`.github/workflows/ci.yml` — รันทุก PR และ push เข้า `main` มี 2 job:
 
-1. checkout → setup pnpm + Node (ตาม `.nvmrc`) → `pnpm install --frozen-lockfile`
-2. `pnpm turbo lint typecheck test build` (Turborepo จะรันเฉพาะส่วนที่เปลี่ยน)
-3. API e2e test ใช้ PostgreSQL service container
+1. **apps**: `pnpm turbo run lint typecheck test build` (ใช้ค่า env dummy)
+2. **database**: `supabase db start` (Postgres + migrations + seed) → `pnpm db:test` (pgTAP) → `pnpm db:types` แล้วเช็คว่า `database.types.ts` ที่ commit มาตรงกับ schema
 
-Deploy ไม่ทำใน CI — Vercel และ DigitalOcean deploy เองผ่าน Git integration
+Deploy ไม่ทำใน CI — Vercel deploy เองผ่าน Git integration, Supabase ใช้ `db push`

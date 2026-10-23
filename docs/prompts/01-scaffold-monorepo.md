@@ -1,5 +1,8 @@
 # Prompt 01 — Scaffold Monorepo (stuMatch)
 
+> ⚠️ **เอกสารเก่า (ใช้แล้ว 2026-10-23)** — prompt นี้วางโครงแบบ NestJS + DigitalOcean ซึ่งถูกเปลี่ยนเป็น **Supabase** แล้ว (ดู `docs/DECISIONS.md` D20)
+> เก็บไว้เป็นประวัติเท่านั้น **ห้ามรันซ้ำ** — โครงสร้างปัจจุบันดูที่ `AGENTS.md`
+
 > **วิธีใช้:** copy ทุกอย่างในกรอบ "PROMPT" ด้านล่างไปวางให้ AI coding agent (Claude Code, Cursor, Codex ฯลฯ)
 > โดยเปิด AI ที่ root ของ repo (`stuMatch/`) ซึ่งมีไฟล์ `AGENTS.md` และ `docs/` อยู่แล้ว
 
