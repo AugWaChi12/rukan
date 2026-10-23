@@ -33,7 +33,7 @@ pnpm dev          # รันทุก app
 | API                | http://localhost:4000/api/v1   |
 | API docs (Swagger) | http://localhost:4000/api/docs |
 | Expo (Metro)       | http://localhost:8081          |
-| PostgreSQL         | localhost:5432                 |
+| PostgreSQL         | localhost:5433 (Docker)        |
 
 ทำงานเฉพาะส่วน: `pnpm dev --filter=api` / `--filter=web` / `--filter=mobile`
 

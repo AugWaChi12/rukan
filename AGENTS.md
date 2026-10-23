@@ -110,7 +110,7 @@ Port มาตรฐานตอน dev:
 | Web                | http://localhost:3000          |
 | API                | http://localhost:4000/api/v1   |
 | API docs (Swagger) | http://localhost:4000/api/docs |
-| PostgreSQL         | localhost:5432                 |
+| PostgreSQL         | localhost:5433 (Docker)        |
 
 > Mobile บนมือถือจริง/emulator เรียก `localhost` ไม่ได้ ต้องใช้ IP เครื่อง dev (เช่น `http://192.168.1.10:4000/api/v1`)
 > หรือ Android emulator ใช้ `http://10.0.2.2:4000/api/v1`
@@ -140,7 +140,7 @@ Port มาตรฐานตอน dev:
 - [x] ตกลง tech stack และโครงสร้าง monorepo
 - [x] เขียนเอกสาร AGENTS.md / docs/
 - [x] Scaffold monorepo (2026-10-23, ตาม [`docs/prompts/01-scaffold-monorepo.md`](docs/prompts/01-scaffold-monorepo.md))
-  - [ ] ยังไม่ได้ทดสอบกับ DB จริง: `pnpm db:up`, `db:migrate`, `db:seed`, `test:e2e` และ `docker build` ของ API (เครื่องที่ scaffold เปิด Docker ไม่ขึ้น)
+  - [x] ทดสอบกับ DB จริงแล้ว (2026-10-23): db:up, db:migrate, db:seed, test:e2e, docker build + docker run ของ API ผ่านทั้งหมด
 - [x] push ขึ้น GitHub: https://github.com/AugWaChi12/stuMatch (2026-10-23)
 - [ ] ตั้ง branch protection ให้ `main` + เช็คว่า CI บน GitHub ผ่าน
 - [ ] ออกแบบ data model (User, Profile, Match, Event ฯลฯ)
