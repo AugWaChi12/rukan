@@ -36,6 +36,7 @@ import {
 import { errorMessage } from '@/i18n';
 import { api, queries, queryClient, queryKeys } from '@/lib/api';
 import { haptic } from '@/lib/haptics';
+import { useSession } from '@/providers/session-provider';
 import { useAppTheme } from '@/theme/theme-provider';
 import { palette, radius, space } from '@/theme/tokens';
 
@@ -44,6 +45,8 @@ type SectionTab = 'chats' | 'bubbles' | 'matches';
 export function ChatsScreen() {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const { session } = useSession();
+  const userId = session?.user.id ?? null;
 
   const [section, setSection] = useState<SectionTab>('chats');
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -52,6 +55,15 @@ export function ChatsScreen() {
   const conversationsQuery = useQuery(queries.myConversations());
   const bubblesQuery = useQuery(queries.myBubbles());
   const matchesQuery = useQuery(queries.myMatches());
+
+  useEffect(() => {
+    if (!userId) return;
+    return api.realtime.subscribeUserInbox(userId, () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myConversations });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myBubbles });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myMatches });
+    });
+  }, [userId]);
 
   const respondBubbleMut = useMutation({
     mutationFn: (input: { bubbleId: string; accept: boolean }) => api.respondBubble(input),
@@ -357,6 +369,18 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
   useEffect(() => {
     void api.markConversationRead(conversationId).then(() => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.myConversations });
+    });
+  }, [conversationId]);
+
+  useEffect(() => {
+    return api.realtime.subscribeConversation(conversationId, (signal) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.messages(conversationId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.conversation(conversationId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myConversations });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.myMatches });
+      if (signal.type === 'new_message') {
+        void api.markConversationRead(conversationId);
+      }
     });
   }, [conversationId]);
 

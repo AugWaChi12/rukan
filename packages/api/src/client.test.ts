@@ -294,4 +294,115 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match
     // ไม่มีทางตั้ง session จาก token ดิบ (กัน login CSRF)
     expect('setSession' in api.auth).toBe(false);
   });
+
+  it('Admin & Subscriptions: getMySubscription, getTierConfigs, updateTierConfig, setUserSubscription', async () => {
+    const subData = {
+      tier: 'premium',
+      source: 'promo',
+      status: 'active',
+      expires_at: null,
+      limits: {
+        daily_drop_limit: 10,
+        has_noon_drop: true,
+        daily_bubble_limit: 30,
+        daily_golden_bubbles: 1,
+        allow_rewind: true,
+        match_expiry_hours: 96,
+        allow_see_likes: true,
+        allow_spotlight_post: true,
+        allow_advanced_filters: true,
+      },
+    };
+    const { client, rpc } = fakeClient({ data: subData, error: null });
+    const api = createApi(client);
+    await expect(api.getMySubscription()).resolves.toEqual(subData);
+    expect(rpc).toHaveBeenCalledWith('get_my_subscription');
+
+    const countsData = {
+      waitlist_total: 42,
+      reports_pending: 3,
+      appeals_pending: 1,
+      active_suspensions: 2,
+    };
+    rpc.mockResolvedValueOnce({ data: countsData, error: null });
+    await expect(api.moderation.getDashboardCounts()).resolves.toEqual(countsData);
+    expect(rpc).toHaveBeenCalledWith('mod_get_dashboard_counts');
+
+    const updatedSub = {
+      user_id: UUID_1,
+      tier: 'premium',
+      source: 'promo',
+      status: 'active',
+      expires_at: null,
+    };
+    rpc.mockResolvedValueOnce({ data: updatedSub, error: null });
+    await expect(
+      api.moderation.setUserSubscription({
+        userId: UUID_1,
+        tier: 'premium',
+        source: 'promo',
+      }),
+    ).resolves.toEqual(updatedSub);
+    expect(rpc).toHaveBeenCalledWith('mod_set_user_subscription', {
+      p_user_id: UUID_1,
+      p_tier: 'premium',
+      p_source: 'promo',
+      p_expires_at: undefined,
+    });
+  });
+
+  it('Realtime: subscribeConversation ใช้ private channel (ไม่ใช้ postgres_changes)', () => {
+    let broadcastHandler: ((msg: { payload: unknown }) => void) | undefined;
+    const fakeChannelObj = {
+      on: vi.fn(),
+      subscribe: vi.fn(),
+    };
+    fakeChannelObj.on.mockImplementation((_type, _filter, cb) => {
+      broadcastHandler = cb;
+      return fakeChannelObj;
+    });
+    fakeChannelObj.subscribe.mockReturnValue(fakeChannelObj);
+    const channel = vi.fn().mockReturnValue(fakeChannelObj);
+    const removeChannel = vi.fn().mockResolvedValue('ok');
+
+    const client = {
+      channel,
+      removeChannel,
+    } as unknown as RukanSupabaseClient;
+
+    const api = createApi(client);
+    const received: unknown[] = [];
+    const unsubscribe = api.realtime.subscribeConversation(UUID_1, (sig) => {
+      received.push(sig);
+    });
+
+    expect(channel).toHaveBeenCalledWith(`conversation:${UUID_1}`, {
+      config: { private: true },
+    });
+    expect(fakeChannelObj.on).toHaveBeenCalledWith(
+      'broadcast',
+      { event: 'chat_event' },
+      expect.any(Function),
+    );
+
+    broadcastHandler?.({
+      payload: {
+        type: 'new_message',
+        conversation_id: UUID_1,
+        message_id: UUID_2,
+        reveal_stage: 2,
+      },
+    });
+    expect(received).toEqual([
+      {
+        type: 'new_message',
+        conversation_id: UUID_1,
+        message_id: UUID_2,
+        reveal_stage: 2,
+      },
+    ]);
+
+    unsubscribe();
+    expect(removeChannel).toHaveBeenCalledWith(fakeChannelObj);
+  });
 });

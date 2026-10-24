@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   conversationDetailSchema,
   getMessagesSchema,
+  realtimeChatSignalSchema,
+  realtimeInboxSignalSchema,
   sendBubbleSchema,
   sendMessageSchema,
 } from './chat';
@@ -9,10 +11,15 @@ import { getMyDropSchema, politeCloseSchema, profileCardSchema, swipeSchema } fr
 import {
   blockedUserItemSchema,
   blockUserFromSchema,
+  modDashboardCountsSchema,
   modRevealAuthorSchema,
+  modSetUserSubscriptionSchema,
   modTakeActionSchema,
+  modUpdateTierConfigSchema,
+  mySubscriptionSchema,
   reportTargetSchema,
   submitAppealSchema,
+  tierConfigSchema,
 } from './safety';
 import { createPostSchema, getFeedSchema, replyPostSchema, spacePostSchema } from './space';
 
@@ -212,5 +219,83 @@ describe('Phase 5 schemas (Daily Drop & Match)', () => {
       unlocked_photo_paths: [`${UUID_2}/00000000-0000-4000-8000-000000000000.webp`],
     };
     expect(profileCardSchema.safeParse(card).success).toBe(true);
+  });
+});
+
+describe('P1 schemas (Tiers, Subscriptions, Admin & Realtime Broadcast)', () => {
+  it('mySubscriptionSchema และ tierConfigSchema ตรวจสอบข้อมูลแพ็กเกจถูกต้อง', () => {
+    const sub = {
+      tier: 'premium',
+      source: 'revenuecat_ios',
+      status: 'active',
+      expires_at: '2026-11-24T00:00:00Z',
+      limits: {
+        daily_drop_limit: 10,
+        has_noon_drop: true,
+        daily_bubble_limit: 30,
+        daily_golden_bubbles: 1,
+        allow_rewind: true,
+        match_expiry_hours: 96,
+        allow_see_likes: true,
+        allow_spotlight_post: true,
+        allow_advanced_filters: true,
+      },
+    };
+    expect(mySubscriptionSchema.safeParse(sub).success).toBe(true);
+
+    const cfg = {
+      tier: 'free',
+      display_name: 'ผู้ใช้ทั่วไป (Free Tier)',
+      daily_drop_limit: 5,
+      has_noon_drop: false,
+      daily_bubble_limit: 3,
+      daily_golden_bubbles: 0,
+      allow_rewind: false,
+      match_expiry_hours: 48,
+      allow_see_likes: false,
+      allow_spotlight_post: false,
+      allow_advanced_filters: false,
+      price_thb_monthly: 0,
+    };
+    expect(tierConfigSchema.safeParse(cfg).success).toBe(true);
+    expect(
+      modUpdateTierConfigSchema.safeParse({
+        tier: 'premium',
+        config: { daily_drop_limit: 12, price_thb_monthly: 199 },
+      }).success,
+    ).toBe(true);
+    expect(
+      modSetUserSubscriptionSchema.safeParse({
+        userId: UUID_1,
+        tier: 'premium',
+        source: 'promo',
+      }).success,
+    ).toBe(true);
+    expect(
+      modDashboardCountsSchema.safeParse({
+        waitlist_total: 10,
+        reports_pending: 2,
+        appeals_pending: 1,
+        active_suspensions: 0,
+      }).success,
+    ).toBe(true);
+  });
+
+  it('realtimeChatSignalSchema และ realtimeInboxSignalSchema ตรวจสัญญาณ private broadcast', () => {
+    expect(
+      realtimeChatSignalSchema.safeParse({
+        type: 'new_message',
+        conversation_id: UUID_1,
+        message_id: UUID_2,
+        reveal_stage: 1,
+      }).success,
+    ).toBe(true);
+    expect(
+      realtimeInboxSignalSchema.safeParse({
+        type: 'daily_drop_ready',
+        drop_date: '2026-10-24',
+        slot: 'evening',
+      }).success,
+    ).toBe(true);
   });
 });

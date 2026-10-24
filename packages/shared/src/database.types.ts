@@ -270,6 +270,7 @@ export type Database = {
     Functions: {
       add_photo: { Args: { p_position: number; p_storage_path: string }; Returns: string };
       block_user_from: { Args: { p_target_id: string; p_target_type: string }; Returns: undefined };
+      can_access_realtime_topic: { Args: { p_topic: string }; Returns: boolean };
       checkin_mood: { Args: { p_mood: string }; Returns: Json };
       complete_onboarding: {
         Args: {
@@ -311,6 +312,7 @@ export type Database = {
       get_my_moderation_history: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_status: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_subscription: { Args: Record<PropertyKey, never>; Returns: Json };
       get_profile_card: { Args: { p_user_id: string }; Returns: Json };
       get_replies: { Args: { p_post_id: string }; Returns: Json };
       get_tier_configs: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -332,6 +334,7 @@ export type Database = {
       mod_get_dashboard_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_get_report: { Args: { p_report_id: string }; Returns: Json };
       mod_get_waitlist_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      mod_list_appeals: { Args: { p_limit?: number; p_status?: string }; Returns: Json };
       mod_list_reports: { Args: { p_limit?: number; p_status?: string }; Returns: Json };
       mod_list_waitlist: {
         Args: { p_limit?: number; p_offset?: number; p_search?: string };
@@ -351,6 +354,10 @@ export type Database = {
         Returns: Json;
       };
       mod_review_appeal: { Args: { p_action_id: string; p_decision: string }; Returns: undefined };
+      mod_set_user_subscription: {
+        Args: { p_expires_at?: string; p_source?: string; p_tier: string; p_user_id: string };
+        Returns: Json;
+      };
       mod_take_action: {
         Args: {
           p_action: string;

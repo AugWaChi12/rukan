@@ -188,3 +188,50 @@ export const requestPhotoUnlockResultSchema = z.object({
   unlocked_all: z.boolean(),
 });
 export type RequestPhotoUnlockResult = z.infer<typeof requestPhotoUnlockResultSchema>;
+
+// ---------------------------------------------------------------------------
+// Realtime Private Broadcast Signal Schemas (ตาม D36 — ไม่มี sender_id / user_id / body)
+// ---------------------------------------------------------------------------
+
+export const REALTIME_CHAT_EVENT_TYPES = [
+  'new_message',
+  'reveal_requested',
+  'identity_revealed',
+  'photo_unlock_updated',
+  'conversation_closed',
+  'bubble_accepted',
+  'conversation_updated',
+] as const;
+export type RealtimeChatEventType = (typeof REALTIME_CHAT_EVENT_TYPES)[number];
+
+export const realtimeChatSignalSchema = z.object({
+  id: z.guid().optional(),
+  type: z.enum(REALTIME_CHAT_EVENT_TYPES),
+  conversation_id: z.guid(),
+  message_id: z.guid().nullable().optional(),
+  reveal_stage: z.number().int().min(0).max(3).nullable().optional(),
+});
+export type RealtimeChatSignal = z.infer<typeof realtimeChatSignalSchema>;
+
+export const REALTIME_INBOX_EVENT_TYPES = [
+  'new_message',
+  'reveal_requested',
+  'identity_revealed',
+  'photo_unlock_updated',
+  'conversation_closed',
+  'bubble_received',
+  'bubble_accepted',
+  'bubble_declined',
+  'daily_drop_ready',
+  'inbox_updated',
+] as const;
+export type RealtimeInboxEventType = (typeof REALTIME_INBOX_EVENT_TYPES)[number];
+
+export const realtimeInboxSignalSchema = z.object({
+  id: z.guid().optional(),
+  type: z.enum(REALTIME_INBOX_EVENT_TYPES),
+  conversation_id: z.guid().nullable().optional(),
+  drop_date: z.string().optional(),
+  slot: z.string().optional(),
+});
+export type RealtimeInboxSignal = z.infer<typeof realtimeInboxSignalSchema>;

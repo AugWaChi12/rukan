@@ -1,64 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { createApi } from '@rukan/api';
+import type {
+  ModAppealItem,
+  ModDashboardCounts,
+  ModReportItem,
+  ModWaitlistRow,
+  ModWaitlistStats,
+  TierConfig,
+} from '@rukan/shared';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 type TabKey = 'overview' | 'waitlist' | 'plans' | 'reports' | 'appeals' | 'audit';
 
-interface DashboardCounts {
-  waitlist_total: number;
-  reports_pending: number;
-  appeals_pending: number;
-  active_suspensions: number;
-}
-
-interface TierConfig {
-  tier: 'free' | 'premium';
-  display_name: string;
-  daily_drop_limit: number;
-  has_noon_drop: boolean;
-  daily_bubble_limit: number;
-  daily_golden_bubbles: number;
-  allow_rewind: boolean;
-  match_expiry_hours: number;
-  allow_see_likes: boolean;
-  allow_spotlight_post: boolean;
-  allow_advanced_filters: boolean;
-  price_thb_monthly: number;
-  updated_at?: string;
-}
-
-interface WaitlistStats {
-  total_count: number;
-  today_count: number;
-  by_area: { area: string; count: number }[];
-  by_age_band: { age_band: string; count: number }[];
-  by_locale: { locale: string; count: number }[];
-}
-
-interface WaitlistRow {
-  id: string;
-  email: string;
-  area: string;
-  age_band: string | null;
-  intents: string[];
-  locale: string;
-  consented_at: string;
-  created_at: string;
-}
-
-interface ReportRow {
-  id: string;
-  target_type: string;
-  target_id: string;
-  reason: string;
-  details: string | null;
-  status: string;
-  created_at: string;
-}
-
 export default function AdminPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const api = useMemo(() => createApi(supabase), [supabase]);
 
   const [loading, setLoading] = useState(true);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
@@ -72,12 +30,13 @@ export default function AdminPage() {
 
   // Dashboard Data
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
-  const [counts, setCounts] = useState<DashboardCounts | null>(null);
-  const [stats, setStats] = useState<WaitlistStats | null>(null);
-  const [waitlistRows, setWaitlistRows] = useState<WaitlistRow[]>([]);
+  const [counts, setCounts] = useState<ModDashboardCounts | null>(null);
+  const [stats, setStats] = useState<ModWaitlistStats | null>(null);
+  const [waitlistRows, setWaitlistRows] = useState<ModWaitlistRow[]>([]);
   const [searchWaitlist, setSearchWaitlist] = useState('');
-  const [reports, setReports] = useState<ReportRow[]>([]);
+  const [reports, setReports] = useState<ModReportItem[]>([]);
   const [reportFilter, setReportFilter] = useState<'open' | 'actioned' | 'dismissed'>('open');
+  const [appeals, setAppeals] = useState<ModAppealItem[]>([]);
   const [tierConfigs, setTierConfigs] = useState<TierConfig[]>([]);
   const [savingTier, setSavingTier] = useState<string | null>(null);
 
@@ -86,48 +45,38 @@ export default function AdminPage() {
 
   const loadTierConfigs = useCallback(async () => {
     try {
-      const { data, error } = await supabase.rpc('get_tier_configs');
-      if (!error && data) {
-        setTierConfigs(data as unknown as TierConfig[]);
-      }
+      const data = await api.getTierConfigs();
+      setTierConfigs(data);
     } catch (err) {
       console.error('Failed to load tier configs:', err);
     }
-  }, [supabase]);
+  }, [api]);
 
-  // โหลดข้อมูล Dashboard
+  // โหลดข้อมูล Dashboard ผ่าน @rukan/api ทั้งหมด
   const refreshAdminData = useCallback(async () => {
     try {
-      const { data: countsData, error: countsError } = await supabase.rpc(
-        'mod_get_dashboard_counts',
-      );
-      if (countsError) {
-        setIsModerator(false);
-        return;
-      }
+      const countsData = await api.moderation.getDashboardCounts();
       setIsModerator(true);
-      setCounts(countsData as unknown as DashboardCounts);
+      setCounts(countsData);
 
-      const { data: statsData } = await supabase.rpc('mod_get_waitlist_stats');
-      if (statsData) setStats(statsData as unknown as WaitlistStats);
+      const [statsData, wlData, repData, appData] = await Promise.all([
+        api.moderation.getWaitlistStats(),
+        api.moderation.listWaitlist({ limit: 100, offset: 0 }),
+        api.moderation.listReports({ status: 'open', limit: 50 }),
+        api.moderation.listAppeals({ status: 'pending', limit: 50 }),
+      ]);
 
-      const { data: wlData } = await supabase.rpc('mod_list_waitlist', {
-        p_limit: 100,
-        p_offset: 0,
-      });
-      if (wlData) setWaitlistRows(wlData as unknown as WaitlistRow[]);
-
-      const { data: repData } = await supabase.rpc('mod_list_reports', {
-        p_status: 'open',
-        p_limit: 50,
-      });
-      if (repData) setReports(repData as unknown as ReportRow[]);
+      setStats(statsData);
+      setWaitlistRows(wlData);
+      setReports(repData);
+      setAppeals(appData);
 
       await loadTierConfigs();
     } catch (err) {
       console.error('Refresh error:', err);
+      setIsModerator(false);
     }
-  }, [supabase, loadTierConfigs]);
+  }, [api, loadTierConfigs]);
 
   useEffect(() => {
     let ignore = false;
@@ -148,33 +97,28 @@ export default function AdminPage() {
 
         setCurrentUserEmail(user.email ?? 'Authenticated');
 
-        const { data: countsData, error: countsError } = await supabase.rpc(
-          'mod_get_dashboard_counts',
-        );
-
-        if (ignore) return;
-        if (countsError) {
-          setIsModerator(false);
-        } else {
+        try {
+          const countsData = await api.moderation.getDashboardCounts();
+          if (ignore) return;
           setIsModerator(true);
-          setCounts(countsData as unknown as DashboardCounts);
+          setCounts(countsData);
 
-          const { data: statsData } = await supabase.rpc('mod_get_waitlist_stats');
-          if (!ignore && statsData) setStats(statsData as unknown as WaitlistStats);
+          const [statsData, wlData, repData, appData] = await Promise.all([
+            api.moderation.getWaitlistStats(),
+            api.moderation.listWaitlist({ limit: 100, offset: 0 }),
+            api.moderation.listReports({ status: 'open', limit: 50 }),
+            api.moderation.listAppeals({ status: 'pending', limit: 50 }),
+          ]);
 
-          const { data: wlData } = await supabase.rpc('mod_list_waitlist', {
-            p_limit: 100,
-            p_offset: 0,
-          });
-          if (!ignore && wlData) setWaitlistRows(wlData as unknown as WaitlistRow[]);
-
-          const { data: repData } = await supabase.rpc('mod_list_reports', {
-            p_status: 'open',
-            p_limit: 50,
-          });
-          if (!ignore && repData) setReports(repData as unknown as ReportRow[]);
-
-          if (!ignore) await loadTierConfigs();
+          if (!ignore) {
+            setStats(statsData);
+            setWaitlistRows(wlData);
+            setReports(repData);
+            setAppeals(appData);
+            await loadTierConfigs();
+          }
+        } catch {
+          if (!ignore) setIsModerator(false);
         }
       } catch (err) {
         console.error('Admin init error:', err);
@@ -189,7 +133,7 @@ export default function AdminPage() {
     return () => {
       ignore = true;
     };
-  }, [supabase, loadTierConfigs]);
+  }, [supabase, api, loadTierConfigs]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -197,16 +141,12 @@ export default function AdminPage() {
     setLoginPending(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail.trim(),
-        password: loginPassword,
-      });
-
-      if (error) {
-        setLoginError(error.message);
-      } else {
-        await refreshAdminData();
-      }
+      await api.auth.signInWithEmail(loginEmail.trim(), loginPassword);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUserEmail(user?.email ?? loginEmail.trim());
+      await refreshAdminData();
     } catch (err: unknown) {
       setLoginError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
     } finally {
@@ -215,30 +155,47 @@ export default function AdminPage() {
   }
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    await api.auth.signOut();
     setIsModerator(false);
     setCurrentUserEmail(null);
   }
 
   async function loadWaitlist(search: string) {
-    const { data } = await supabase.rpc('mod_list_waitlist', {
-      p_limit: 100,
-      p_offset: 0,
-      p_search: search || undefined,
-    });
-    if (data) setWaitlistRows(data as unknown as WaitlistRow[]);
+    try {
+      const data = await api.moderation.listWaitlist({
+        limit: 100,
+        offset: 0,
+        search: search || undefined,
+      });
+      setWaitlistRows(data);
+    } catch (err) {
+      console.error('Failed to load waitlist:', err);
+    }
   }
 
   async function loadReports(status: 'open' | 'actioned' | 'dismissed') {
-    const { data } = await supabase.rpc('mod_list_reports', {
-      p_status: status,
-      p_limit: 50,
-    });
-    if (data) setReports(data as unknown as ReportRow[]);
+    try {
+      const data = await api.moderation.listReports({
+        status,
+        limit: 50,
+      });
+      setReports(data);
+    } catch (err) {
+      console.error('Failed to load reports:', err);
+    }
+  }
+
+  async function loadAppeals() {
+    try {
+      const data = await api.moderation.listAppeals({ status: 'pending', limit: 50 });
+      setAppeals(data);
+    } catch (err) {
+      console.error('Failed to load appeals:', err);
+    }
   }
 
   async function handleTakeAction(
-    report: ReportRow,
+    report: ModReportItem,
     action: 'warn' | 'hide_content' | 'suspend' | 'ban',
     days?: number,
   ) {
@@ -251,25 +208,39 @@ export default function AdminPage() {
         const level =
           action === 'warn' ? 1 : action === 'hide_content' ? 2 : action === 'suspend' ? 3 : 4;
 
-        const { error } = await supabase.rpc('mod_take_action', {
-          p_user_id: report.target_id,
-          p_action: action,
-          p_level: level,
-          p_reason: `Action taken by admin (${action})`,
-          p_report_id: report.id,
-          p_target_type: report.target_type,
-          p_target_id: report.target_id,
-          p_until: untilDate,
+        await api.moderation.takeAction({
+          userId: report.target_id,
+          action,
+          level,
+          reason: `Action taken by admin (${action})`,
+          reportId: report.id,
+          targetType: report.target_type,
+          targetId: report.target_id,
+          until: untilDate,
         });
 
-        if (error) {
-          setActionMessage(`เกิดข้อผิดพลาด: ${error.message}`);
-        } else {
-          setActionMessage(`ดำเนินการ ${action} สำเร็จ`);
-          await loadReports(reportFilter);
-          const { data: countsData } = await supabase.rpc('mod_get_dashboard_counts');
-          if (countsData) setCounts(countsData as unknown as DashboardCounts);
-        }
+        setActionMessage(`ดำเนินการ ${action} สำเร็จ`);
+        await loadReports(reportFilter);
+        const countsData = await api.moderation.getDashboardCounts();
+        setCounts(countsData);
+      } catch (err: unknown) {
+        setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    });
+  }
+
+  async function handleReviewAppeal(actionId: string, decision: 'accepted' | 'rejected') {
+    startTransition(async () => {
+      try {
+        await api.moderation.reviewAppeal({ actionId, decision });
+        setActionMessage(
+          decision === 'accepted'
+            ? '✅ อนุมัติคำอุทธรณ์และปลดระงับบัญชีเรียบร้อยแล้ว'
+            : '❌ ปฏิเสธคำอุทธรณ์เรียบร้อยแล้ว',
+        );
+        await loadAppeals();
+        const countsData = await api.moderation.getDashboardCounts();
+        setCounts(countsData);
       } catch (err: unknown) {
         setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
       }
@@ -325,9 +296,9 @@ export default function AdminPage() {
 
     setSavingTier(tier);
     try {
-      const { error } = await supabase.rpc('mod_update_tier_config', {
-        p_tier: tier,
-        p_config: {
+      await api.moderation.updateTierConfig({
+        tier,
+        config: {
           display_name: config.display_name,
           daily_drop_limit: Number(config.daily_drop_limit),
           has_noon_drop: Boolean(config.has_noon_drop),
@@ -342,16 +313,12 @@ export default function AdminPage() {
         },
       });
 
-      if (error) {
-        setActionMessage(`เกิดข้อผิดพลาดในการบันทึก: ${error.message}`);
-      } else {
-        setActionMessage(
-          `✅ บันทึกการตั้งค่า ${
-            tier === 'free' ? 'Free Tier (ผู้ใช้ทั่วไป)' : 'Rukan Gold (พรีเมียม)'
-          } เรียบร้อยแล้ว!`,
-        );
-        await loadTierConfigs();
-      }
+      setActionMessage(
+        `✅ บันทึกการตั้งค่า ${
+          tier === 'free' ? 'Free Tier (ผู้ใช้ทั่วไป)' : 'Rukan Gold (พรีเมียม)'
+        } เรียบร้อยแล้ว!`,
+      );
+      await loadTierConfigs();
     } catch (err: unknown) {
       setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -501,7 +468,8 @@ export default function AdminPage() {
               key={item.key}
               onClick={() => {
                 setActiveTab(item.key as TabKey);
-                if (item.key === 'reports') loadReports(reportFilter);
+                if (item.key === 'reports') void loadReports(reportFilter);
+                if (item.key === 'appeals') void loadAppeals();
               }}
               className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition ${
                 activeTab === item.key
@@ -1393,11 +1361,57 @@ export default function AdminPage() {
           <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4">
             <h2 className="text-lg font-bold text-[#f2eadb]">⚖️ คำอุทธรณ์จากผู้ใช้ที่ถูกระงับ</h2>
             <p className="text-xs text-[#a69d90]">
-              ผู้ใช้สามารถยื่นอุทธรณ์ได้ภายใน 14 วันหลังถูกลงโทษ (ตามข้อกำหนดนโยบายความโปร่งใส)
+              ผู้ใช้สามารถยื่นอุทธรณ์ได้ภายใน 14 วันหลังถูกลงโทษ (ผู้ตรวจต้องไม่ใช่ Moderator
+              คนเดียวกับผู้สั่งลงโทษ)
             </p>
-            <div className="rounded-2xl border border-[#2a2724] bg-[#25221f] p-8 text-center text-sm text-[#a69d90]">
-              ยังไม่มีคำร้องอุทธรณ์ที่ค้างอยู่
-            </div>
+            {appeals.length > 0 ? (
+              <div className="space-y-4">
+                {appeals.map((ap) => (
+                  <div
+                    key={ap.id}
+                    className="rounded-2xl border border-[#2a2724] bg-[#25221f] p-5 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-[#f2eadb]">
+                            {ap.display_name}
+                          </span>
+                          <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-xs font-bold text-red-300 uppercase">
+                            {ap.action} (Level {ap.level})
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-[#a69d90]">เหตุผลเดิม: {ap.reason}</p>
+                      </div>
+                      <span className="text-xs text-[#a69d90]">
+                        {ap.appealed_at ? new Date(ap.appealed_at).toLocaleString('th-TH') : ''}
+                      </span>
+                    </div>
+                    <p className="rounded-xl bg-[#1b1917] p-3 text-sm text-[#f2eadb]">
+                      {ap.appeal_text ?? '—'}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => handleReviewAppeal(ap.id, 'accepted')}
+                        className="rounded-full bg-emerald-500/20 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/30 transition"
+                      >
+                        ✓ อนุมัติคำอุทธรณ์ & ปลดระงับ
+                      </button>
+                      <button
+                        onClick={() => handleReviewAppeal(ap.id, 'rejected')}
+                        className="rounded-full bg-red-500/20 px-3.5 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30 transition"
+                      >
+                        ✕ ปฏิเสธคำอุทธรณ์
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-[#2a2724] bg-[#25221f] p-8 text-center text-sm text-[#a69d90]">
+                ยังไม่มีคำร้องอุทธรณ์ที่ค้างอยู่
+              </div>
+            )}
           </div>
         )}
       </main>

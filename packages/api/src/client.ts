@@ -15,23 +15,35 @@ import {
   interestsSchema,
   matchListSchema,
   moderationHistoryListSchema,
+  modAppealListSchema,
+  modDashboardCountsSchema,
+  modListAppealsSchema,
   modListReportsSchema,
+  modListWaitlistSchema,
   modReportDetailSchema,
   modReportListSchema,
   modRevealAuthorSchema,
   modRevealedAuthorSchema,
   modReviewAppealSchema,
+  modSetUserSubscriptionResultSchema,
+  modSetUserSubscriptionSchema,
   modTakeActionResultSchema,
   modTakeActionSchema,
+  modUpdateTierConfigSchema,
+  modWaitlistListSchema,
+  modWaitlistStatsSchema,
   moodCheckinResultSchema,
   myBubblesSchema,
   myProfileSchema,
   myStatusSchema,
+  mySubscriptionSchema,
   onboardingSchema,
   photoPositionSchema,
   politeCloseSchema,
   profileCardSchema,
   promptAnswerSchema,
+  realtimeChatSignalSchema,
+  realtimeInboxSignalSchema,
   replyPostResultSchema,
   replyPostSchema,
   reportResultSchema,
@@ -52,6 +64,8 @@ import {
   swipeResultSchema,
   swipeSchema,
   TABLES,
+  tierConfigListSchema,
+  tierConfigSchema,
   updateProfileSchema,
   type BlockedUserItem,
   type BlockUserFromInput,
@@ -66,23 +80,35 @@ import {
   type GetFeedInput,
   type GetMessagesInput,
   type MatchItem,
+  type ModAppealItem,
+  type ModDashboardCounts,
   type ModerationHistoryItem,
+  type ModListAppealsInput,
   type ModListReportsInput,
+  type ModListWaitlistInput,
   type ModReportDetail,
   type ModReportItem,
   type ModRevealAuthorInput,
   type ModRevealedAuthor,
   type ModReviewAppealInput,
+  type ModSetUserSubscriptionInput,
+  type ModSetUserSubscriptionResult,
   type ModTakeActionInput,
   type ModTakeActionResult,
+  type ModUpdateTierConfigInput,
+  type ModWaitlistRow,
+  type ModWaitlistStats,
   type MoodCheckinResult,
   type MyBubbles,
   type MyProfile,
   type MyStatus,
+  type MySubscription,
   type OnboardingInput,
   type PoliteCloseInput,
   type ProfileCard,
   type ProfileMode,
+  type RealtimeChatSignal,
+  type RealtimeInboxSignal,
   type ReplyPostInput,
   type ReplyPostResult,
   type ReportResult,
@@ -101,6 +127,7 @@ import {
   type SubmitAppealInput,
   type SwipeInput,
   type SwipeResult,
+  type TierConfig,
   type UpdateProfileInput,
 } from '@rukan/shared';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -197,6 +224,17 @@ export function createApi(supabase: RukanSupabaseClient) {
 
     async getMyProfile(): Promise<MyProfile> {
       return parse(myProfileSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getMyProfile)));
+    },
+
+    async getMySubscription(): Promise<MySubscription> {
+      return parse(
+        mySubscriptionSchema,
+        unwrap(await supabase.rpc(SUPABASE_RPC.getMySubscription)),
+      );
+    },
+
+    async getTierConfigs(): Promise<TierConfig[]> {
+      return parse(tierConfigListSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getTierConfigs)));
     },
 
     async updateMyProfile(input: UpdateProfileInput): Promise<void> {
@@ -456,6 +494,77 @@ export function createApi(supabase: RukanSupabaseClient) {
           }),
         );
       },
+
+      async listAppeals(input: ModListAppealsInput = {}): Promise<ModAppealItem[]> {
+        const v = modListAppealsSchema.parse(input);
+        return parse(
+          modAppealListSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modListAppeals, {
+              p_status: v.status,
+              p_limit: v.limit,
+            }),
+          ),
+        );
+      },
+
+      async getDashboardCounts(): Promise<ModDashboardCounts> {
+        return parse(
+          modDashboardCountsSchema,
+          unwrap(await supabase.rpc(SUPABASE_RPC.modGetDashboardCounts)),
+        );
+      },
+
+      async getWaitlistStats(): Promise<ModWaitlistStats> {
+        return parse(
+          modWaitlistStatsSchema,
+          unwrap(await supabase.rpc(SUPABASE_RPC.modGetWaitlistStats)),
+        );
+      },
+
+      async listWaitlist(input: ModListWaitlistInput = {}): Promise<ModWaitlistRow[]> {
+        const v = modListWaitlistSchema.parse(input);
+        return parse(
+          modWaitlistListSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modListWaitlist, {
+              p_limit: v.limit,
+              p_offset: v.offset,
+              p_search: v.search || undefined,
+            }),
+          ),
+        );
+      },
+
+      async updateTierConfig(input: ModUpdateTierConfigInput): Promise<TierConfig> {
+        const v = modUpdateTierConfigSchema.parse(input);
+        return parse(
+          tierConfigSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modUpdateTierConfig, {
+              p_tier: v.tier,
+              p_config: v.config,
+            }),
+          ),
+        );
+      },
+
+      async setUserSubscription(
+        input: ModSetUserSubscriptionInput,
+      ): Promise<ModSetUserSubscriptionResult> {
+        const v = modSetUserSubscriptionSchema.parse(input);
+        return parse(
+          modSetUserSubscriptionResultSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modSetUserSubscription, {
+              p_user_id: v.userId,
+              p_tier: v.tier,
+              p_source: v.source,
+              p_expires_at: v.expiresAt ?? undefined,
+            }),
+          ),
+        );
+      },
     },
 
     // -------------------------------------------------------------------------
@@ -711,6 +820,70 @@ export function createApi(supabase: RukanSupabaseClient) {
           .map((p) => urlByPath.get(p))
           .filter((u): u is string => typeof u === 'string'),
       };
+    },
+
+    // -------------------------------------------------------------------------
+    // Realtime Private Broadcast (ตาม D36 — ห้ามใช้ postgres_changes)
+    // -------------------------------------------------------------------------
+
+    realtime: {
+      /**
+       * Subscribe รับสัญญาณในห้องแชทแบบ Private Broadcast (`conversation:<id>`)
+       * payload มีเฉพาะสัญญาณ `{ type, conversation_id, message_id, reveal_stage }`
+       * เมื่อได้รับสัญญาณ ให้ดึงข้อมูลจริงผ่าน RPC เสมอ
+       */
+      subscribeConversation(
+        conversationId: string,
+        onEvent: (signal: RealtimeChatSignal) => void,
+      ): () => void {
+        const channel = supabase
+          .channel(`conversation:${conversationId}`, {
+            config: { private: true },
+          })
+          .on('broadcast', { event: 'chat_event' }, (msg) => {
+            const parsed = realtimeChatSignalSchema.safeParse(msg.payload);
+            if (parsed.success) {
+              onEvent(parsed.data);
+            } else {
+              onEvent({
+                type: 'conversation_updated',
+                conversation_id: conversationId,
+              });
+            }
+          })
+          .subscribe();
+
+        return () => {
+          void supabase.removeChannel(channel);
+        };
+      },
+
+      /**
+       * Subscribe รับสัญญาณภาพรวมของผู้ใช้แบบ Private Broadcast (`user:<uid>`)
+       * เช่น มีข้อความใหม่ในห้องอื่น, มีคนส่ง Bubble, หรือถึงเวลาเปิด Daily Drop
+       */
+      subscribeUserInbox(
+        userId: string,
+        onEvent: (signal: RealtimeInboxSignal) => void,
+      ): () => void {
+        const channel = supabase
+          .channel(`user:${userId}`, {
+            config: { private: true },
+          })
+          .on('broadcast', { event: 'inbox_event' }, (msg) => {
+            const parsed = realtimeInboxSignalSchema.safeParse(msg.payload);
+            if (parsed.success) {
+              onEvent(parsed.data);
+            } else {
+              onEvent({ type: 'inbox_updated' });
+            }
+          })
+          .subscribe();
+
+        return () => {
+          void supabase.removeChannel(channel);
+        };
+      },
     },
   };
 }
