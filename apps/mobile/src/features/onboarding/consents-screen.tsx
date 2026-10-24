@@ -44,6 +44,7 @@ export function ConsentsScreen() {
         disabled={!allChecked}
         loading={accept.isPending}
       />
+      <Button variant="ghost" label={t('common.signOut')} onPress={() => void api.auth.signOut()} />
     </Screen>
   );
 }
