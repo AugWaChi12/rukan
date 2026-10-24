@@ -300,8 +300,8 @@ export default function AdminPage() {
         tier,
         config: {
           display_name: config.display_name,
-          daily_drop_limit: Number(config.daily_drop_limit),
-          has_noon_drop: Boolean(config.has_noon_drop),
+          swipe_batch_size: Number(config.swipe_batch_size),
+          swipe_window_hours: Number(config.swipe_window_hours),
           daily_bubble_limit: Number(config.daily_bubble_limit),
           daily_golden_bubbles: Number(config.daily_golden_bubbles),
           allow_rewind: Boolean(config.allow_rewind),
@@ -785,15 +785,31 @@ export default function AdminPage() {
                       <div className="mt-6 space-y-4">
                         <div>
                           <label className="block text-xs font-semibold text-[#a69d90] mb-1">
-                            🎴 การ์ดแนะนำ Daily Drop (คน/วัน)
+                            🎴 ปัดได้กี่ใบต่อรอบ (ใบ)
                           </label>
                           <input
                             type="number"
                             min={1}
-                            max={50}
-                            value={free.daily_drop_limit}
+                            max={200}
+                            value={free.swipe_batch_size}
                             onChange={(e) =>
-                              updateTierField('free', 'daily_drop_limit', Number(e.target.value))
+                              updateTierField('free', 'swipe_batch_size', Number(e.target.value))
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            ⏱️ รอบปัดรีใหม่หลังปัดใบแรก (ชั่วโมง)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={48}
+                            value={free.swipe_window_hours}
+                            onChange={(e) =>
+                              updateTierField('free', 'swipe_window_hours', Number(e.target.value))
                             }
                             className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
                           />
@@ -858,11 +874,6 @@ export default function AdminPage() {
                           </span>
 
                           {[
-                            {
-                              key: 'has_noon_drop',
-                              label: '☀️ Drop รอบพิเศษตอนเที่ยง (Noon Drop)',
-                              desc: 'ได้รับ Drop เพิ่มอีกรอบตอน 12:00',
-                            },
                             {
                               key: 'allow_rewind',
                               label: '⏪ สิทธิ์ย้อนการ์ดที่ปัดผ่าน (Rewind)',
@@ -966,15 +977,35 @@ export default function AdminPage() {
                       <div className="mt-6 space-y-4">
                         <div>
                           <label className="block text-xs font-semibold text-[#a69d90] mb-1">
-                            🎴 การ์ดแนะนำ Daily Drop (คน/วัน)
+                            🎴 ปัดได้กี่ใบต่อรอบ (ใบ)
                           </label>
                           <input
                             type="number"
                             min={1}
-                            max={100}
-                            value={premium.daily_drop_limit}
+                            max={200}
+                            value={premium.swipe_batch_size}
                             onChange={(e) =>
-                              updateTierField('premium', 'daily_drop_limit', Number(e.target.value))
+                              updateTierField('premium', 'swipe_batch_size', Number(e.target.value))
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            ⏱️ รอบปัดรีใหม่หลังปัดใบแรก (ชั่วโมง)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={48}
+                            value={premium.swipe_window_hours}
+                            onChange={(e) =>
+                              updateTierField(
+                                'premium',
+                                'swipe_window_hours',
+                                Number(e.target.value),
+                              )
                             }
                             className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
                           />
@@ -1067,11 +1098,6 @@ export default function AdminPage() {
                           </span>
 
                           {[
-                            {
-                              key: 'has_noon_drop',
-                              label: '☀️ Drop รอบพิเศษตอนเที่ยง (Noon Drop)',
-                              desc: 'ได้รับ Drop เพิ่มอีกรอบตอน 12:00',
-                            },
                             {
                               key: 'allow_rewind',
                               label: '⏪ สิทธิ์ย้อนการ์ดที่ปัดผ่าน (Rewind)',
@@ -1169,16 +1195,10 @@ export default function AdminPage() {
                     highlight: true,
                   },
                   {
-                    feature: 'การ์ดแนะนำ Daily Drop (19:00)',
-                    freeVal: `${free.daily_drop_limit} คน / วัน`,
-                    premVal: `${premium.daily_drop_limit} คน / วัน`,
+                    feature: 'โควตาปัดต่อรอบ (Swipe)',
+                    freeVal: `${free.swipe_batch_size} ใบ / ${free.swipe_window_hours} ชม.`,
+                    premVal: `${premium.swipe_batch_size} ใบ / ${premium.swipe_window_hours} ชม.`,
                     highlight: true,
-                  },
-                  {
-                    feature: 'Drop รอบพิเศษตอนเที่ยง (Noon Drop 12:00)',
-                    freeVal: free.has_noon_drop ? '✓ เปิดใช้งาน' : '✗ ไม่มี',
-                    premVal: premium.has_noon_drop ? '✓ ได้รับเพิ่มอีกรอบ' : '✗ ปิด',
-                    highlight: premium.has_noon_drop,
                   },
                   {
                     feature: 'โควตาส่ง Bubble ทักทายใน Space',
