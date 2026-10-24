@@ -268,14 +268,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      add_photo: {
-        Args: { p_position: number; p_storage_path: string };
-        Returns: string;
-      };
-      block_user_from: {
-        Args: { p_target_id: string; p_target_type: string };
-        Returns: undefined;
-      };
+      add_photo: { Args: { p_position: number; p_storage_path: string }; Returns: string };
+      block_user_from: { Args: { p_target_id: string; p_target_type: string }; Returns: undefined };
       checkin_mood: { Args: { p_mood: string }; Returns: Json };
       complete_onboarding: {
         Args: {
@@ -333,17 +327,11 @@ export type Database = {
         Returns: Json;
       };
       like_post: { Args: { p_post_id: string }; Returns: undefined };
-      mark_conversation_read: {
-        Args: { p_conversation_id: string };
-        Returns: undefined;
-      };
+      mark_conversation_read: { Args: { p_conversation_id: string }; Returns: undefined };
       mod_get_dashboard_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_get_report: { Args: { p_report_id: string }; Returns: Json };
       mod_get_waitlist_stats: { Args: Record<PropertyKey, never>; Returns: Json };
-      mod_list_reports: {
-        Args: { p_limit?: number; p_status?: string };
-        Returns: Json;
-      };
+      mod_list_reports: { Args: { p_limit?: number; p_status?: string }; Returns: Json };
       mod_list_waitlist: {
         Args: { p_limit?: number; p_offset?: number; p_search?: string };
         Returns: {
@@ -361,10 +349,7 @@ export type Database = {
         Args: { p_reason: string; p_target_id: string; p_target_type: string };
         Returns: Json;
       };
-      mod_review_appeal: {
-        Args: { p_action_id: string; p_decision: string };
-        Returns: undefined;
-      };
+      mod_review_appeal: { Args: { p_action_id: string; p_decision: string }; Returns: undefined };
       mod_take_action: {
         Args: {
           p_action: string;
@@ -378,51 +363,22 @@ export type Database = {
         };
         Returns: Json;
       };
-      polite_close: {
-        Args: { p_match_id: string; p_template_id?: string };
-        Returns: undefined;
-      };
-      record_consent: {
-        Args: { p_doc: string; p_version: string };
-        Returns: undefined;
-      };
+      polite_close: { Args: { p_match_id: string; p_template_id?: string }; Returns: undefined };
+      record_consent: { Args: { p_doc: string; p_version: string }; Returns: undefined };
       remove_photo: { Args: { p_photo_id: string }; Returns: string };
       reply_post: { Args: { p_body: string; p_post_id: string }; Returns: Json };
       report_target: {
-        Args: {
-          p_details?: string;
-          p_reason: string;
-          p_target_id: string;
-          p_target_type: string;
-        };
+        Args: { p_details?: string; p_reason: string; p_target_id: string; p_target_type: string };
         Returns: Json;
       };
-      request_photo_unlock: {
-        Args: { p_conversation_id: string };
-        Returns: Json;
-      };
+      request_photo_unlock: { Args: { p_conversation_id: string }; Returns: Json };
       request_reveal: { Args: { p_conversation_id: string }; Returns: Json };
-      respond_bubble: {
-        Args: { p_accept: boolean; p_bubble_id: string };
-        Returns: Json;
-      };
-      send_bubble: {
-        Args: { p_message: string; p_post_id: string };
-        Returns: Json;
-      };
-      send_message: {
-        Args: { p_body: string; p_conversation_id: string };
-        Returns: Json;
-      };
+      respond_bubble: { Args: { p_accept: boolean; p_bubble_id: string }; Returns: Json };
+      send_bubble: { Args: { p_message: string; p_post_id: string }; Returns: Json };
+      send_message: { Args: { p_body: string; p_conversation_id: string }; Returns: Json };
       set_interests: { Args: { p_interest_ids: string[] }; Returns: undefined };
-      set_prompt_answer: {
-        Args: { p_answer: string; p_prompt_id: string };
-        Returns: undefined;
-      };
-      submit_appeal: {
-        Args: { p_action_id: string; p_appeal_text: string };
-        Returns: undefined;
-      };
+      set_prompt_answer: { Args: { p_answer: string; p_prompt_id: string }; Returns: undefined };
+      submit_appeal: { Args: { p_action_id: string; p_appeal_text: string }; Returns: undefined };
       swipe: {
         Args: { p_candidate_id: string; p_direction: string; p_mode: string };
         Returns: Json;
@@ -466,9 +422,7 @@ export type Tables<
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R;
@@ -491,9 +445,7 @@ export type TablesInsert<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I;
     }
@@ -515,9 +467,7 @@ export type TablesUpdate<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U;
     }
@@ -539,9 +489,7 @@ export type Enums<
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
     ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
@@ -555,9 +503,7 @@ export type CompositeTypes<
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never) = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
     ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
