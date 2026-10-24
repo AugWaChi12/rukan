@@ -4,19 +4,156 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { AppText, BouncyPressable, Button, Screen, TextField } from '@/components/ui';
 import { errorMessage } from '@/i18n';
 import { api } from '@/lib/api';
 import { useAppTheme } from '@/theme/theme-provider';
-import { radius, space } from '@/theme/tokens';
+import { palette, radius, space } from '@/theme/tokens';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_ICON_SVG =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="%23EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="%234285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="%23FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="%2334A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
 
+/** ดึงค่าจาก query / hash ของ redirect URL */
+function param(url: string, key: string): string | undefined {
+  const match = url.match(new RegExp(`[?&#]${key}=([^&#]+)`));
+  return match?.[1] ? decodeURIComponent(match[1].replace(/\+/g, ' ')) : undefined;
+}
+
+async function signInWithGoogle() {
+  const redirectUri =
+    Platform.OS === 'web'
+      ? `${window.location.origin}/auth/callback`
+      : Linking.createURL('auth/callback', { scheme: 'rukan' });
+
+  const oauth = await api.auth.signInWithOAuth('google', redirectUri);
+  if (!oauth?.url) throw new Error('oauth_url_missing');
+
+  if (Platform.OS === 'web') {
+    window.location.href = oauth.url;
+    return;
+  }
+
+  const res = await WebBrowser.openAuthSessionAsync(oauth.url, redirectUri);
+  // ผู้ใช้กดปิดหน้าต่างเอง → ไม่ถือเป็น error
+  if (res.type !== 'success') return;
+
+  const failure = param(res.url, 'error_description') ?? param(res.url, 'error');
+  if (failure) throw new Error(failure);
+
+  const code = param(res.url, 'code');
+  if (code) {
+    await api.auth.exchangeCodeForSession(code);
+    return;
+  }
+  const accessToken = param(res.url, 'access_token');
+  const refreshToken = param(res.url, 'refresh_token');
+  if (accessToken && refreshToken) {
+    await api.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+  }
+  // สำเร็จแล้ว SessionProvider จะเห็น session ใหม่ → navigator พาไปหน้าถัดไปเอง
+}
+
+/** หน้าแรกของแอป: Google เป็นทางหลัก อีเมลเป็นทางรอง */
 export function SignInScreen() {
+  const [step, setStep] = useState<'welcome' | 'email'>('welcome');
+  return step === 'welcome' ? (
+    <WelcomeStep onUseEmail={() => setStep('email')} />
+  ) : (
+    <EmailStep onBack={() => setStep('welcome')} />
+  );
+}
+
+function WelcomeStep({ onUseEmail }: { onUseEmail: () => void }) {
+  const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const google = useMutation({ mutationFn: signInWithGoogle });
+
+  return (
+    <Screen scroll={false} style={styles.welcome}>
+      {/* แบรนด์ */}
+      <View style={styles.brandRow}>
+        <View style={[styles.brandDot, { backgroundColor: colors.accentSoft }]} />
+        <AppText style={styles.brandName}>{t('common.appName')}</AppText>
+      </View>
+
+      {/* ภาพประกอบ: ฟองสามลูกซ้อนกัน = คนสามคนที่เพิ่งเริ่มรู้จักกัน */}
+      <View style={styles.art} accessible={false}>
+        <View style={[styles.bubble, styles.bubbleA, { backgroundColor: palette.rose }]} />
+        <View style={[styles.bubble, styles.bubbleB, { backgroundColor: palette.lilac }]} />
+        <View style={[styles.bubble, styles.bubbleC, { backgroundColor: palette.sage }]} />
+      </View>
+
+      {/* ข้อความหลัก */}
+      <View style={styles.copy}>
+        <AppText style={[styles.headline, { color: colors.text }]}>{t('auth.headline')}</AppText>
+        <AppText style={[styles.lede, { color: colors.muted }]}>{t('auth.lede')}</AppText>
+      </View>
+
+      {/* ปุ่ม */}
+      <View style={styles.actions}>
+        <BouncyPressable
+          accessibilityRole="button"
+          accessibilityLabel={t('auth.continueWithGoogle')}
+          onPress={() => google.mutate()}
+          disabled={google.isPending}
+          activeScale={0.98}
+          style={[
+            styles.googleButton,
+            { backgroundColor: colors.card, borderColor: colors.lineStrong },
+          ]}
+        >
+          {google.isPending ? (
+            <ActivityIndicator color={colors.text} />
+          ) : (
+            <>
+              <Image
+                source={{ uri: GOOGLE_ICON_SVG }}
+                style={styles.googleIcon}
+                contentFit="contain"
+              />
+              <AppText style={[styles.googleLabel, { color: colors.text }]}>
+                {t('auth.continueWithGoogle')}
+              </AppText>
+            </>
+          )}
+        </BouncyPressable>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={onUseEmail}
+          hitSlop={8}
+          style={({ pressed }) => [styles.textLink, { opacity: pressed ? 0.5 : 1 }]}
+        >
+          <AppText style={[styles.textLinkLabel, { color: colors.text }]}>
+            {t('auth.useEmail')}
+          </AppText>
+        </Pressable>
+
+        {google.isError ? (
+          <AppText variant="error" style={styles.center}>
+            {errorMessage(google.error)}
+          </AppText>
+        ) : null}
+
+        <AppText variant="small" style={[styles.center, styles.legal]}>
+          {t('auth.legal')}
+        </AppText>
+      </View>
+    </Screen>
+  );
+}
+
+function EmailStep({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
   const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
@@ -30,194 +167,142 @@ export function SignInScreen() {
         : api.auth.signUpWithEmail(email.trim(), password),
   });
 
-  const googleSignIn = useMutation({
-    mutationFn: async () => {
-      const redirectUri =
-        Platform.OS === 'web'
-          ? typeof window !== 'undefined'
-            ? `${window.location.origin}/auth/callback`
-            : Linking.createURL('auth/callback')
-          : Linking.createURL('auth/callback', { scheme: 'rukan' });
-
-      const oauth = await api.auth.signInWithOAuth('google', redirectUri);
-      if (!oauth?.url) throw new Error('Cannot get OAuth URL');
-
-      if (Platform.OS === 'web') {
-        window.location.href = oauth.url;
-        return;
-      }
-
-      const res = await WebBrowser.openAuthSessionAsync(oauth.url, redirectUri);
-      if (res.type === 'success' && res.url) {
-        const url = res.url;
-        const errorMatch =
-          url.match(/[?&#]error_description=([^&#]+)/) || url.match(/[?&#]error=([^&#]+)/);
-        if (errorMatch?.[1]) {
-          throw new Error(decodeURIComponent(errorMatch[1].replace(/\+/g, ' ')));
-        }
-
-        const codeMatch = url.match(/[?&]code=([^&#]+)/);
-        if (codeMatch?.[1]) {
-          const code = decodeURIComponent(codeMatch[1]);
-          await api.auth.exchangeCodeForSession(code);
-          return;
-        }
-
-        const accessMatch = url.match(/[#&]access_token=([^&#]+)/);
-        const refreshMatch = url.match(/[#&]refresh_token=([^&#]+)/);
-        if (accessMatch?.[1] && refreshMatch?.[1]) {
-          await api.auth.setSession({
-            access_token: decodeURIComponent(accessMatch[1]),
-            refresh_token: decodeURIComponent(refreshMatch[1]),
-          });
-          return;
-        }
-      }
-    },
-  });
-
-  const error = googleSignIn.error || submit.error;
+  const isSignIn = mode === 'signIn';
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <AppText variant="title">{t('common.appName')}</AppText>
-        <AppText variant="muted">{t('common.tagline')}</AppText>
-      </View>
-
-      <View style={styles.sectionHeader}>
-        <AppText variant="heading">{t('auth.title')}</AppText>
-        <AppText variant="muted">{t('auth.subtitle')}</AppText>
-      </View>
-
-      {/* Social Login Options */}
-      <View style={styles.socialGroup}>
-        <BouncyPressable
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Screen>
+        <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('auth.continueWithGoogle')}
-          onPress={() => googleSignIn.mutate()}
-          disabled={googleSignIn.isPending}
-          style={[
-            styles.googleButton,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.lineStrong,
-            },
-          ]}
+          accessibilityLabel={t('auth.back')}
+          onPress={onBack}
+          hitSlop={12}
+          style={({ pressed }) => [styles.back, { opacity: pressed ? 0.5 : 1 }]}
         >
-          {googleSignIn.isPending ? (
-            <ActivityIndicator color={colors.text} size="small" />
-          ) : (
-            <View style={styles.socialButtonContent}>
-              <Image
-                source={{ uri: GOOGLE_ICON_SVG }}
-                style={styles.googleIcon}
-                contentFit="contain"
-              />
-              <AppText variant="body" style={styles.socialButtonLabel}>
-                {t('auth.continueWithGoogle')}
-              </AppText>
-            </View>
-          )}
-        </BouncyPressable>
-      </View>
+          <AppText style={[styles.backLabel, { color: colors.text }]}>‹ {t('auth.back')}</AppText>
+        </Pressable>
 
-      {/* Divider */}
-      <View style={styles.dividerRow}>
-        <View style={[styles.dividerLine, { backgroundColor: colors.line }]} />
-        <AppText variant="small" style={{ color: colors.muted }}>
-          {t('auth.orDivider')}
-        </AppText>
-        <View style={[styles.dividerLine, { backgroundColor: colors.line }]} />
-      </View>
+        <View style={styles.emailHeader}>
+          <AppText style={[styles.emailTitle, { color: colors.text }]}>
+            {isSignIn ? t('auth.emailTitleSignIn') : t('auth.emailTitleSignUp')}
+          </AppText>
+          <AppText variant="muted">{t('auth.emailSubtitle')}</AppText>
+        </View>
 
-      {/* Email / Password Form */}
-      <TextField
-        label={t('auth.email')}
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-        inputMode="email"
-      />
-      <TextField
-        label={t('auth.password')}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-      />
+        <View style={styles.form}>
+          <TextField
+            label={t('auth.email')}
+            placeholder={t('auth.emailPlaceholder')}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            inputMode="email"
+            returnKeyType="next"
+          />
+          <TextField
+            label={t('auth.password')}
+            hint={isSignIn ? undefined : t('auth.passwordHint')}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoComplete={isSignIn ? 'current-password' : 'new-password'}
+            returnKeyType="go"
+            onSubmitEditing={() => {
+              if (email && password.length >= 6) submit.mutate();
+            }}
+          />
+        </View>
 
-      {error ? <AppText variant="error">{errorMessage(error)}</AppText> : null}
-      {submit.isSuccess && mode === 'signUp' ? (
-        <AppText variant="muted">{t('auth.checkEmail')}</AppText>
-      ) : null}
+        {submit.isError ? <AppText variant="error">{errorMessage(submit.error)}</AppText> : null}
+        {submit.isSuccess && !isSignIn ? (
+          <View style={[styles.notice, { backgroundColor: colors.sageTint }]}>
+            <AppText style={{ color: colors.sageDeep }}>{t('auth.checkEmail')}</AppText>
+          </View>
+        ) : null}
 
-      <Button
-        label={mode === 'signIn' ? t('auth.signIn') : t('auth.signUp')}
-        onPress={() => submit.mutate()}
-        loading={submit.isPending}
-        disabled={!email || password.length < 6 || googleSignIn.isPending}
-      />
-      <Button
-        variant="ghost"
-        label={mode === 'signIn' ? t('auth.toSignUp') : t('auth.toSignIn')}
-        onPress={() => {
-          submit.reset();
-          googleSignIn.reset();
-          setMode(mode === 'signIn' ? 'signUp' : 'signIn');
-        }}
-      />
-    </Screen>
+        <Button
+          label={isSignIn ? t('auth.signIn') : t('auth.signUp')}
+          onPress={() => submit.mutate()}
+          loading={submit.isPending}
+          disabled={!email || password.length < 6}
+        />
+
+        <View style={styles.switchRow}>
+          <AppText variant="muted">
+            {isSignIn ? t('auth.noAccount') : t('auth.haveAccount')}
+          </AppText>
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => {
+              submit.reset();
+              setMode(isSignIn ? 'signUp' : 'signIn');
+            }}
+          >
+            <AppText style={[styles.switchLink, { color: colors.accent }]}>
+              {isSignIn ? t('auth.toSignUp') : t('auth.toSignIn')}
+            </AppText>
+          </Pressable>
+        </View>
+      </Screen>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    marginBottom: space.xs,
-  },
-  sectionHeader: {
-    marginBottom: space.md,
-  },
-  socialGroup: {
-    gap: space.sm,
-    marginBottom: space.xs,
-  },
+  flex: { flex: 1 },
+  center: { textAlign: 'center' },
+
+  // --- welcome ---
+  welcome: { justifyContent: 'space-between', paddingBottom: space.lg, gap: 0 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingTop: space.sm },
+  brandDot: { width: 14, height: 14, borderRadius: 7 },
+  brandName: { fontSize: 18, fontWeight: '800', letterSpacing: -0.3 },
+
+  art: { height: 190, alignSelf: 'center', width: 240, marginVertical: space.lg },
+  bubble: { position: 'absolute', borderRadius: 999, opacity: 0.85 },
+  bubbleA: { width: 130, height: 130, left: 10, top: 30 },
+  bubbleB: { width: 110, height: 110, right: 14, top: 0 },
+  bubbleC: { width: 92, height: 92, right: 52, bottom: 0 },
+
+  copy: { gap: space.md },
+  headline: { fontSize: 34, lineHeight: 42, fontWeight: '800', letterSpacing: -0.8 },
+  lede: { fontSize: 16, lineHeight: 24, maxWidth: 320 },
+
+  actions: { gap: space.md, marginTop: space.xxl },
   googleButton: {
-    minHeight: 52,
-    borderRadius: radius.pill,
+    height: 56,
+    borderRadius: radius.md,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  socialButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: space.md,
   },
-  googleIcon: {
-    width: 22,
-    height: 22,
-  },
-  socialButtonLabel: {
-    fontWeight: '600',
-  },
-  dividerRow: {
+  googleIcon: { width: 20, height: 20 },
+  googleLabel: { fontSize: 16, fontWeight: '600' },
+  textLink: { alignSelf: 'center', paddingVertical: space.sm },
+  textLinkLabel: { fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
+  legal: { lineHeight: 18, paddingHorizontal: space.lg },
+
+  // --- email ---
+  back: { alignSelf: 'flex-start', paddingVertical: space.xs },
+  backLabel: { fontSize: 16, fontWeight: '600' },
+  emailHeader: { gap: space.xs, marginTop: space.md, marginBottom: space.sm },
+  emailTitle: { fontSize: 28, lineHeight: 36, fontWeight: '800', letterSpacing: -0.5 },
+  form: { gap: space.lg },
+  notice: { borderRadius: radius.sm, padding: space.md },
+  switchRow: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: space.md,
-    gap: space.md,
+    gap: space.xs,
+    marginTop: space.xs,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
+  switchLink: { fontSize: 14, fontWeight: '700' },
 });
