@@ -69,7 +69,7 @@ select set_eq(
     'request_reveal', 'request_photo_unlock',
     'can_access_realtime_topic',
     -- เฟส 5: Daily Drop + Match + Profile Card
-    'get_my_drop', 'swipe', 'get_my_matches',
+    'get_my_deck', 'swipe', 'get_my_matches',
     'polite_close', 'unmatch', 'get_profile_card',
     -- Master & Plans & Subscriptions
     'get_my_subscription', 'mod_update_tier_config', 'mod_set_user_subscription'
