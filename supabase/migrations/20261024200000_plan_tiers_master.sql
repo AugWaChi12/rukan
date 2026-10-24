@@ -19,6 +19,8 @@ create table if not exists private.tier_configs (
   updated_by uuid references auth.users(id)
 );
 
+alter table private.tier_configs enable row level security;
+
 -- Seed initial configs
 insert into private.tier_configs (
   tier, display_name, daily_drop_limit, has_noon_drop, daily_bubble_limit,
