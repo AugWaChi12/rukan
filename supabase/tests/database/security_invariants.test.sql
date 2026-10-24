@@ -55,23 +55,24 @@ select set_eq(
     'block_user_from', 'unblock_user', 'get_my_blocks',
     'report_target', 'get_my_moderation_history', 'submit_appeal',
     'mod_list_reports', 'mod_get_report', 'mod_reveal_author',
-    'mod_take_action', 'mod_review_appeal',
+    'mod_take_action', 'mod_review_appeal', 'mod_list_appeals',
     'mod_get_dashboard_counts', 'mod_get_waitlist_stats', 'mod_list_waitlist',
     -- เฟส 3: Space
     'create_post', 'get_feed', 'delete_my_post',
     'like_post', 'unlike_post',
     'reply_post', 'get_replies', 'delete_my_reply',
     'checkin_mood',
-    -- เฟส 4: Bubble + แชท
+    -- เฟส 4: Bubble + แชท + Realtime Private Broadcast
     'send_bubble', 'get_my_bubbles', 'respond_bubble',
     'get_conversations', 'get_conversation', 'get_messages',
     'send_message', 'mark_conversation_read',
     'request_reveal', 'request_photo_unlock',
+    'can_access_realtime_topic',
     -- เฟส 5: Daily Drop + Match + Profile Card
     'get_my_drop', 'swipe', 'get_my_matches',
     'polite_close', 'unmatch', 'get_profile_card',
-    -- Master & Plans
-    'mod_update_tier_config'
+    -- Master & Plans & Subscriptions
+    'get_my_subscription', 'mod_update_tier_config', 'mod_set_user_subscription'
   ],
   'authenticated เรียกได้เฉพาะ API ที่ประกาศไว้'
 );
