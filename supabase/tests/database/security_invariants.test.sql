@@ -56,6 +56,7 @@ select set_eq(
     'report_target', 'get_my_moderation_history', 'submit_appeal',
     'mod_list_reports', 'mod_get_report', 'mod_reveal_author',
     'mod_take_action', 'mod_review_appeal',
+    'mod_get_dashboard_counts', 'mod_get_waitlist_stats', 'mod_list_waitlist',
     -- เฟส 3: Space
     'create_post', 'get_feed', 'delete_my_post',
     'like_post', 'unlike_post',
