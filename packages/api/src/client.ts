@@ -8,10 +8,8 @@ import {
   conversationListSchema,
   createPostResultSchema,
   createPostSchema,
-  dailyDropListSchema,
   getFeedSchema,
   getMessagesSchema,
-  getMyDropSchema,
   interestsSchema,
   matchListSchema,
   moderationHistoryListSchema,
@@ -61,6 +59,7 @@ import {
   STORAGE_BUCKETS,
   submitAppealSchema,
   SUPABASE_RPC,
+  swipeDeckSchema,
   swipeResultSchema,
   swipeSchema,
   TABLES,
@@ -76,7 +75,6 @@ import {
   type CreatePostInput,
   type CreatePostResult,
   type Database,
-  type DropCandidate,
   type GetFeedInput,
   type GetMessagesInput,
   type MatchItem,
@@ -106,7 +104,6 @@ import {
   type OnboardingInput,
   type PoliteCloseInput,
   type ProfileCard,
-  type ProfileMode,
   type RealtimeChatSignal,
   type RealtimeInboxSignal,
   type ReplyPostInput,
@@ -125,6 +122,7 @@ import {
   type SpacePost,
   type SpaceReply,
   type SubmitAppealInput,
+  type SwipeDeck,
   type SwipeInput,
   type SwipeResult,
   type TierConfig,
@@ -754,15 +752,11 @@ export function createApi(supabase: RukanSupabaseClient) {
     },
 
     // -------------------------------------------------------------------------
-    // เฟส 5: Daily Drop & Match & Profile Card
+    // เฟส 5: Swipe deck & Match & Profile Card
     // -------------------------------------------------------------------------
 
-    async getMyDrop(mode: ProfileMode): Promise<DropCandidate[]> {
-      const v = getMyDropSchema.parse(mode);
-      return parse(
-        dailyDropListSchema,
-        unwrap(await supabase.rpc(SUPABASE_RPC.getMyDrop, { p_mode: v })),
-      );
+    async getMyDeck(): Promise<SwipeDeck> {
+      return parse(swipeDeckSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getMyDeck)));
     },
 
     async swipe(input: SwipeInput): Promise<SwipeResult> {
@@ -772,7 +766,6 @@ export function createApi(supabase: RukanSupabaseClient) {
         unwrap(
           await supabase.rpc(SUPABASE_RPC.swipe, {
             p_candidate_id: v.candidateId,
-            p_mode: v.mode,
             p_direction: v.direction,
           }),
         ),

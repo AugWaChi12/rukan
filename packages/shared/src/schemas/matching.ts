@@ -17,11 +17,8 @@ export type PoliteCloseTemplate = (typeof POLITE_CLOSE_TEMPLATES)[number];
 // Input Schemas
 // ---------------------------------------------------------------------------
 
-export const getMyDropSchema = z.enum(PROFILE_MODES);
-
 export const swipeSchema = z.object({
   candidateId: z.guid(),
-  mode: z.enum(PROFILE_MODES),
   direction: z.enum(SWIPE_DIRECTIONS),
 });
 export type SwipeInput = z.input<typeof swipeSchema>;
@@ -41,28 +38,43 @@ export const dropCandidatePromptSchema = z.object({
   answer: z.string(),
 });
 
-export const dropCandidateSchema = z.object({
+export const deckCardSchema = z.object({
   candidate_id: z.guid(),
-  mode: z.enum(PROFILE_MODES),
-  rank: z.number().int(),
-  action: z.enum(SWIPE_DIRECTIONS).nullable(),
   display_name: z.string(),
   age: z.number().int().nullable(),
   bio: z.string().nullable(),
   occupation: z.string().nullable(),
   area_id: z.string().nullable(),
   org_badge: z.string().nullable(),
+  modes: z.array(z.enum(PROFILE_MODES)),
   interests: z.array(z.string()),
   prompts: z.array(dropCandidatePromptSchema),
   photo_stage: z.number().int(),
 });
-export type DropCandidate = z.infer<typeof dropCandidateSchema>;
-export const dailyDropListSchema = z.array(dropCandidateSchema);
+export type DeckCard = z.infer<typeof deckCardSchema>;
+
+/** โควตาปัดต่อรอบ — resets_at เป็น null จนกว่าจะปัดใบแรกของรอบ */
+export const swipeQuotaSchema = z.object({
+  batch_size: z.number().int(),
+  window_hours: z.number().int(),
+  used: z.number().int(),
+  remaining: z.number().int(),
+  window_started_at: z.string().nullable(),
+  resets_at: z.string().nullable(),
+});
+export type SwipeQuota = z.infer<typeof swipeQuotaSchema>;
+
+export const swipeDeckSchema = z.object({
+  quota: swipeQuotaSchema,
+  cards: z.array(deckCardSchema),
+});
+export type SwipeDeck = z.infer<typeof swipeDeckSchema>;
 
 export const swipeResultSchema = z.object({
   matched: z.boolean(),
   match_id: z.guid().nullable(),
   conversation_id: z.guid().nullable(),
+  quota: swipeQuotaSchema,
 });
 export type SwipeResult = z.infer<typeof swipeResultSchema>;
 

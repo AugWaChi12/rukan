@@ -157,7 +157,7 @@ describe('setInterests / setPromptAnswer / photos', () => {
   });
 });
 
-describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match)', () => {
+describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match)', () => {
   const UUID_1 = '11111111-1111-4111-8111-111111111111';
   const UUID_2 = '22222222-2222-4222-8222-222222222222';
 
@@ -233,6 +233,47 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match
     });
   });
 
+  it('getMyDeck และ swipe (ไม่ส่ง mode) พร้อมโควตาต่อรอบ', async () => {
+    const quota = {
+      batch_size: 20,
+      window_hours: 6,
+      used: 1,
+      remaining: 19,
+      window_started_at: '2026-10-25T01:00:00Z',
+      resets_at: '2026-10-25T07:00:00Z',
+    };
+    const deck = {
+      quota,
+      cards: [
+        {
+          candidate_id: UUID_2,
+          display_name: 'Demo Two',
+          age: 21,
+          bio: null,
+          occupation: null,
+          area_id: null,
+          org_badge: null,
+          modes: ['friend', 'date'],
+          interests: [],
+          prompts: [],
+          photo_stage: 0,
+        },
+      ],
+    };
+    const { client, rpc } = fakeClient({ data: deck, error: null });
+    const api = createApi(client);
+    await expect(api.getMyDeck()).resolves.toEqual(deck);
+    expect(rpc).toHaveBeenCalledWith('get_my_deck');
+
+    rpc.mockResolvedValueOnce({
+      data: { matched: false, match_id: null, conversation_id: null, quota },
+      error: null,
+    });
+    const res = await api.swipe({ candidateId: UUID_2, direction: 'like' });
+    expect(res.quota.remaining).toBe(19);
+    expect(rpc).toHaveBeenCalledWith('swipe', { p_candidate_id: UUID_2, p_direction: 'like' });
+  });
+
   it('swipe, politeClose และ getProfileCard (พร้อมสร้าง signed URLs ของรูปที่ปลดล็อกแล้ว)', async () => {
     const path0 = `${UUID_2}/00000000-0000-4000-8000-000000000000.webp`;
     const cardData = {
@@ -302,8 +343,8 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match
       status: 'active',
       expires_at: null,
       limits: {
-        daily_drop_limit: 10,
-        has_noon_drop: true,
+        swipe_batch_size: 40,
+        swipe_window_hours: 6,
         daily_bubble_limit: 30,
         daily_golden_bubbles: 1,
         allow_rewind: true,

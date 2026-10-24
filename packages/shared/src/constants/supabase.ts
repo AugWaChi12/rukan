@@ -56,7 +56,7 @@ export const SUPABASE_RPC = {
   requestPhotoUnlock: 'request_photo_unlock',
   canAccessRealtimeTopic: 'can_access_realtime_topic',
   // เฟส 5: Daily Drop & Match
-  getMyDrop: 'get_my_drop',
+  getMyDeck: 'get_my_deck',
   swipe: 'swipe',
   getMyMatches: 'get_my_matches',
   politeClose: 'polite_close',

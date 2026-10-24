@@ -139,8 +139,8 @@ export type ModListWaitlistInput = z.input<typeof modListWaitlistSchema>;
 
 export const tierConfigUpdateFieldsSchema = z.object({
   display_name: z.string().trim().min(1).max(100).optional(),
-  daily_drop_limit: z.number().int().min(1).max(100).optional(),
-  has_noon_drop: z.boolean().optional(),
+  swipe_batch_size: z.number().int().min(1).max(200).optional(),
+  swipe_window_hours: z.number().int().min(1).max(48).optional(),
   daily_bubble_limit: z.number().int().min(0).max(9999).optional(),
   daily_golden_bubbles: z.number().int().min(0).max(100).optional(),
   allow_rewind: z.boolean().optional(),
@@ -311,8 +311,8 @@ export const modWaitlistListSchema = z.array(modWaitlistRowSchema);
 export const tierConfigSchema = z.object({
   tier: z.enum(SUBSCRIPTION_TIERS),
   display_name: z.string(),
-  daily_drop_limit: z.number().int(),
-  has_noon_drop: z.boolean(),
+  swipe_batch_size: z.number().int(),
+  swipe_window_hours: z.number().int(),
   daily_bubble_limit: z.number().int(),
   daily_golden_bubbles: z.number().int(),
   allow_rewind: z.boolean(),
@@ -327,8 +327,8 @@ export type TierConfig = z.infer<typeof tierConfigSchema>;
 export const tierConfigListSchema = z.array(tierConfigSchema);
 
 export const userLimitsSchema = z.object({
-  daily_drop_limit: z.number().int(),
-  has_noon_drop: z.boolean(),
+  swipe_batch_size: z.number().int(),
+  swipe_window_hours: z.number().int(),
   daily_bubble_limit: z.number().int(),
   daily_golden_bubbles: z.number().int(),
   allow_rewind: z.boolean(),

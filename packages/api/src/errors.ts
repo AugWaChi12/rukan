@@ -73,7 +73,8 @@ export const API_ERROR_CODES = [
   // เฟส 5: Daily Drop & Match
   'invalid_mode',
   'invalid_swipe_direction',
-  'candidate_not_in_drop',
+  'candidate_not_in_deck',
+  'swipe_limit_reached',
   'invalid_polite_template',
   'match_not_found',
   'profile_not_accessible',
