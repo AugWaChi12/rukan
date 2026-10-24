@@ -1,18 +1,14 @@
-import { useTheme } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
-import { SupabaseStatus } from '@/components/supabase-status';
+import { Redirect } from 'expo-router';
+import { stepPath } from '@/features/onboarding/steps';
+import { useMyStatus } from '@/hooks/use-my-status';
+import { useSession } from '@/providers/session-provider';
 
-export default function HomeScreen() {
-  const { colors } = useTheme();
-  return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>รู้กัน</Text>
-      <SupabaseStatus />
-    </View>
-  );
+/** จุดเริ่มต้น — พาไปโซนที่ถูกตามสถานะ (root layout รอโหลดสถานะให้แล้ว) */
+export default function Index() {
+  const { session } = useSession();
+  const status = useMyStatus();
+
+  if (!session) return <Redirect href="/sign-in" />;
+  const path = status.data ? stepPath(status.data.next_step) : null;
+  return <Redirect href={path ?? '/space'} />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
-  title: { fontSize: 36, fontWeight: '600' },
-});

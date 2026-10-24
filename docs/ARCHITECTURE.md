@@ -56,6 +56,13 @@
 - OAuth / magic link ใช้ deep link scheme `rukan://` (อยู่ใน `additional_redirect_urls` ของ config.toml แล้ว)
 - Build/ส่ง store ด้วย EAS (`eas build`, `eas submit`)
 
+### `packages/api`
+
+- `createApi(supabase)` — ฟังก์ชันมี type ของทุก RPC / ตารางที่แอปใช้ (`getMyStatus`, `completeOnboarding`, `auth.signInWithEmail` …) parse ผลด้วย zod จาก shared
+- `ApiError` — error code เดียวกันทุกแอป (ตรงกับข้อความใน `raise exception` ของ RPC) + `network` / `forbidden` / `unknown`
+- `createQueries(api)` + `queryKeys` — TanStack Query options (ข้อมูลของฉันอยู่ใต้ `['me']` ล้างทีเดียวตอน logout)
+- ไม่สร้าง Supabase client เอง (แอปส่งเข้ามา) · Vitest ด้วย client ปลอม
+
 ### `packages/shared`
 
 - `database.types.ts` — **generate** จาก DB ด้วย `pnpm db:types` (ห้ามแก้มือ, CI เช็คว่าตรงกับ migrations)
