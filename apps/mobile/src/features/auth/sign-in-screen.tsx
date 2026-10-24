@@ -50,16 +50,10 @@ async function signInWithGoogle() {
   const failure = param(res.url, 'error_description') ?? param(res.url, 'error');
   if (failure) throw new Error(failure);
 
+  // PKCE: รับแค่ code (แลกได้เฉพาะเครื่องที่มี code_verifier) — ไม่รับ access_token จาก URL
   const code = param(res.url, 'code');
-  if (code) {
-    await api.auth.exchangeCodeForSession(code);
-    return;
-  }
-  const accessToken = param(res.url, 'access_token');
-  const refreshToken = param(res.url, 'refresh_token');
-  if (accessToken && refreshToken) {
-    await api.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  }
+  if (!code) throw new Error('oauth_code_missing');
+  await api.auth.exchangeCodeForSession(code);
   // สำเร็จแล้ว SessionProvider จะเห็น session ใหม่ → navigator พาไปหน้าถัดไปเอง
 }
 

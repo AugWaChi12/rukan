@@ -1,7 +1,7 @@
 -- ทดสอบเฟส 2: บล็อก (รวมการไม่เปิดเผยตัวตนเมื่อบล็อกจาก Space), รายงาน, สิทธิ์ Moderator, การระงับ/แบน และการอุทธรณ์
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(25);
 
 -- สร้างโพสต์ของ demo2 ไว้ทดสอบการบล็อกและรายงานจาก Space
 set local role authenticated;
@@ -79,6 +79,26 @@ select throws_ok(
   $$ select public.mod_take_action('22222222-2222-2222-2222-222222222222', 'ban', 3::smallint, 'scam') $$,
   '42501', 'forbidden',
   'ผู้ใช้ทั่วไปสั่งแบนคนอื่นไม่ได้'
+);
+
+-- 5.1) P0 (docs/AUDIT.md): อีเมล / user_metadata ไม่ทำให้เป็น moderator — ต้องเป็น app_metadata.role เท่านั้น
+set local request.jwt.claims = '{"sub": "33333333-3333-3333-3333-333333333333", "role": "authenticated", "email": "attacker@rukan.app"}';
+select throws_ok(
+  $$ select public.mod_list_reports() $$,
+  '42501', 'forbidden',
+  'อีเมล @rukan.app ไม่ได้สิทธิ์ moderator'
+);
+set local request.jwt.claims = '{"sub": "33333333-3333-3333-3333-333333333333", "role": "authenticated", "email": "demo@rukan.dev"}';
+select throws_ok(
+  $$ select public.mod_reveal_author('post', '00000000-0000-0000-0000-000000000000', 'test') $$,
+  '42501', 'forbidden',
+  'อีเมล demo@rukan.dev (ไม่มี app_metadata.role) เปิดดูตัวตนคนโพสต์ไม่ได้'
+);
+set local request.jwt.claims = '{"sub": "33333333-3333-3333-3333-333333333333", "role": "authenticated", "user_metadata": {"role": "moderator"}}';
+select throws_ok(
+  $$ select public.mod_get_waitlist_stats() $$,
+  '42501', 'forbidden',
+  'role ใน user_metadata (ผู้ใช้แก้เองได้) ไม่ได้สิทธิ์ moderator'
 );
 
 -- 6) Moderator ตรวจรายงาน + เปิดดูตัวตนผู้โพสต์ (บันทึก audit log) + สั่งระงับบัญชี

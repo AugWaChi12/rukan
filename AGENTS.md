@@ -80,6 +80,7 @@ stuMatch/                     ← ชื่อ repo/โฟลเดอร์ย�
 │   ├── CONVENTIONS.md        ← กฎการเขียนโค้ด, SQL, git, การตั้งชื่อ
 │   ├── DATABASE.md           ← ★ สร้าง/sync DB บนเครื่อง, schema map, checklist เพิ่มตาราง + template
 │   ├── DECISIONS.md          ← บันทึกการตัดสินใจ + เรื่องที่ยังเปิดอยู่
+│   ├── AUDIT.md              ← ★ ผลตรวจล่าสุด (ช่องโหว่ / ช่องว่าง) + roadmap P0 / P1 / P2 — งานถัดไปเลือกจากที่นี่
 │   ├── PRODUCT.md            ← แอปนี้คืออะไร, กลุ่มผู้ใช้, ฟีเจอร์ MVP
 │   ├── SYSTEM_DESIGN.md      ← data model, schema private + RPC, flow, cron, Edge Functions, ลำดับการสร้าง
 │   ├── POLICY.md             ← (ร่าง) ยืนยันตัวตน, กติกาชุมชน, PDPA
@@ -169,7 +170,9 @@ URL ตอน dev:
     - [x] เฟส 5 Daily Drop & Match (`daily_drops`, `swipes`, `matches` + คัดการ์ดไม่เกิน 5 คน/วัน/โหมด + หมดอายุ 48 ชม. ถ้าไม่ทัก + `polite_close` / `unmatch` + `get_profile_card` ปลดล็อกรูปตาม `reveal_stage` และกัน scrape)
     - [x] `@rukan/shared` (types 36 RPCs + zod schemas) และ `@rukan/api` (`createApi` + `createQueries` ครบทุกเฟส) — ทดสอบ pgTAP 152/152 และ Vitest 57/57 ผ่านทั้งหมด
   - [ ] เฟส 1 ที่รอทีม: SMS OTP + liveness vendor (Q14 — **มีข้อเสนอแล้ว: ด่านแรก MediaPipe + AWS Rekognition** ดู `docs/DECISIONS.md` หัวข้อ "ข้อเสนอ: selfie liveness"), social login, Edge Functions
-  - [ ] งานถัดไปที่ทำได้เลย (ฝั่ง UI): หน้า `/admin` บนเว็บสำหรับ moderator, หน้าจอแท็บ Space / Daily Drop / แชท / บล็อก & อุทธรณ์ บน mobile, selfie PoC (Edge Function `start-liveness` / `liveness-result` + หน้า selfie), ไอคอนแท็บ, ฟอนต์ Prompt/Anuphan บน mobile
+  - [x] admin console (`admin.rukan.app`), tier config Free / Gold, Google sign-in, แท็บ Space / Drop / แชท / ฉัน บน mobile (2026-10-24, push เข้า `main` ตรง)
+  - [x] **Audit รอบแรก (2026-10-24) → [`docs/AUDIT.md`](docs/AUDIT.md)** — แก้ P0 แล้ว 2 ข้อ (moderator จากอีเมล, OAuth ไม่ใช่ PKCE) · pgTAP 155/155
+  - [ ] **งานถัดไป: ดู roadmap ใน `docs/AUDIT.md` หัวข้อ 4** (P1: Drop ตามเวลาไทย, tier ต่อผู้ใช้ + จ่ายเงิน, Realtime แชท, admin ใช้ `@rukan/api`, selfie / SMS vendor)
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 - [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้
   - [x] หน้า `/rules` `/privacy` `/terms` (TH + EN) พร้อมป้ายร่างและ sitemap (2026-10-24, branch `feature/me-and-legal`)
@@ -185,6 +188,7 @@ URL ตอน dev:
 
 - อ่าน `AGENTS.md` → `docs/PRODUCT.md` → `docs/ARCHITECTURE.md` → `docs/SYSTEM_DESIGN.md` → `docs/DATABASE.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม (งานที่แตะผู้ใช้/ข้อมูลส่วนตัว อ่าน `docs/POLICY.md` ด้วย)
 - **ก่อนรัน/ทดสอบอะไรที่ใช้ database: ทำให้ DB บนเครื่องตรงกับ `supabase/migrations/` ก่อน** — `pnpm db:start` แล้วถ้า `supabase/` เปลี่ยนหลัง pull/สลับ branch → `pnpm db:reset && pnpm db:test` ([`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 2)
+- **ห้าม push เข้า `main` ตรง** แม้จะเป็นงานเล็ก — ทำ branch + PR เสมอ (รอบ 2026-10-24 มี ~20 commit เข้า main ตรง ดู `AUDIT.md`)
 - ฟีเจอร์ที่แตะข้อมูล ทำตามลำดับ: **migration (ตาราง + RLS) → pgTAP test → `pnpm db:types` → zod schema ใน shared → UI** ตาม checklist + template ใน [`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 4 และอัปเดตตาราง "สิ่งที่มีอยู่ตอนนี้" (หัวข้อ 3.3) ทุกครั้ง
 - **แอปเรียก Supabase ผ่าน `@rukan/api` เท่านั้น** (หน้าจอไม่เรียก `supabase.from/rpc` ตรง) — เพิ่ม RPC ใหม่ = เพิ่มฟังก์ชันใน `packages/api/src/client.ts` + test
 - logic ที่ client ไม่ควรทำเอง (เช่น จับคู่ match, ตรวจสิทธิ์ซับซ้อน, เรียก service ภายนอกด้วย secret) ให้ทำเป็น **Postgres function (`security definer` อย่างระวัง)** หรือ **Edge Function** — ห้ามเชื่อข้อมูลจาก client

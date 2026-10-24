@@ -2,7 +2,7 @@
 -- (ไม่ถูกใช้กับ Supabase project จริง)
 --
 -- ผู้ใช้ทดสอบ (login ได้จริง):
---   demo@rukan.dev  / password123  — ยืนยันครบ (selfie) + onboarding เสร็จ → เข้าแอปได้เลย
+--   demo@rukan.dev  / password123  — ยืนยันครบ (selfie) + onboarding เสร็จ → เข้าแอปได้เลย · เป็น moderator (app_metadata.role) ใช้เข้า admin console ได้
 --   demo2@rukan.dev / password123  — ยืนยันครบเหมือนกัน (ใช้เป็น "อีกคน" ตอนทดสอบสิทธิ์)
 --   demo3@rukan.dev / password123  — ผู้ใช้ใหม่ ยังไม่ทำอะไร → ใช้ทดสอบ flow onboarding
 
@@ -16,7 +16,7 @@ values
     '00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111',
     'authenticated', 'authenticated', 'demo@rukan.dev',
     extensions.crypt('password123', extensions.gen_salt('bf')), now(),
-    '{"provider":"email","providers":["email"]}', '{"display_name":"Demo User"}', now(), now(),
+    '{"provider":"email","providers":["email"],"role":"moderator"}', '{"display_name":"Demo User"}', now(), now(),
     '', '', '', ''
   ),
   (
