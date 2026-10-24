@@ -266,7 +266,7 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match
     expect(card.unlocked_photo_urls).toEqual(['https://signed.example/photo0.webp']);
   });
 
-  it('auth OAuth: signInWithOAuth, exchangeCodeForSession, setSession', async () => {
+  it('auth OAuth: signInWithOAuth + exchangeCodeForSession (PKCE เท่านั้น)', async () => {
     const signInWithOAuth = vi.fn().mockResolvedValue({
       data: { provider: 'google', url: 'https://accounts.google.com/o/oauth2/v2/auth' },
       error: null,
@@ -275,13 +275,9 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match
       data: { session: { access_token: 'acc-123', refresh_token: 'ref-123' } },
       error: null,
     });
-    const setSession = vi.fn().mockResolvedValue({
-      data: { session: { access_token: 'acc-456', refresh_token: 'ref-456' } },
-      error: null,
-    });
 
     const client = {
-      auth: { signInWithOAuth, exchangeCodeForSession, setSession },
+      auth: { signInWithOAuth, exchangeCodeForSession },
     } as unknown as RukanSupabaseClient;
 
     const api = createApi(client);
@@ -295,7 +291,7 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match
     await api.auth.exchangeCodeForSession('test-code');
     expect(exchangeCodeForSession).toHaveBeenCalledWith('test-code');
 
-    await api.auth.setSession({ access_token: 'acc-456', refresh_token: 'ref-456' });
-    expect(setSession).toHaveBeenCalledWith({ access_token: 'acc-456', refresh_token: 'ref-456' });
+    // ไม่มีทางตั้ง session จาก token ดิบ (กัน login CSRF)
+    expect('setSession' in api.auth).toBe(false);
   });
 });

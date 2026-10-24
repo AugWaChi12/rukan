@@ -183,12 +183,8 @@ export function createApi(supabase: RukanSupabaseClient) {
         if (error) throw toApiError(error);
         return data;
       },
-      /** ตั้งค่า session จาก tokens โดยตรง */
-      async setSession(tokens: { access_token: string; refresh_token: string }) {
-        const { data, error } = await supabase.auth.setSession(tokens);
-        if (error) throw toApiError(error);
-        return data;
-      },
+      // ไม่มี setSession(tokens) โดยตั้งใจ — รับ token จาก URL = ถูกยัด session ของคนอื่นได้ (login CSRF)
+      // OAuth ทุกทางต้องผ่าน PKCE code → exchangeCodeForSession เท่านั้น (docs/AUDIT.md P0-2)
     },
 
     // -------------------------------------------------------------------------

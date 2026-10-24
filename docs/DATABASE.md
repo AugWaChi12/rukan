@@ -207,11 +207,14 @@ pgTAP (152 tests / 8 ไฟล์ใน `supabase/tests/database/`): `security_i
 supabase/
 ├── config.toml                 ← ตั้งค่า local (ports, auth, storage) — แก้แล้วต้อง db:stop + db:start
 ├── migrations/
-│   └── <timestamp>_<เรื่อง>.sql  ← สร้างด้วยคำสั่ง ห้ามตั้ง timestamp เอง
+│   └── <timestamp>_<เรื่อง>.sql  ← สร้างด้วยคำสั่ง แล้ว **เช็คว่าเรียงหลังไฟล์ล่าสุด** (ดูหมายเหตุด้านล่าง)
 ├── seed.sql                    ← ข้อมูลทดสอบ local/CI เท่านั้น (ผู้ใช้ demo) — ห้ามมีข้อมูลจริง
 └── tests/database/
     └── <เรื่อง>.test.sql         ← pgTAP 1 ไฟล์ต่อ 1 เรื่อง ชื่อตรงกับ migration
 ```
+
+> ⚠️ **timestamp ต้องเรียงหลังไฟล์ล่าสุดเสมอ** — migration บางไฟล์ใน repo ตั้งเวลาล่วงหน้า (เช่น `…200000`) ทำให้ `pnpm db:migration` สร้างไฟล์ที่ **รันก่อน** ไฟล์เก่า และถูกไฟล์เก่าทับ
+> หลังสร้างให้ `ls supabase/migrations | tail -3` ถ้าไฟล์ใหม่ไม่อยู่ท้ายสุด → เปลี่ยนชื่อ timestamp ให้มากกว่าไฟล์ล่าสุด (เจอจริงตอนแก้ P0-1 ใน `AUDIT.md`)
 
 **ตั้งชื่อ migration** (snake_case, ภาษาอังกฤษ, บอกว่าทำอะไร):
 

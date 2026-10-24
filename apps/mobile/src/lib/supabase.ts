@@ -19,6 +19,10 @@ export const supabase = createClient<Database>(url, publishableKey, {
     storage: Platform.OS === 'web' ? undefined : new LargeSecureStore(),
     autoRefreshToken: true,
     persistSession: true,
+    // PKCE: OAuth คืนแค่ ?code= (ใช้ได้ครั้งเดียว + ต้องมี code_verifier ที่เก็บในเครื่องนี้)
+    // ไม่ใช้ implicit flow ที่ส่ง access_token มาใน URL (หลุดผ่าน history / ถูกยัด session คนอื่นได้)
+    flowType: 'pkce',
+    // บนเว็บให้ supabase-js แลก ?code= เองตอนเปิดหน้า /auth/callback
     detectSessionInUrl: Platform.OS === 'web',
   },
 });
