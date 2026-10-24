@@ -19,7 +19,7 @@ export const supabase = createClient<Database>(url, publishableKey, {
     storage: Platform.OS === 'web' ? undefined : new LargeSecureStore(),
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
 
