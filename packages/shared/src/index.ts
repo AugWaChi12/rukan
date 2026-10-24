@@ -1,3 +1,4 @@
+export * from './constants/identity';
 export * from './constants/supabase';
 export * from './schemas/common';
 export * from './schemas/health';

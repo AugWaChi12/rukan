@@ -40,6 +40,11 @@
 | D39 | 2026-10-24 | "ว่างตอนนี้"             | ย้ายไป **หลัง MVP**                                                                                                                                                                                                                           | ต้องมีผู้ใช้หนาแน่นในย่านเดียวกันก่อนถึงจะมีประโยชน์ + เรื่องตำแหน่งต้องระวังมาก                                                                                  |
 | D40 | 2026-10-24 | ชื่อแอป (ตอบ Q18)        | **รู้กัน · rukan** · โดเมน **rukan.app** · โลโก้ "สองฟองที่รู้กัน" · bundle id / package `app.rukan` · scheme `rukan://` · package scope `@rukan/*`                                                                                           | "รู้กันแค่เรา" ตรงกับ Space ไม่ระบุตัวตน + "รู้จักกัน" ตรงกับ match · ไม่เจอแอปชื่อซ้ำ · rukan.com/.co ไม่ว่าง จึงใช้ .app (ชื่อ repo บน GitHub ยังเป็น stuMatch) |
 | D41 | 2026-10-24 | Landing + waitlist       | หน้าเดียว TH (`/`) + EN (`/en`) ใน `apps/web` · ฟอร์มเรียก RPC **`join_waitlist`** ตรงจากเบราว์เซอร์ (publishable key) · ข้อมูลอยู่ใน `private.waitlist` · กัน bot ด้วย **honeypot + rate limit 10 ครั้ง/ชม./IP** ใน DB (ยังไม่ใช้ Turnstile) | ไม่ต้องมี server action/Edge Function เพิ่ม, อ่านข้อมูล waitlist ผ่าน API ไม่ได้ · ถ้าโดน spam ค่อยเพิ่ม Turnstile — ดู `WEBSITE.md`                              |
+| D42 | 2026-10-24 | สิทธิ์ค่าเริ่มต้นของ DB  | migration `security_baseline`: function / table ใหม่ **ไม่ grant ให้ใครอัตโนมัติ** (รวม revoke EXECUTE จาก PUBLIC ระดับ global) ต้อง `grant` เองทีละตัว                                                                                       | Supabase/Postgres ให้ anon เรียก function ใหม่ได้ทุกตัวโดย default → ลืม revoke ครั้งเดียว = รั่ว                                                                 |
+| D43 | 2026-10-24 | รั้วความปลอดภัยใน CI     | pgTAP `security_invariants.test.sql`: RLS ทุกตาราง, search_path ทุก function, allowlist ของ RPC ที่ anon/authenticated เรียกได้, private ปิดสนิท, client เขียนตาราง public ตรงไม่ได้, ไม่มี bucket public                                     | กันคน/AI เปิดช่องโดยไม่ตั้งใจ — เพิ่ม API ใหม่ต้องแก้ allowlist ให้เห็นใน PR                                                                                      |
+| D44 | 2026-10-24 | การเขียนข้อมูลจาก client | **ผ่าน RPC เท่านั้น** (ไม่มี insert/update policy บนตารางใดๆ) · อ่านตรงได้แค่ของตัวเอง + ข้อมูลอ้างอิง                                                                                                                                        | validate / เช็คระดับการยืนยัน / rate limit อยู่ที่ server จุดเดียว                                                                                                |
+| D45 | 2026-10-24 | ลำดับ onboarding         | `get_my_status().next_step`: consents (terms/privacy/rules) → phone → profile → selfie → done · liveness ตั้งได้เฉพาะ server (`private.mark_liveness_passed`) ไม่มีทางลัดในโค้ด · local ใช้ seed แทน                                          | ยอมรับเอกสารก่อนเก็บข้อมูล (PDPA) · ยังไม่เลือก vendor (Q14) แต่โครงพร้อม                                                                                         |
+| D46 | 2026-10-24 | รูปโปรไฟล์ (ทำตาม D37)   | bucket `photos` private, path `<uid>/<uuid>.webp`, เขียนทับไม่ได้, ลงทะเบียนด้วย `add_photo` · bucket `avatars` ปิดเป็น private (เลิกใช้)                                                                                                     | คนอื่นจะเห็นรูปผ่าน signed URL ตามขั้นเปิดรูปในเฟส Match                                                                                                          |
 
 ## ⛔ ยกเลิกแล้ว
 
@@ -61,17 +66,19 @@
 
 > AI: ใช้ค่าเหล่านี้ได้เลยถ้าไม่มีคำสั่งอื่น แต่ให้ออกแบบให้เปลี่ยนทีหลังได้ง่าย
 
-| #   | เรื่อง                     | Default                                                                               | ทางเลือกอื่น                            |
-| --- | -------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- |
-| T3  | วิธี login                 | Email + password (Supabase Auth)                                                      | + Google / Apple / magic link           |
-| T4  | Validation ฝั่ง client     | **zod** schema ใน `packages/shared` (กฎตรงกับ check constraint ใน DB)                 | —                                       |
-| T5  | Package manager            | **pnpm**                                                                              | npm, yarn                               |
-| T6  | Node version               | Node 22                                                                               | Node 24 LTS — ถ้าเปลี่ยนให้แก้ `.nvmrc` |
-| T7  | Web styling                | Tailwind CSS                                                                          | CSS Modules                             |
-| T8  | Mobile styling             | StyleSheet ปกติ (หรือ NativeWind)                                                     | Tamagui                                 |
-| T9  | Data fetching (web/mobile) | TanStack Query ครอบ supabase-js                                                       | SWR                                     |
-| T10 | Supabase region            | Singapore (`ap-southeast-1`)                                                          | —                                       |
-| T11 | Logic ฝั่ง server          | Postgres function (`.rpc()`) ก่อน, Edge Function เมื่อต้องใช้ secret / service ภายนอก | —                                       |
+| #   | เรื่อง                     | Default                                                                                       | ทางเลือกอื่น                            |
+| --- | -------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------- |
+| T3  | วิธี login                 | Email + password (Supabase Auth)                                                              | + Google / Apple / magic link           |
+| T4  | Validation ฝั่ง client     | **zod** schema ใน `packages/shared` (กฎตรงกับ check constraint ใน DB)                         | —                                       |
+| T5  | Package manager            | **pnpm**                                                                                      | npm, yarn                               |
+| T6  | Node version               | Node 22                                                                                       | Node 24 LTS — ถ้าเปลี่ยนให้แก้ `.nvmrc` |
+| T7  | Web styling                | Tailwind CSS                                                                                  | CSS Modules                             |
+| T8  | Mobile styling             | StyleSheet ปกติ (หรือ NativeWind)                                                             | Tamagui                                 |
+| T9  | Data fetching (web/mobile) | TanStack Query ครอบ supabase-js                                                               | SWR                                     |
+| T10 | Supabase region            | Singapore (`ap-southeast-1`)                                                                  | —                                       |
+| T12 | ย่าน (Q17)                 | 8 ย่านชุดเดียวกับฟอร์ม waitlist (`public.areas` ใน `identity_core`) — เพิ่ม/ปิดผ่าน migration | ทีมกำหนดรายการจริง                      |
+| T13 | เพศ / สนใจเพศ (Q16)        | มีคอลัมน์ `profile_private.gender` / `interested_in` (null ได้) แต่ยังไม่มี RPC / หน้าจอ      | รอทีมกำหนดตัวเลือก                      |
+| T11 | Logic ฝั่ง server          | Postgres function (`.rpc()`) ก่อน, Edge Function เมื่อต้องใช้ secret / service ภายนอก         | —                                       |
 
 ## ❓ Open questions (ต้องให้ทีมตัดสินใจ)
 

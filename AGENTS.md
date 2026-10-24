@@ -149,7 +149,10 @@ URL ตอน dev:
 - [ ] สร้าง Supabase project จริง + ผูก Vercel (ดู ARCHITECTURE.md หัวข้อ 6)
 - [ ] ตั้ง branch protection ให้ `main` + เช็คว่า CI บน GitHub ผ่าน
 - [x] ออกแบบระบบ (2026-10-24) → [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md) — ยังไม่ได้ implement
-- [ ] เฟส 1–5 ตาม SYSTEM_DESIGN.md หัวข้อ 14 (เริ่มที่เฟส 1 ตัวตน)
+- [ ] เฟส 1–5 ตาม SYSTEM_DESIGN.md หัวข้อ 14
+  - [x] เฟส 1 ฝั่ง DB (2026-10-24, branch `feature/identity-core`): security baseline + รั้ว `security_invariants`, ตารางตัวตน, RPC onboarding/โปรไฟล์, bucket `photos` — pgTAP 70/70
+  - [ ] เฟส 1 ฝั่งแอป: `packages/api` + โครง expo-router (auth / onboarding / tabs)
+  - [ ] เฟส 1 ที่รอทีม: SMS OTP + liveness vendor (Q14), social login, Edge Functions
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 - [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้
   - [ ] หน้า `/rules` `/privacy` `/terms`, OG image, analytics, ซื้อโดเมน rukan.app (ดู `docs/WEBSITE.md`)
