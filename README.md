@@ -81,6 +81,16 @@ wsl -d Ubuntu-24.04 -- bash scripts/wsl/install-node.sh
 
 > ถ้า distro ไม่ได้ชื่อ `Ubuntu-24.04` ให้เรียก `wsl -d <ชื่อ distro> -- bash scripts/wsl/supabase.sh <คำสั่ง>` ตรงๆ
 
+**กัน WSL ดับ:** Windows จะปิด WSL เองเมื่อไม่มีโปรแกรมรันอยู่ข้างใน (ไม่นานหลังคำสั่งล่าสุดจบ) → Supabase ดับตามไปด้วย
+อาการคือเว็บ/แอปส่งข้อมูลไม่ได้ (`ERR_CONNECTION_REFUSED` ที่ `127.0.0.1:54321`) ทั้งที่เพิ่งรัน `pnpm db:wsl start` ไป
+ระหว่าง dev ให้เปิด terminal แยกหนึ่งแท็บรันคำสั่งนี้ค้างไว้ (ปิดแท็บ / Ctrl+C เมื่อเลิกใช้):
+
+```bash
+wsl -d Ubuntu-24.04 -- sleep infinity
+```
+
+container ของ Supabase จะ start เองเมื่อ WSL บูต — รอ ~30 วินาทีให้ healthy (เช็คด้วย `pnpm db:wsl status`)
+
 ## ก่อนเปิด Pull Request
 
 ```bash
