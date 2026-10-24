@@ -86,6 +86,7 @@ export function PhoneScreen() {
         </>
       )}
       {error ? <AppText variant="error">{errorMessage(error)}</AppText> : null}
+      <Button variant="ghost" label={t('common.signOut')} onPress={() => void api.auth.signOut()} />
     </Screen>
   );
 }

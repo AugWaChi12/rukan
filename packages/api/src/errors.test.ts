@@ -22,9 +22,16 @@ describe('toApiError', () => {
     expect(toApiError({ message: 'same_moderator_cannot_review_appeal', code: '42501' }).code).toBe(
       'same_moderator_cannot_review_appeal',
     );
-    expect(toApiError({ message: 'candidate_not_in_drop', code: '42501' }).code).toBe(
-      'candidate_not_in_drop',
+    expect(toApiError({ message: 'candidate_not_in_deck', code: '42501' }).code).toBe(
+      'candidate_not_in_deck',
     );
+    const limit = toApiError({
+      message: 'swipe_limit_reached',
+      code: 'P0001',
+      details: '2026-10-25T12:00:00+00:00',
+    });
+    expect(limit.code).toBe('swipe_limit_reached');
+    expect(limit.detail).toBe('2026-10-25T12:00:00+00:00');
     expect(toApiError({ message: 'profile_not_accessible', code: '42501' }).code).toBe(
       'profile_not_accessible',
     );

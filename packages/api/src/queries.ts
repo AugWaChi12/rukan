@@ -1,4 +1,4 @@
-import type { AppealStatus, ProfileMode, ReportStatus, SpaceFeedTab } from '@rukan/shared';
+import type { AppealStatus, ReportStatus, SpaceFeedTab } from '@rukan/shared';
 import { queryOptions } from '@tanstack/react-query';
 import type { RukanApi } from './client';
 
@@ -19,7 +19,7 @@ export const queryKeys = {
   conversation: (conversationId: string) => ['me', 'conversations', conversationId] as const,
   messages: (conversationId: string) =>
     ['me', 'conversations', conversationId, 'messages'] as const,
-  myDrop: (mode: ProfileMode) => ['me', 'drop', mode] as const,
+  myDeck: ['me', 'deck'] as const,
   myMatches: ['me', 'matches'] as const,
   profileCard: (userId: string) => ['me', 'profile-card', userId] as const,
   space: ['space'] as const,
@@ -69,11 +69,7 @@ export function createQueries(api: RukanApi) {
         queryKey: queryKeys.messages(conversationId),
         queryFn: () => api.getMessages({ conversationId, limit }),
       }),
-    myDrop: (mode: ProfileMode) =>
-      queryOptions({
-        queryKey: queryKeys.myDrop(mode),
-        queryFn: () => api.getMyDrop(mode),
-      }),
+    myDeck: () => queryOptions({ queryKey: queryKeys.myDeck, queryFn: api.getMyDeck }),
     myMatches: () => queryOptions({ queryKey: queryKeys.myMatches, queryFn: api.getMyMatches }),
     profileCard: (userId: string) =>
       queryOptions({

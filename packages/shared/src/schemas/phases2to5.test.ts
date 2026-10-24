@@ -7,7 +7,7 @@ import {
   sendBubbleSchema,
   sendMessageSchema,
 } from './chat';
-import { getMyDropSchema, politeCloseSchema, profileCardSchema, swipeSchema } from './matching';
+import { politeCloseSchema, profileCardSchema, swipeDeckSchema, swipeSchema } from './matching';
 import {
   blockedUserItemSchema,
   blockUserFromSchema,
@@ -183,16 +183,28 @@ describe('Phase 4 schemas (Bubbles & Chat)', () => {
   });
 });
 
-describe('Phase 5 schemas (Daily Drop & Match)', () => {
-  it('getMyDropSchema และ swipeSchema รับเฉพาะโหมด friend/date และทิศทาง like/skip', () => {
-    expect(getMyDropSchema.safeParse('friend').success).toBe(true);
-    expect(getMyDropSchema.safeParse('hookup').success).toBe(false);
-    expect(
-      swipeSchema.safeParse({ candidateId: UUID_2, mode: 'date', direction: 'like' }).success,
-    ).toBe(true);
-    expect(
-      swipeSchema.safeParse({ candidateId: UUID_2, mode: 'date', direction: 'superlike' }).success,
-    ).toBe(false);
+describe('Phase 5 schemas (Swipe deck & Match)', () => {
+  it('swipeSchema รับเฉพาะทิศทาง like/skip และไม่มี mode', () => {
+    expect(swipeSchema.safeParse({ candidateId: UUID_2, direction: 'like' }).success).toBe(true);
+    expect(swipeSchema.safeParse({ candidateId: UUID_2, direction: 'superlike' }).success).toBe(
+      false,
+    );
+  });
+
+  it('swipeDeckSchema ตรวจโควตาต่อรอบ (resets_at เป็น null ได้ก่อนปัดใบแรก)', () => {
+    const deck = {
+      quota: {
+        batch_size: 20,
+        window_hours: 6,
+        used: 0,
+        remaining: 20,
+        window_started_at: null,
+        resets_at: null,
+      },
+      cards: [],
+    };
+    expect(swipeDeckSchema.safeParse(deck).success).toBe(true);
+    expect(swipeDeckSchema.safeParse({ ...deck, quota: { batch_size: 20 } }).success).toBe(false);
   });
 
   it('politeCloseSchema ตั้งค่า templateId เริ่มต้นเป็น thanks', () => {
@@ -230,8 +242,8 @@ describe('P1 schemas (Tiers, Subscriptions, Admin & Realtime Broadcast)', () => 
       status: 'active',
       expires_at: '2026-11-24T00:00:00Z',
       limits: {
-        daily_drop_limit: 10,
-        has_noon_drop: true,
+        swipe_batch_size: 40,
+        swipe_window_hours: 6,
         daily_bubble_limit: 30,
         daily_golden_bubbles: 1,
         allow_rewind: true,
@@ -246,8 +258,8 @@ describe('P1 schemas (Tiers, Subscriptions, Admin & Realtime Broadcast)', () => 
     const cfg = {
       tier: 'free',
       display_name: 'ผู้ใช้ทั่วไป (Free Tier)',
-      daily_drop_limit: 5,
-      has_noon_drop: false,
+      swipe_batch_size: 20,
+      swipe_window_hours: 6,
       daily_bubble_limit: 3,
       daily_golden_bubbles: 0,
       allow_rewind: false,
@@ -261,7 +273,7 @@ describe('P1 schemas (Tiers, Subscriptions, Admin & Realtime Broadcast)', () => 
     expect(
       modUpdateTierConfigSchema.safeParse({
         tier: 'premium',
-        config: { daily_drop_limit: 12, price_thb_monthly: 199 },
+        config: { swipe_batch_size: 30, price_thb_monthly: 199 },
       }).success,
     ).toBe(true);
     expect(
@@ -292,9 +304,8 @@ describe('P1 schemas (Tiers, Subscriptions, Admin & Realtime Broadcast)', () => 
     ).toBe(true);
     expect(
       realtimeInboxSignalSchema.safeParse({
-        type: 'daily_drop_ready',
-        drop_date: '2026-10-24',
-        slot: 'evening',
+        type: 'bubble_received',
+        conversation_id: null,
       }).success,
     ).toBe(true);
   });

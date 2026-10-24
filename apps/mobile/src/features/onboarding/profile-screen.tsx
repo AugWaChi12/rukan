@@ -97,6 +97,7 @@ export function ProfileScreen() {
         disabled={!validation.success}
         loading={save.isPending}
       />
+      <Button variant="ghost" label={t('common.signOut')} onPress={() => void api.auth.signOut()} />
     </Screen>
   );
 }

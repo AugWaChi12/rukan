@@ -222,7 +222,6 @@ export const REALTIME_INBOX_EVENT_TYPES = [
   'bubble_received',
   'bubble_accepted',
   'bubble_declined',
-  'daily_drop_ready',
   'inbox_updated',
 ] as const;
 export type RealtimeInboxEventType = (typeof REALTIME_INBOX_EVENT_TYPES)[number];
@@ -231,7 +230,5 @@ export const realtimeInboxSignalSchema = z.object({
   id: z.guid().optional(),
   type: z.enum(REALTIME_INBOX_EVENT_TYPES),
   conversation_id: z.guid().nullable().optional(),
-  drop_date: z.string().optional(),
-  slot: z.string().optional(),
 });
 export type RealtimeInboxSignal = z.infer<typeof realtimeInboxSignalSchema>;

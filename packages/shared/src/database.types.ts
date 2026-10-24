@@ -307,7 +307,7 @@ export type Database = {
       };
       get_my_blocks: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_bubbles: { Args: Record<PropertyKey, never>; Returns: Json };
-      get_my_drop: { Args: { p_mode: string }; Returns: Json };
+      get_my_deck: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_matches: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_moderation_history: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -388,10 +388,7 @@ export type Database = {
       set_interests: { Args: { p_interest_ids: string[] }; Returns: undefined };
       set_prompt_answer: { Args: { p_answer: string; p_prompt_id: string }; Returns: undefined };
       submit_appeal: { Args: { p_action_id: string; p_appeal_text: string }; Returns: undefined };
-      swipe: {
-        Args: { p_candidate_id: string; p_direction: string; p_mode: string };
-        Returns: Json;
-      };
+      swipe: { Args: { p_candidate_id: string; p_direction: string }; Returns: Json };
       unblock_user: { Args: { p_block_id: string }; Returns: undefined };
       unlike_post: { Args: { p_post_id: string }; Returns: undefined };
       unmatch: { Args: { p_match_id: string }; Returns: undefined };
