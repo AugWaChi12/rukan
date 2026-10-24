@@ -31,8 +31,8 @@ declare
   v_res jsonb;
 begin
   select jsonb_build_object(
-    'reports_pending', (select count(*) from private.reports where status = 'pending'),
-    'appeals_pending', (select count(*) from private.appeals where status = 'pending'),
+    'reports_pending', (select count(*) from private.reports where status = 'open'),
+    'appeals_pending', (select count(*) from private.moderation_actions where appeal_status = 'pending'),
     'waitlist_total', (select count(*) from private.waitlist),
     'active_suspensions', (
       select count(*)
