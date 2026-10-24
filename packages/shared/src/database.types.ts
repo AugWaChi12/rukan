@@ -1,11 +1,6 @@
-﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: '14.18';
-  };
   public: {
     Tables: {
       areas: {
@@ -18,6 +13,7 @@ export type Database = {
           name_th: string;
           sort: number;
         };
+        ComputedFields: never;
         Insert: {
           active?: boolean;
           city?: string;
@@ -48,6 +44,7 @@ export type Database = {
           name_th: string;
           sort: number;
         };
+        ComputedFields: never;
         Insert: {
           active?: boolean;
           category?: string;
@@ -77,6 +74,7 @@ export type Database = {
           storage_path: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           id?: string;
@@ -109,6 +107,7 @@ export type Database = {
           interest_id: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           created_at?: string;
           interest_id: string;
@@ -144,6 +143,7 @@ export type Database = {
           updated_at: string;
           user_id: string;
         };
+        ComputedFields: never;
         Insert: {
           answer: string;
           created_at?: string;
@@ -192,6 +192,7 @@ export type Database = {
           updated_at: string;
           verification_level: Database['public']['Enums']['verification_level'];
         };
+        ComputedFields: never;
         Insert: {
           area_id?: string | null;
           bio?: string | null;
@@ -243,6 +244,7 @@ export type Database = {
           text_en: string;
           text_th: string;
         };
+        ComputedFields: never;
         Insert: {
           active?: boolean;
           created_at?: string;
@@ -289,7 +291,7 @@ export type Database = {
       delete_my_post: { Args: { p_post_id: string }; Returns: undefined };
       delete_my_reply: { Args: { p_reply_id: string }; Returns: undefined };
       get_conversation: { Args: { p_conversation_id: string }; Returns: Json };
-      get_conversations: { Args: never; Returns: Json };
+      get_conversations: { Args: Record<PropertyKey, never>; Returns: Json };
       get_feed: {
         Args: {
           p_before_created_at?: string;
@@ -308,16 +310,16 @@ export type Database = {
         };
         Returns: Json;
       };
-      get_my_blocks: { Args: never; Returns: Json };
-      get_my_bubbles: { Args: never; Returns: Json };
+      get_my_blocks: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_bubbles: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_drop: { Args: { p_mode: string }; Returns: Json };
-      get_my_matches: { Args: never; Returns: Json };
-      get_my_moderation_history: { Args: never; Returns: Json };
-      get_my_profile: { Args: never; Returns: Json };
-      get_my_status: { Args: never; Returns: Json };
+      get_my_matches: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_moderation_history: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_status: { Args: Record<PropertyKey, never>; Returns: Json };
       get_profile_card: { Args: { p_user_id: string }; Returns: Json };
       get_replies: { Args: { p_post_id: string }; Returns: Json };
-      health: { Args: never; Returns: Json };
+      health: { Args: Record<PropertyKey, never>; Returns: Json };
       join_waitlist: {
         Args: {
           p_age_band?: string;
@@ -335,9 +337,9 @@ export type Database = {
         Args: { p_conversation_id: string };
         Returns: undefined;
       };
-      mod_get_dashboard_counts: { Args: never; Returns: Json };
+      mod_get_dashboard_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_get_report: { Args: { p_report_id: string }; Returns: Json };
-      mod_get_waitlist_stats: { Args: never; Returns: Json };
+      mod_get_waitlist_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_list_reports: {
         Args: { p_limit?: number; p_status?: string };
         Returns: Json;
