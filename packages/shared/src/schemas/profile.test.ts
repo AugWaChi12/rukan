@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ageFromBirthdate, myStatusSchema, onboardingSchema, updateProfileSchema } from './profile';
+import {
+  ageFromBirthdate,
+  interestsSchema,
+  myStatusSchema,
+  onboardingSchema,
+  photoPositionSchema,
+  promptAnswerSchema,
+  updateProfileSchema,
+} from './profile';
 
 describe('ageFromBirthdate', () => {
   const today = new Date(2026, 9, 24); // 24 ต.ค. 2026
@@ -62,5 +70,27 @@ describe('myStatusSchema', () => {
     };
     expect(myStatusSchema.safeParse(status).success).toBe(false);
     expect(myStatusSchema.safeParse({ ...status, next_step: 'phone' }).success).toBe(true);
+  });
+});
+
+describe('interestsSchema / promptAnswerSchema / photoPositionSchema', () => {
+  it('ความสนใจเกิน 10 อย่างไม่ผ่าน', () => {
+    const ten = Array.from({ length: 10 }, (_, i) => `tag_${i}`);
+    expect(interestsSchema.safeParse(ten).success).toBe(true);
+    expect(interestsSchema.safeParse([...ten, 'tag_10']).success).toBe(false);
+  });
+
+  it('คำตอบคำถามโปรไฟล์ยาวเกิน 200 ไม่ผ่าน แต่ค่าว่างผ่าน (ใช้ลบคำตอบ)', () => {
+    expect(promptAnswerSchema.safeParse({ promptId: 'p1', answer: '' }).success).toBe(true);
+    expect(promptAnswerSchema.safeParse({ promptId: 'p1', answer: 'a'.repeat(201) }).success).toBe(
+      false,
+    );
+  });
+
+  it('ตำแหน่งรูปต้องอยู่ระหว่าง 0–5', () => {
+    expect(photoPositionSchema.safeParse(0).success).toBe(true);
+    expect(photoPositionSchema.safeParse(5).success).toBe(true);
+    expect(photoPositionSchema.safeParse(-1).success).toBe(false);
+    expect(photoPositionSchema.safeParse(6).success).toBe(false);
   });
 });

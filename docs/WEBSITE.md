@@ -75,9 +75,9 @@
 
 1. ✅ โครง (ไฟล์นี้)
 2. ดีไซน์หน้าแรก (เดสก์ท็อป + มือถือ) บน canvas
-3. migration `waitlist` + RPC + pgTAP
-4. สร้างหน้าแรก + i18n + ฟอร์ม waitlist ใน `apps/web`
-5. หน้า `/rules` `/privacy` `/terms` (รอเนื้อหาจากทนาย — ใส่ร่างจาก POLICY.md ไว้ก่อนพร้อมป้าย "ร่าง")
+3. ✅ migration `waitlist` + RPC + pgTAP
+4. ✅ สร้างหน้าแรก + i18n + ฟอร์ม waitlist ใน `apps/web`
+5. ✅ หน้า `/rules` `/privacy` `/terms` (ใส่ร่างจาก POLICY.md ไว้ก่อนพร้อมป้าย "ร่าง" ทั้ง TH และ EN)
 6. OG image, sitemap, analytics → ผูกโดเมน → เปิด
 
 ## 7. ต้องตัดสินใจ

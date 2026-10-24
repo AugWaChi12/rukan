@@ -1,0 +1,216 @@
+import { describe, expect, it } from 'vitest';
+import {
+  conversationDetailSchema,
+  getMessagesSchema,
+  sendBubbleSchema,
+  sendMessageSchema,
+} from './chat';
+import { getMyDropSchema, politeCloseSchema, profileCardSchema, swipeSchema } from './matching';
+import {
+  blockedUserItemSchema,
+  blockUserFromSchema,
+  modRevealAuthorSchema,
+  modTakeActionSchema,
+  reportTargetSchema,
+  submitAppealSchema,
+} from './safety';
+import { createPostSchema, getFeedSchema, replyPostSchema, spacePostSchema } from './space';
+
+const UUID_1 = '11111111-1111-4111-8111-111111111111';
+const UUID_2 = '22222222-2222-4222-8222-222222222222';
+
+describe('Phase 2 schemas (Safety & Moderation)', () => {
+  it('blockUserFromSchema รองรับทุก targetType รวมถึงการบล็อกจากโพสต์ไม่ระบุตัวตน', () => {
+    expect(blockUserFromSchema.safeParse({ targetType: 'post', targetId: UUID_1 }).success).toBe(
+      true,
+    );
+    expect(blockUserFromSchema.safeParse({ targetType: 'invalid', targetId: UUID_1 }).success).toBe(
+      false,
+    );
+  });
+
+  it('blockedUserItemSchema รองรับแถวที่ซ่อนตัวตนเมื่อบล็อกจาก Space', () => {
+    const anonBlock = {
+      id: UUID_1,
+      is_anonymous: true,
+      blocked_user_id: null,
+      display_name: null,
+      created_at: '2026-10-24T00:00:00Z',
+    };
+    expect(blockedUserItemSchema.safeParse(anonBlock).success).toBe(true);
+  });
+
+  it('reportTargetSchema ตรวจเหตุผลและความยาวรายละเอียด', () => {
+    expect(
+      reportTargetSchema.safeParse({
+        targetType: 'post',
+        targetId: UUID_1,
+        reason: 'self_harm',
+        details: 'น่าเป็นห่วง',
+      }).success,
+    ).toBe(true);
+    expect(
+      reportTargetSchema.safeParse({
+        targetType: 'post',
+        targetId: UUID_1,
+        reason: 'unknown_reason',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('submitAppealSchema ต้องมีข้อความอุทธรณ์อย่างน้อย 5 ตัวอักษร', () => {
+    expect(submitAppealSchema.safeParse({ actionId: UUID_1, appealText: 'abc' }).success).toBe(
+      false,
+    );
+    expect(
+      submitAppealSchema.safeParse({ actionId: UUID_1, appealText: 'ขออุทธรณ์เนื่องจากเข้าใจผิด' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('modRevealAuthorSchema และ modTakeActionSchema บังคับระบุเหตุผลอย่างน้อย 3 ตัวอักษร', () => {
+    expect(
+      modRevealAuthorSchema.safeParse({ targetType: 'post', targetId: UUID_1, reason: 'ab' })
+        .success,
+    ).toBe(false);
+    expect(
+      modTakeActionSchema.safeParse({
+        userId: UUID_2,
+        action: 'suspend',
+        level: 2,
+        reason: 'คุกคามซ้ำ',
+        until: '2026-11-01T00:00:00Z',
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe('Phase 3 schemas (Space)', () => {
+  it('createPostSchema บังคับข้อความ 1–500 ตัวอักษร และ mood ที่อยู่ในรายการ', () => {
+    expect(createPostSchema.safeParse({ body: '   ' }).success).toBe(false);
+    expect(createPostSchema.safeParse({ body: 'a'.repeat(501) }).success).toBe(false);
+    expect(createPostSchema.parse({ body: ' วันนี้เหนื่อยจัง ', mood: 'tired' })).toEqual({
+      body: 'วันนี้เหนื่อยจัง',
+      mood: 'tired',
+    });
+  });
+
+  it('getFeedSchema ตั้งค่าเริ่มต้นเป็น tab = all, limit = 20', () => {
+    expect(getFeedSchema.parse({})).toEqual({ tab: 'all', limit: 20 });
+  });
+
+  it('replyPostSchema บังคับไม่เกิน 300 ตัวอักษร', () => {
+    expect(replyPostSchema.safeParse({ postId: UUID_1, body: 'x'.repeat(301) }).success).toBe(
+      false,
+    );
+    expect(replyPostSchema.safeParse({ postId: UUID_1, body: 'เป็นกำลังใจให้นะ' }).success).toBe(
+      true,
+    );
+  });
+
+  it('spacePostSchema ตรวจรูปร่างโพสต์จาก get_feed', () => {
+    const post = {
+      id: UUID_1,
+      alias: 'แมวส้มสายชิล',
+      alias_color: '#E5B84B',
+      body: 'ใครอยู่แถวอารีย์บ้าง',
+      mood: 'lonely',
+      area_id: 'ari',
+      age_band: '22-25',
+      like_count: 2,
+      reply_count: 1,
+      liked_by_me: true,
+      is_mine: false,
+      created_at: '2026-10-24T12:00:00Z',
+    };
+    expect(spacePostSchema.safeParse(post).success).toBe(true);
+  });
+});
+
+describe('Phase 4 schemas (Bubbles & Chat)', () => {
+  it('sendBubbleSchema จำกัดข้อความทักทายไม่เกิน 200 ตัวอักษร', () => {
+    expect(sendBubbleSchema.safeParse({ postId: UUID_1, message: 'x'.repeat(201) }).success).toBe(
+      false,
+    );
+    expect(
+      sendBubbleSchema.safeParse({ postId: UUID_1, message: 'ชอบร้านนี้เหมือนกัน!' }).success,
+    ).toBe(true);
+  });
+
+  it('sendMessageSchema และ getMessagesSchema ตรวจสอบข้อมูลถูกต้อง', () => {
+    expect(
+      sendMessageSchema.safeParse({ conversationId: UUID_1, body: 'สวัสดีครับ' }).success,
+    ).toBe(true);
+    expect(getMessagesSchema.parse({ conversationId: UUID_1 })).toEqual({
+      conversationId: UUID_1,
+      limit: 50,
+    });
+  });
+
+  it('conversationDetailSchema รองรับทั้งแชทนามแฝง (peer.user_id = null) และแชทที่เปิดตัวแล้ว', () => {
+    const detail = {
+      id: UUID_1,
+      kind: 'anon',
+      is_anonymous: true,
+      reveal_stage: 0,
+      match_id: null,
+      closed_at: null,
+      closed_reason: null,
+      peer: {
+        user_id: null,
+        display_name: null,
+        alias: 'กระต่ายถือร่ม',
+        alias_color: '#6BB8A6',
+      },
+      my_message_count: 2,
+      peer_message_count: 3,
+      my_wants_reveal: true,
+      peer_wants_reveal: false,
+      my_wants_photo_unlock: false,
+      peer_wants_photo_unlock: false,
+      next_stage_target_messages: 5,
+      my_messages_needed_for_next_stage: null,
+      peer_messages_needed_for_next_stage: null,
+    };
+    expect(conversationDetailSchema.safeParse(detail).success).toBe(true);
+  });
+});
+
+describe('Phase 5 schemas (Daily Drop & Match)', () => {
+  it('getMyDropSchema และ swipeSchema รับเฉพาะโหมด friend/date และทิศทาง like/skip', () => {
+    expect(getMyDropSchema.safeParse('friend').success).toBe(true);
+    expect(getMyDropSchema.safeParse('hookup').success).toBe(false);
+    expect(
+      swipeSchema.safeParse({ candidateId: UUID_2, mode: 'date', direction: 'like' }).success,
+    ).toBe(true);
+    expect(
+      swipeSchema.safeParse({ candidateId: UUID_2, mode: 'date', direction: 'superlike' }).success,
+    ).toBe(false);
+  });
+
+  it('politeCloseSchema ตั้งค่า templateId เริ่มต้นเป็น thanks', () => {
+    expect(politeCloseSchema.parse({ matchId: UUID_1 })).toEqual({
+      matchId: UUID_1,
+      templateId: 'thanks',
+    });
+  });
+
+  it('profileCardSchema ตรวจข้อมูลการ์ดโปรไฟล์ตาม reveal_stage', () => {
+    const card = {
+      id: UUID_2,
+      display_name: 'Demo Two',
+      age: 21,
+      bio: 'ชอบถ่ายรูปฟิล์ม',
+      occupation: 'นักศึกษา',
+      area_id: 'siam',
+      modes: ['friend', 'date'],
+      org_badge: null,
+      verification_level: 'selfie',
+      reveal_stage: 1,
+      interests: ['cafe', 'film'],
+      prompts: [{ prompt_id: 'sunday', answer: 'เดินหอศิลป์' }],
+      unlocked_photo_paths: [`${UUID_2}/00000000-0000-4000-8000-000000000000.webp`],
+    };
+    expect(profileCardSchema.safeParse(card).success).toBe(true);
+  });
+});

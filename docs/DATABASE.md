@@ -152,44 +152,54 @@ curl -s -X POST http://127.0.0.1:54321/rest/v1/rpc/health \
 
 **ตาราง**
 
-| ตาราง                                                                | client อ่าน           | client เขียน                                     | migration                     |
-| -------------------------------------------------------------------- | --------------------- | ------------------------------------------------ | ----------------------------- |
-| `public.profiles` (ชื่อ, bio, งาน, ย่าน, โหมด, ระดับยืนยัน, ตั้งค่า) | เจ้าของ (แถวตัวเอง)   | `update_my_profile`, `complete_onboarding`       | init_profiles → identity_core |
-| `public.areas` / `interests` / `prompts`                             | ทุกคน (anon ด้วย)     | migration เท่านั้น                               | identity_core                 |
-| `public.profile_interests` / `profile_prompts`                       | เจ้าของ               | `set_interests`, `set_prompt_answer`             | identity_core                 |
-| `public.photos` (metadata รูป)                                       | เจ้าของ               | `add_photo`, `remove_photo`                      | photos_storage                |
-| `private.profile_private` (วันเกิด, เพศ\*, ช่วงอายุที่สนใจ)          | ผ่าน `get_my_profile` | `complete_onboarding` (วันเกิดตั้งได้ครั้งเดียว) | identity_core                 |
-| `private.verifications` (เบอร์, liveness, องค์กร)                    | —                     | trigger เบอร์ / `mark_liveness_passed` (server)  | identity_core                 |
-| `private.aliases` (นามแฝง Space)                                     | ผ่าน `get_my_profile` | trigger ตอนสมัคร                                 | identity_core                 |
-| `private.consents`                                                   | ผ่าน `get_my_status`  | `record_consent` (เวอร์ชันปัจจุบันเท่านั้น)      | identity_core                 |
-| `private.user_status` (ระงับ / แบน)                                  | ผ่าน `get_my_status`  | moderator (เฟส 2)                                | security_baseline             |
-| `private.rate_events`                                                | —                     | `private.check_rate()`                           | waitlist                      |
-| `private.waitlist`                                                   | —                     | `join_waitlist`                                  | waitlist                      |
+| ตาราง                                                                | client อ่าน                                         | client เขียน                                             | migration                     |
+| -------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------- | ----------------------------- |
+| `public.profiles` (ชื่อ, bio, งาน, ย่าน, โหมด, ระดับยืนยัน, ตั้งค่า) | เจ้าของ (แถวตัวเอง) / คนอื่นผ่าน `get_profile_card` | `update_my_profile`, `complete_onboarding`               | init_profiles → identity_core |
+| `public.areas` / `interests` / `prompts`                             | ทุกคน (anon ด้วย)                                   | migration เท่านั้น                                       | identity_core                 |
+| `public.profile_interests` / `profile_prompts`                       | เจ้าของ                                             | `set_interests`, `set_prompt_answer`                     | identity_core                 |
+| `public.photos` (metadata รูป)                                       | เจ้าของ / รูปที่ปลดล็อกผ่าน `get_profile_card`      | `add_photo`, `remove_photo`                              | photos_storage                |
+| `private.profile_private` (วันเกิด, เพศ\*, ช่วงอายุที่สนใจ)          | ผ่าน `get_my_profile` (คนอื่นเห็นเฉพาะ `age`)       | `complete_onboarding` (วันเกิดตั้งได้ครั้งเดียว)         | identity_core                 |
+| `private.verifications` (เบอร์, liveness, องค์กร)                    | —                                                   | trigger เบอร์ / `mark_liveness_passed` (server)          | identity_core                 |
+| `private.aliases` (นามแฝง Space)                                     | ผ่าน `get_my_profile`                               | trigger ตอนสมัคร                                         | identity_core                 |
+| `private.consents`                                                   | ผ่าน `get_my_status`                                | `record_consent` (เวอร์ชันปัจจุบันเท่านั้น)              | identity_core                 |
+| `private.user_status` (ระงับ / แบน / strikes)                        | ผ่าน `get_my_status`                                | `mod_take_action`, `mod_review_appeal`                   | security_baseline             |
+| `private.blocks` (รวม `is_anonymous_block` กันแอบดูชื่อจาก Space)    | ผ่าน `get_my_blocks` (ซ่อนชื่อถ้าเป็น anon block)   | `block_user_from`, `unblock_user`                        | phase2_safety_moderation      |
+| `private.reports` (รายงาน + snapshot หลักฐาน + severity 1–3)         | moderator ผ่าน `mod_list_reports`, `mod_get_report` | `report_target`                                          | phase2_safety_moderation      |
+| `private.moderation_actions` (ประวัติโทษ + คำอุทธรณ์ 14 วัน)         | เจ้าของผ่าน `get_my_moderation_history` / moderator | `mod_take_action`, `submit_appeal`, `mod_review`         | phase2_safety_moderation      |
+| `private.identity_reveals_log` (audit log ตอน moderator เปิดดูตัวตน) | — (บันทึกถาวร แก้/ลบไม่ได้)                         | `mod_reveal_author`                                      | phase2_safety_moderation      |
+| `private.posts` / `post_replies` / `post_likes` / `mood_checkins`    | ผ่าน `get_feed`, `get_replies` (ไม่มี `author_id`)  | `create_post`, `reply_post`, `like_post` ฯลฯ             | phase3_space                  |
+| `private.bubbles` (ทักจากโพสต์ Space 1 ข้อความ)                      | ผ่าน `get_my_bubbles` (ไม่มี `sender_id`)           | `send_bubble`, `respond_bubble`                          | phase4_bubbles_and_chat       |
+| `private.conversations` / `conversation_members` / `messages`        | ผ่าน `get_conversations`, `get_messages`            | `send_message`, `request_reveal`, `request_photo_unlock` | phase4_bubbles_and_chat       |
+| `private.daily_drops` / `swipes` / `matches`                         | ผ่าน `get_my_drop`, `get_my_matches`                | `swipe`, `polite_close`, `unmatch`                       | phase5_matches_and_drops      |
+| `private.rate_events`                                                | —                                                   | `private.check_rate()`                                   | waitlist                      |
+| `private.waitlist`                                                   | —                                                   | `join_waitlist`                                          | waitlist                      |
 
 \* เพศ / สนใจเพศ: มีคอลัมน์แต่ยังไม่มี RPC เขียน — รอทีมตัดสินใจ Q16
 
-**RPC ที่ client เรียกได้** (= allowlist ใน `security_invariants.test.sql`)
+**RPC ที่ client เรียกได้** (= allowlist 36 ฟังก์ชันใน `security_invariants.test.sql`)
 
-| function                                                                                      | ใครเรียก     | ต้องยืนยันถึงระดับ    |
-| --------------------------------------------------------------------------------------------- | ------------ | --------------------- |
-| `health()`, `join_waitlist(...)`                                                              | anon + login | —                     |
-| `get_my_status()`, `get_my_profile()`                                                         | login        | —                     |
-| `record_consent(doc, version)`, `update_my_profile(...)`                                      | login        | none (แค่ไม่ถูกระงับ) |
-| `complete_onboarding(...)`, `set_interests`, `set_prompt_answer`, `add_photo`, `remove_photo` | login        | phone                 |
+| function                                                                                                                                                                                                                 | ใครเรียก                                      | ต้องยืนยันถึงระดับ             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | ------------------------------ |
+| `health()`, `join_waitlist(...)`                                                                                                                                                                                         | anon + login                                  | —                              |
+| `get_my_status()`, `get_my_profile()`, `get_my_moderation_history()`, `submit_appeal(...)`                                                                                                                               | login                                         | — (แม้ถูกระงับก็ดู/อุทธรณ์ได้) |
+| `record_consent(doc, version)`, `update_my_profile(...)`, `block_user_from(...)`, `unblock_user(...)`, `get_my_blocks()`, `report_target(...)`                                                                           | login                                         | none (แค่ไม่ถูกระงับ)          |
+| `complete_onboarding(...)`, `set_interests`, `set_prompt_answer`, `add_photo`, `remove_photo`                                                                                                                            | login                                         | phone                          |
+| **Space (เฟส 3)**: `create_post`, `get_feed`, `delete_my_post`, `like_post`, `unlike_post`, `reply_post`, `get_replies`, `delete_my_reply`, `checkin_mood`                                                               | login                                         | selfie                         |
+| **Bubble & แชท (เฟส 4)**: `send_bubble`, `get_my_bubbles`, `respond_bubble`, `get_conversations`, `get_conversation`, `get_messages`, `send_message`, `mark_conversation_read`, `request_reveal`, `request_photo_unlock` | login                                         | selfie                         |
+| **Daily Drop & Match (เฟส 5)**: `get_my_drop`, `swipe`, `get_my_matches`, `polite_close`, `unmatch`, `get_profile_card`                                                                                                  | login                                         | selfie                         |
+| **Moderator (เฟส 2)**: `mod_list_reports`, `mod_get_report`, `mod_reveal_author`, `mod_take_action`, `mod_review_appeal`                                                                                                 | moderator (`app_metadata.role = 'moderator'`) | —                              |
 
 `get_my_status().next_step`: `restricted` → `consents` → `phone` → `profile` → `selfie` → `done`
 
-**Storage**: bucket `photos` (private, ≤5MB, webp/jpeg, path `<uid>/<uuid>.webp`) — เจ้าของอัปโหลด/อ่าน/ลบได้แค่ของตัวเอง เขียนทับไม่ได้ · bucket `avatars` เดิมปิดเป็น private แล้ว (เลิกใช้)
+**Storage**: bucket `photos` (private, ≤5MB, webp/jpeg, path `<uid>/<uuid>.webp`) — เจ้าของอัปโหลด/อ่าน/ลบได้แค่ของตัวเอง เขียนทับไม่ได้ · คนอื่นดูได้เฉพาะรูปที่ `get_profile_card` ปลดล็อกตาม `reveal_stage` (0=0 รูป, 1=1 รูป, 2=3 รูป, 3=6 รูป) · bucket `avatars` เดิมปิดเป็น private แล้ว (เลิกใช้)
 
-**Helper ภายใน (`private`, client เรียกไม่ได้)**: `assert_signed_in()`, `assert_active_user(min_level)`, `user_state()`, `is_moderator()`, `age_years()`, `check_rate()`, `client_ip()`, `has_consent()`, `current_consent_version()`, `generate_alias()`, `is_own_photo_path()`, `mark_liveness_passed()` (สำหรับ Edge Function ในอนาคต)
+**Helper ภายใน (`private`, client เรียกไม่ได้)**: `assert_signed_in()`, `assert_active_user(min_level)`, `assert_moderator()`, `user_state()`, `is_moderator()`, `is_blocked()`, `age_years()`, `age_band_label()`, `check_rate()`, `client_ip()`, `has_consent()`, `current_consent_version()`, `generate_alias()`, `is_own_photo_path()`, `mark_liveness_passed()`, `resolve_target_owner_and_snapshot()`, `contains_contact_or_pii()`, `contains_self_harm_signal()`, `contains_scam_keywords()`, `recompute_reveal_stage()`, `ensure_user_daily_drop()`, `generate_daily_drops()`, `expire_stale_matches()`, `close_stale_anon_chats()`, `purge_old_rate_events()`
 
-**Trigger**: `on_auth_user_created` (สร้าง profiles + profile_private + verifications + alias) · `on_auth_user_phone_confirmed` (→ ระดับ `phone`) · `*_set_updated_at`
+**Trigger**: `on_auth_user_created` (สร้าง profiles + profile_private + verifications + alias) · `on_auth_user_phone_confirmed` (→ ระดับ `phone`) · `post_likes_sync_count` · `post_replies_sync_count` · `*_set_updated_at`
 
-pgTAP: `security_invariants`, `identity`, `photos_storage`, `waitlist` (ใน `supabase/tests/database/`)
+pgTAP (152 tests / 8 ไฟล์ใน `supabase/tests/database/`): `security_invariants`, `identity`, `photos_storage`, `waitlist`, `phase2_safety_moderation`, `phase3_space`, `phase4_bubbles_and_chat`, `phase5_matches_and_drops`
 
 ผู้ใช้ใน seed (รหัส `password123`): `demo` (1111…) และ `demo2` (2222…) ยืนยันครบ · `demo3` (3333…) ผู้ใช้ใหม่
-
-ตารางที่จะสร้างต่อ (ตามเฟส) → [`SYSTEM_DESIGN.md`](SYSTEM_DESIGN.md) หัวข้อ 5 (data model) และ 14 (ลำดับการสร้าง)
 
 ### 3.4 ไฟล์ใน `supabase/`
 

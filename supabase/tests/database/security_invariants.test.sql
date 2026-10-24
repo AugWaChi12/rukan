@@ -47,9 +47,28 @@ select set_eq(
   $$,
   array[
     'health', 'join_waitlist',
+    -- เฟส 1: ตัวตน + โปรไฟล์ + รูป
     'get_my_status', 'get_my_profile', 'update_my_profile', 'complete_onboarding',
     'record_consent', 'set_interests', 'set_prompt_answer',
-    'add_photo', 'remove_photo'
+    'add_photo', 'remove_photo',
+    -- เฟส 2: ความปลอดภัย + ดูแลชุมชน
+    'block_user_from', 'unblock_user', 'get_my_blocks',
+    'report_target', 'get_my_moderation_history', 'submit_appeal',
+    'mod_list_reports', 'mod_get_report', 'mod_reveal_author',
+    'mod_take_action', 'mod_review_appeal',
+    -- เฟส 3: Space
+    'create_post', 'get_feed', 'delete_my_post',
+    'like_post', 'unlike_post',
+    'reply_post', 'get_replies', 'delete_my_reply',
+    'checkin_mood',
+    -- เฟส 4: Bubble + แชท
+    'send_bubble', 'get_my_bubbles', 'respond_bubble',
+    'get_conversations', 'get_conversation', 'get_messages',
+    'send_message', 'mark_conversation_read',
+    'request_reveal', 'request_photo_unlock',
+    -- เฟส 5: Daily Drop + Match + Profile Card
+    'get_my_drop', 'swipe', 'get_my_matches',
+    'polite_close', 'unmatch', 'get_profile_card'
   ],
   'authenticated เรียกได้เฉพาะ API ที่ประกาศไว้'
 );

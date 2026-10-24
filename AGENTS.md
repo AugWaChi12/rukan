@@ -158,15 +158,22 @@ URL ตอน dev:
   - [x] ทดสอบบนเครื่องแล้ว: db:reset, db:test (9/9), login/signup ผ่าน Supabase API, web + mobile (web build) ต่อ Supabase ได้
 - [ ] สร้าง Supabase project จริง + ผูก Vercel (ดู ARCHITECTURE.md หัวข้อ 6)
 - [ ] ตั้ง branch protection ให้ `main` + เช็คว่า CI บน GitHub ผ่าน
-- [x] ออกแบบระบบ (2026-10-24) → [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md) — ยังไม่ได้ implement
+- [x] ออกแบบระบบ (2026-10-24) → [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md)
 - [ ] เฟส 1–5 ตาม SYSTEM_DESIGN.md หัวข้อ 14
   - [x] เฟส 1 ฝั่ง DB (2026-10-24, branch `feature/identity-core`): security baseline + รั้ว `security_invariants`, ตารางตัวตน, RPC onboarding/โปรไฟล์, bucket `photos` — pgTAP 70/70
-  - [x] เฟส 1 ฝั่งแอป (2026-10-24, branch `feature/app-structure`): `packages/api` + โครง expo-router (auth / onboarding / tabs) + หน้า "ฉัน" — ทดสอบบน expo web แล้ว
+  - [x] เฟส 1 ฝั่งแอป (2026-10-24, branch `feature/app-structure`, `feature/me-and-legal`): `packages/api` + โครง expo-router (auth / onboarding / tabs) + หน้า "ฉัน" (รูปโปรไฟล์, ข้อมูลพื้นฐาน, ความสนใจ, คำถามเปิดบทสนทนา, ตั้งค่า)
+  - [x] เฟส 2–5 ฝั่ง DB + API ทั้งหมด (2026-10-24, branch `feature/me-and-legal`):
+    - [x] เฟส 2 ความปลอดภัย & Moderator (`blocks` พร้อมซ่อนตัวตนเมื่อบล็อกจาก Space, `reports`, `moderation_actions`, `identity_reveals_log` + RPC ผู้ใช้/ผู้ดูแล/อุทธรณ์)
+    - [x] เฟส 3 Space (`posts`, `post_replies`, `post_likes`, `mood_checkins` + กรองข้อมูลติดต่อ/PII + สัญญาณขอความช่วยเหลือ `care_notice` + ไม่ส่ง `author_id` ออกไปเด็ดขาด)
+    - [x] เฟส 4 Bubble & แชท (`bubbles`, `conversations`, `conversation_members`, `messages` + เตือนคำเสี่ยงกลโกง `scam_warning` + กดเปิดตัวสองฝ่าย `request_reveal` + คำนวณ `reveal_stage` 0–3 จากข้อความของทั้งสองฝ่าย + `request_photo_unlock`)
+    - [x] เฟส 5 Daily Drop & Match (`daily_drops`, `swipes`, `matches` + คัดการ์ดไม่เกิน 5 คน/วัน/โหมด + หมดอายุ 48 ชม. ถ้าไม่ทัก + `polite_close` / `unmatch` + `get_profile_card` ปลดล็อกรูปตาม `reveal_stage` และกัน scrape)
+    - [x] `@rukan/shared` (types 36 RPCs + zod schemas) และ `@rukan/api` (`createApi` + `createQueries` ครบทุกเฟส) — ทดสอบ pgTAP 152/152 และ Vitest 57/57 ผ่านทั้งหมด
   - [ ] เฟส 1 ที่รอทีม: SMS OTP + liveness vendor (Q14 — **มีข้อเสนอแล้ว: ด่านแรก MediaPipe + AWS Rekognition** ดู `docs/DECISIONS.md` หัวข้อ "ข้อเสนอ: selfie liveness"), social login, Edge Functions
-  - [ ] งานถัดไปที่ทำได้เลย: selfie PoC (Edge Function `start-liveness` / `liveness-result` + หน้า selfie), ไอคอนแท็บ, ฟอนต์ Prompt/Anuphan, แก้ความสนใจ/คำถาม/รูปในหน้า "ฉัน", หน้า `/rules` `/privacy` `/terms` บนเว็บ
+  - [ ] งานถัดไปที่ทำได้เลย (ฝั่ง UI): หน้า `/admin` บนเว็บสำหรับ moderator, หน้าจอแท็บ Space / Daily Drop / แชท / บล็อก & อุทธรณ์ บน mobile, selfie PoC (Edge Function `start-liveness` / `liveness-result` + หน้า selfie), ไอคอนแท็บ, ฟอนต์ Prompt/Anuphan บน mobile
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 - [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้
-  - [ ] หน้า `/rules` `/privacy` `/terms`, OG image, analytics, ซื้อโดเมน rukan.app (ดู `docs/WEBSITE.md`)
+  - [x] หน้า `/rules` `/privacy` `/terms` (TH + EN) พร้อมป้ายร่างและ sitemap (2026-10-24, branch `feature/me-and-legal`)
+  - [ ] OG image, analytics, ซื้อโดเมน rukan.app (ดู `docs/WEBSITE.md`)
 
 > **AI ที่ทำงานเสร็จแต่ละขั้น: อัปเดต checklist นี้ และบันทึกการตัดสินใจใหม่ลง `docs/DECISIONS.md` ด้วย**
 

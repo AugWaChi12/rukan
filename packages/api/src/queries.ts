@@ -1,3 +1,4 @@
+import type { ProfileMode, ReportStatus, SpaceFeedTab } from '@rukan/shared';
 import { queryOptions } from '@tanstack/react-query';
 import type { RukanApi } from './client';
 
@@ -9,6 +10,23 @@ export const queryKeys = {
   me: ['me'] as const,
   myStatus: ['me', 'status'] as const,
   myProfile: ['me', 'profile'] as const,
+  myPhotos: ['me', 'photos'] as const,
+  myBlocks: ['me', 'blocks'] as const,
+  myModerationHistory: ['me', 'moderation-history'] as const,
+  myBubbles: ['me', 'bubbles'] as const,
+  myConversations: ['me', 'conversations'] as const,
+  conversation: (conversationId: string) => ['me', 'conversations', conversationId] as const,
+  messages: (conversationId: string) =>
+    ['me', 'conversations', conversationId, 'messages'] as const,
+  myDrop: (mode: ProfileMode) => ['me', 'drop', mode] as const,
+  myMatches: ['me', 'matches'] as const,
+  profileCard: (userId: string) => ['me', 'profile-card', userId] as const,
+  space: ['space'] as const,
+  spaceFeed: (tab: SpaceFeedTab) => ['space', 'feed', tab] as const,
+  spaceReplies: (postId: string) => ['space', 'replies', postId] as const,
+  moderation: ['moderation'] as const,
+  modReports: (status: ReportStatus = 'open') => ['moderation', 'reports', status] as const,
+  modReport: (reportId: string) => ['moderation', 'report', reportId] as const,
   reference: ['reference'] as const,
   areas: ['reference', 'areas'] as const,
   interests: ['reference', 'interests'] as const,
@@ -21,6 +39,57 @@ export function createQueries(api: RukanApi) {
   return {
     myStatus: () => queryOptions({ queryKey: queryKeys.myStatus, queryFn: api.getMyStatus }),
     myProfile: () => queryOptions({ queryKey: queryKeys.myProfile, queryFn: api.getMyProfile }),
+    myPhotos: () => queryOptions({ queryKey: queryKeys.myPhotos, queryFn: api.listMyPhotos }),
+    myBlocks: () => queryOptions({ queryKey: queryKeys.myBlocks, queryFn: api.getMyBlocks }),
+    myModerationHistory: () =>
+      queryOptions({
+        queryKey: queryKeys.myModerationHistory,
+        queryFn: api.getMyModerationHistory,
+      }),
+    myBubbles: () => queryOptions({ queryKey: queryKeys.myBubbles, queryFn: api.getMyBubbles }),
+    myConversations: () =>
+      queryOptions({ queryKey: queryKeys.myConversations, queryFn: api.getConversations }),
+    conversation: (conversationId: string) =>
+      queryOptions({
+        queryKey: queryKeys.conversation(conversationId),
+        queryFn: () => api.getConversation(conversationId),
+      }),
+    messages: (conversationId: string, limit = 50) =>
+      queryOptions({
+        queryKey: queryKeys.messages(conversationId),
+        queryFn: () => api.getMessages({ conversationId, limit }),
+      }),
+    myDrop: (mode: ProfileMode) =>
+      queryOptions({
+        queryKey: queryKeys.myDrop(mode),
+        queryFn: () => api.getMyDrop(mode),
+      }),
+    myMatches: () => queryOptions({ queryKey: queryKeys.myMatches, queryFn: api.getMyMatches }),
+    profileCard: (userId: string) =>
+      queryOptions({
+        queryKey: queryKeys.profileCard(userId),
+        queryFn: () => api.getProfileCard(userId),
+      }),
+    spaceFeed: (tab: SpaceFeedTab = 'all', limit = 20) =>
+      queryOptions({
+        queryKey: queryKeys.spaceFeed(tab),
+        queryFn: () => api.getFeed({ tab, limit }),
+      }),
+    spaceReplies: (postId: string) =>
+      queryOptions({
+        queryKey: queryKeys.spaceReplies(postId),
+        queryFn: () => api.getReplies(postId),
+      }),
+    modReports: (status: ReportStatus = 'open', limit = 50) =>
+      queryOptions({
+        queryKey: queryKeys.modReports(status),
+        queryFn: () => api.moderation.listReports({ status, limit }),
+      }),
+    modReport: (reportId: string) =>
+      queryOptions({
+        queryKey: queryKeys.modReport(reportId),
+        queryFn: () => api.moderation.getReport(reportId),
+      }),
     areas: () =>
       queryOptions({
         queryKey: queryKeys.areas,

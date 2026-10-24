@@ -1,16 +1,106 @@
 import {
+  blockedUserListSchema,
+  blockUserFromSchema,
+  chatMessageListSchema,
+  checkinMoodSchema,
   CONSENT_VERSIONS,
+  conversationDetailSchema,
+  conversationListSchema,
+  createPostResultSchema,
+  createPostSchema,
+  dailyDropListSchema,
+  getFeedSchema,
+  getMessagesSchema,
+  getMyDropSchema,
+  interestsSchema,
+  matchListSchema,
+  moderationHistoryListSchema,
+  modListReportsSchema,
+  modReportDetailSchema,
+  modReportListSchema,
+  modRevealAuthorSchema,
+  modRevealedAuthorSchema,
+  modReviewAppealSchema,
+  modTakeActionResultSchema,
+  modTakeActionSchema,
+  moodCheckinResultSchema,
+  myBubblesSchema,
   myProfileSchema,
   myStatusSchema,
   onboardingSchema,
+  photoPositionSchema,
+  politeCloseSchema,
+  profileCardSchema,
+  promptAnswerSchema,
+  replyPostResultSchema,
+  replyPostSchema,
+  reportResultSchema,
+  reportTargetSchema,
+  requestPhotoUnlockResultSchema,
+  requestRevealResultSchema,
+  respondBubbleResultSchema,
+  respondBubbleSchema,
+  sendBubbleResultSchema,
+  sendBubbleSchema,
+  sendMessageResultSchema,
+  sendMessageSchema,
+  spaceFeedSchema,
+  spaceRepliesSchema,
+  STORAGE_BUCKETS,
+  submitAppealSchema,
   SUPABASE_RPC,
+  swipeResultSchema,
+  swipeSchema,
   TABLES,
   updateProfileSchema,
+  type BlockedUserItem,
+  type BlockUserFromInput,
+  type ChatMessage,
   type ConsentDoc,
+  type ConversationDetail,
+  type ConversationListItem,
+  type CreatePostInput,
+  type CreatePostResult,
   type Database,
+  type DropCandidate,
+  type GetFeedInput,
+  type GetMessagesInput,
+  type MatchItem,
+  type ModerationHistoryItem,
+  type ModListReportsInput,
+  type ModReportDetail,
+  type ModReportItem,
+  type ModRevealAuthorInput,
+  type ModRevealedAuthor,
+  type ModReviewAppealInput,
+  type ModTakeActionInput,
+  type ModTakeActionResult,
+  type MoodCheckinResult,
+  type MyBubbles,
   type MyProfile,
   type MyStatus,
   type OnboardingInput,
+  type PoliteCloseInput,
+  type ProfileCard,
+  type ProfileMode,
+  type ReplyPostInput,
+  type ReplyPostResult,
+  type ReportResult,
+  type ReportTargetInput,
+  type RequestPhotoUnlockResult,
+  type RequestRevealResult,
+  type RespondBubbleInput,
+  type RespondBubbleResult,
+  type SendBubbleInput,
+  type SendBubbleResult,
+  type SendMessageInput,
+  type SendMessageResult,
+  type SpaceMood,
+  type SpacePost,
+  type SpaceReply,
+  type SubmitAppealInput,
+  type SwipeInput,
+  type SwipeResult,
   type UpdateProfileInput,
 } from '@rukan/shared';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -23,11 +113,20 @@ type Tables = Database['public']['Tables'];
 export type Area = Pick<Tables['areas']['Row'], 'id' | 'name_th' | 'name_en' | 'city'>;
 export type Interest = Pick<Tables['interests']['Row'], 'id' | 'name_th' | 'name_en' | 'category'>;
 export type Prompt = Pick<Tables['prompts']['Row'], 'id' | 'text_th' | 'text_en'>;
+export type MyPhoto = Pick<
+  Tables['photos']['Row'],
+  'id' | 'storage_path' | 'position' | 'moderation_status' | 'created_at'
+> & {
+  signedUrl: string | null;
+};
+export type ProfileCardWithUrls = ProfileCard & {
+  unlocked_photo_urls: string[];
+};
 
 /** โยน ApiError ถ้ามี error, ไม่งั้นคืน data */
-function unwrap<T>(result: { data: T; error: unknown }): T {
+function unwrap<T>(result: { data: T | null; error: unknown }): T {
   if (result.error) throw toApiError(result.error);
-  return result.data;
+  return result.data as T;
 }
 
 function parse<S extends z.ZodType>(schema: S, data: unknown): z.infer<S> {
@@ -67,6 +166,10 @@ export function createApi(supabase: RukanSupabaseClient) {
         if (error) throw toApiError(error);
       },
     },
+
+    // -------------------------------------------------------------------------
+    // เฟส 1: ตัวตน & โปรไฟล์ของฉัน
+    // -------------------------------------------------------------------------
 
     async getMyStatus(): Promise<MyStatus> {
       return parse(myStatusSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getMyStatus)));
@@ -117,16 +220,77 @@ export function createApi(supabase: RukanSupabaseClient) {
     },
 
     async setInterests(interestIds: string[]): Promise<void> {
-      unwrap(await supabase.rpc(SUPABASE_RPC.setInterests, { p_interest_ids: interestIds }));
+      const ids = interestsSchema.parse(interestIds);
+      unwrap(await supabase.rpc(SUPABASE_RPC.setInterests, { p_interest_ids: ids }));
     },
 
     async setPromptAnswer(promptId: string, answer: string): Promise<void> {
+      const v = promptAnswerSchema.parse({ promptId, answer });
       unwrap(
         await supabase.rpc(SUPABASE_RPC.setPromptAnswer, {
-          p_prompt_id: promptId,
-          p_answer: answer,
+          p_prompt_id: v.promptId,
+          p_answer: v.answer,
         }),
       );
+    },
+
+    async listMyPhotos(): Promise<MyPhoto[]> {
+      const rows =
+        unwrap(
+          await supabase
+            .from(TABLES.photos)
+            .select('id, storage_path, position, moderation_status, created_at')
+            .order('position'),
+        ) ?? [];
+      if (rows.length === 0) return [];
+
+      const { data: signed } = await supabase.storage.from(STORAGE_BUCKETS.photos).createSignedUrls(
+        rows.map((r) => r.storage_path),
+        600,
+      );
+      const urlByPath = new Map<string, string>();
+      for (const item of signed ?? []) {
+        if (item.path && item.signedUrl) urlByPath.set(item.path, item.signedUrl);
+      }
+
+      return rows.map((row) => ({
+        ...row,
+        signedUrl: urlByPath.get(row.storage_path) ?? null,
+      }));
+    },
+
+    async uploadMyPhoto(input: {
+      userId: string;
+      photoId: string;
+      position: number;
+      body: Blob | ArrayBuffer;
+      contentType: 'image/webp' | 'image/jpeg';
+    }): Promise<string> {
+      const pos = photoPositionSchema.parse(input.position);
+      const ext = input.contentType === 'image/webp' ? 'webp' : 'jpg';
+      const storagePath = `${input.userId}/${input.photoId.toLowerCase()}.${ext}`;
+
+      unwrap(
+        await supabase.storage.from(STORAGE_BUCKETS.photos).upload(storagePath, input.body, {
+          contentType: input.contentType,
+          upsert: false,
+        }),
+      );
+
+      return unwrap(
+        await supabase.rpc(SUPABASE_RPC.addPhoto, {
+          p_storage_path: storagePath,
+          p_position: pos,
+        }),
+      );
+    },
+
+    async removePhoto(photoId: string): Promise<string> {
+      const storagePath = unwrap(
+        await supabase.rpc(SUPABASE_RPC.removePhoto, { p_photo_id: photoId }),
+      );
+      await supabase.storage.from(STORAGE_BUCKETS.photos).remove([storagePath]);
+      return storagePath;
     },
 
     async listAreas(): Promise<Area[]> {
@@ -153,6 +317,380 @@ export function createApi(supabase: RukanSupabaseClient) {
         unwrap(await supabase.from(TABLES.prompts).select('id, text_th, text_en').order('sort')) ??
         []
       );
+    },
+
+    // -------------------------------------------------------------------------
+    // เฟส 2: ความปลอดภัย (Block / Report / Appeal / Moderator)
+    // -------------------------------------------------------------------------
+
+    async blockUserFrom(input: BlockUserFromInput): Promise<void> {
+      const v = blockUserFromSchema.parse(input);
+      unwrap(
+        await supabase.rpc(SUPABASE_RPC.blockUserFrom, {
+          p_target_type: v.targetType,
+          p_target_id: v.targetId,
+        }),
+      );
+    },
+
+    async unblockUser(blockId: string): Promise<void> {
+      unwrap(await supabase.rpc(SUPABASE_RPC.unblockUser, { p_block_id: blockId }));
+    },
+
+    async getMyBlocks(): Promise<BlockedUserItem[]> {
+      return parse(blockedUserListSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getMyBlocks)));
+    },
+
+    async reportTarget(input: ReportTargetInput): Promise<ReportResult> {
+      const v = reportTargetSchema.parse(input);
+      return parse(
+        reportResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.reportTarget, {
+            p_target_type: v.targetType,
+            p_target_id: v.targetId,
+            p_reason: v.reason,
+            p_details: v.details,
+          }),
+        ),
+      );
+    },
+
+    async getMyModerationHistory(): Promise<ModerationHistoryItem[]> {
+      return parse(
+        moderationHistoryListSchema,
+        unwrap(await supabase.rpc(SUPABASE_RPC.getMyModerationHistory)),
+      );
+    },
+
+    async submitAppeal(input: SubmitAppealInput): Promise<void> {
+      const v = submitAppealSchema.parse(input);
+      unwrap(
+        await supabase.rpc(SUPABASE_RPC.submitAppeal, {
+          p_action_id: v.actionId,
+          p_appeal_text: v.appealText,
+        }),
+      );
+    },
+
+    moderation: {
+      async listReports(input: ModListReportsInput = {}): Promise<ModReportItem[]> {
+        const v = modListReportsSchema.parse(input);
+        return parse(
+          modReportListSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modListReports, {
+              p_status: v.status,
+              p_limit: v.limit,
+            }),
+          ),
+        );
+      },
+
+      async getReport(reportId: string): Promise<ModReportDetail> {
+        return parse(
+          modReportDetailSchema,
+          unwrap(await supabase.rpc(SUPABASE_RPC.modGetReport, { p_report_id: reportId })),
+        );
+      },
+
+      async revealAuthor(input: ModRevealAuthorInput): Promise<ModRevealedAuthor> {
+        const v = modRevealAuthorSchema.parse(input);
+        return parse(
+          modRevealedAuthorSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modRevealAuthor, {
+              p_target_type: v.targetType,
+              p_target_id: v.targetId,
+              p_reason: v.reason,
+            }),
+          ),
+        );
+      },
+
+      async takeAction(input: ModTakeActionInput): Promise<ModTakeActionResult> {
+        const v = modTakeActionSchema.parse(input);
+        return parse(
+          modTakeActionResultSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modTakeAction, {
+              p_user_id: v.userId,
+              p_action: v.action,
+              p_level: v.level,
+              p_reason: v.reason,
+              p_until: v.until,
+              p_report_id: v.reportId,
+              p_target_type: v.targetType,
+              p_target_id: v.targetId,
+            }),
+          ),
+        );
+      },
+
+      async reviewAppeal(input: ModReviewAppealInput): Promise<void> {
+        const v = modReviewAppealSchema.parse(input);
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.modReviewAppeal, {
+            p_action_id: v.actionId,
+            p_decision: v.decision,
+          }),
+        );
+      },
+    },
+
+    // -------------------------------------------------------------------------
+    // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
+    // -------------------------------------------------------------------------
+
+    async createPost(input: CreatePostInput): Promise<CreatePostResult> {
+      const v = createPostSchema.parse(input);
+      return parse(
+        createPostResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.createPost, {
+            p_body: v.body,
+            p_mood: v.mood,
+          }),
+        ),
+      );
+    },
+
+    async getFeed(input: GetFeedInput = {}): Promise<SpacePost[]> {
+      const v = getFeedSchema.parse(input);
+      return parse(
+        spaceFeedSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.getFeed, {
+            p_tab: v.tab,
+            p_before_created_at: v.beforeCreatedAt,
+            p_before_id: v.beforeId,
+            p_limit: v.limit,
+          }),
+        ),
+      );
+    },
+
+    async deleteMyPost(postId: string): Promise<void> {
+      unwrap(await supabase.rpc(SUPABASE_RPC.deleteMyPost, { p_post_id: postId }));
+    },
+
+    async likePost(postId: string): Promise<void> {
+      unwrap(await supabase.rpc(SUPABASE_RPC.likePost, { p_post_id: postId }));
+    },
+
+    async unlikePost(postId: string): Promise<void> {
+      unwrap(await supabase.rpc(SUPABASE_RPC.unlikePost, { p_post_id: postId }));
+    },
+
+    async replyPost(input: ReplyPostInput): Promise<ReplyPostResult> {
+      const v = replyPostSchema.parse(input);
+      return parse(
+        replyPostResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.replyPost, {
+            p_post_id: v.postId,
+            p_body: v.body,
+          }),
+        ),
+      );
+    },
+
+    async getReplies(postId: string): Promise<SpaceReply[]> {
+      return parse(
+        spaceRepliesSchema,
+        unwrap(await supabase.rpc(SUPABASE_RPC.getReplies, { p_post_id: postId })),
+      );
+    },
+
+    async deleteMyReply(replyId: string): Promise<void> {
+      unwrap(await supabase.rpc(SUPABASE_RPC.deleteMyReply, { p_reply_id: replyId }));
+    },
+
+    async checkinMood(mood: SpaceMood): Promise<MoodCheckinResult> {
+      const v = checkinMoodSchema.parse(mood);
+      return parse(
+        moodCheckinResultSchema,
+        unwrap(await supabase.rpc(SUPABASE_RPC.checkinMood, { p_mood: v })),
+      );
+    },
+
+    // -------------------------------------------------------------------------
+    // เฟส 4: Bubble & แชท (แชทนามแฝง + แชท Match + เปิดตัว + เปิดรูป)
+    // -------------------------------------------------------------------------
+
+    async sendBubble(input: SendBubbleInput): Promise<SendBubbleResult> {
+      const v = sendBubbleSchema.parse(input);
+      return parse(
+        sendBubbleResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.sendBubble, {
+            p_post_id: v.postId,
+            p_message: v.message,
+          }),
+        ),
+      );
+    },
+
+    async getMyBubbles(): Promise<MyBubbles> {
+      return parse(myBubblesSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getMyBubbles)));
+    },
+
+    async respondBubble(input: RespondBubbleInput): Promise<RespondBubbleResult> {
+      const v = respondBubbleSchema.parse(input);
+      return parse(
+        respondBubbleResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.respondBubble, {
+            p_bubble_id: v.bubbleId,
+            p_accept: v.accept,
+          }),
+        ),
+      );
+    },
+
+    async getConversations(): Promise<ConversationListItem[]> {
+      return parse(
+        conversationListSchema,
+        unwrap(await supabase.rpc(SUPABASE_RPC.getConversations)),
+      );
+    },
+
+    async getConversation(conversationId: string): Promise<ConversationDetail> {
+      return parse(
+        conversationDetailSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.getConversation, {
+            p_conversation_id: conversationId,
+          }),
+        ),
+      );
+    },
+
+    async getMessages(input: GetMessagesInput): Promise<ChatMessage[]> {
+      const v = getMessagesSchema.parse(input);
+      return parse(
+        chatMessageListSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.getMessages, {
+            p_conversation_id: v.conversationId,
+            p_before_created_at: v.beforeCreatedAt,
+            p_before_id: v.beforeId,
+            p_limit: v.limit,
+          }),
+        ),
+      );
+    },
+
+    async sendMessage(input: SendMessageInput): Promise<SendMessageResult> {
+      const v = sendMessageSchema.parse(input);
+      return parse(
+        sendMessageResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.sendMessage, {
+            p_conversation_id: v.conversationId,
+            p_body: v.body,
+          }),
+        ),
+      );
+    },
+
+    async markConversationRead(conversationId: string): Promise<void> {
+      unwrap(
+        await supabase.rpc(SUPABASE_RPC.markConversationRead, {
+          p_conversation_id: conversationId,
+        }),
+      );
+    },
+
+    async requestReveal(conversationId: string): Promise<RequestRevealResult> {
+      return parse(
+        requestRevealResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.requestReveal, {
+            p_conversation_id: conversationId,
+          }),
+        ),
+      );
+    },
+
+    async requestPhotoUnlock(conversationId: string): Promise<RequestPhotoUnlockResult> {
+      return parse(
+        requestPhotoUnlockResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.requestPhotoUnlock, {
+            p_conversation_id: conversationId,
+          }),
+        ),
+      );
+    },
+
+    // -------------------------------------------------------------------------
+    // เฟส 5: Daily Drop & Match & Profile Card
+    // -------------------------------------------------------------------------
+
+    async getMyDrop(mode: ProfileMode): Promise<DropCandidate[]> {
+      const v = getMyDropSchema.parse(mode);
+      return parse(
+        dailyDropListSchema,
+        unwrap(await supabase.rpc(SUPABASE_RPC.getMyDrop, { p_mode: v })),
+      );
+    },
+
+    async swipe(input: SwipeInput): Promise<SwipeResult> {
+      const v = swipeSchema.parse(input);
+      return parse(
+        swipeResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.swipe, {
+            p_candidate_id: v.candidateId,
+            p_mode: v.mode,
+            p_direction: v.direction,
+          }),
+        ),
+      );
+    },
+
+    async getMyMatches(): Promise<MatchItem[]> {
+      return parse(matchListSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getMyMatches)));
+    },
+
+    async politeClose(input: PoliteCloseInput): Promise<void> {
+      const v = politeCloseSchema.parse(input);
+      unwrap(
+        await supabase.rpc(SUPABASE_RPC.politeClose, {
+          p_match_id: v.matchId,
+          p_template_id: v.templateId,
+        }),
+      );
+    },
+
+    async unmatch(matchId: string): Promise<void> {
+      unwrap(await supabase.rpc(SUPABASE_RPC.unmatch, { p_match_id: matchId }));
+    },
+
+    async getProfileCard(userId: string): Promise<ProfileCardWithUrls> {
+      const card = parse(
+        profileCardSchema,
+        unwrap(await supabase.rpc(SUPABASE_RPC.getProfileCard, { p_user_id: userId })),
+      );
+      if (card.unlocked_photo_paths.length === 0) {
+        return { ...card, unlocked_photo_urls: [] };
+      }
+
+      const { data: signed } = await supabase.storage
+        .from(STORAGE_BUCKETS.photos)
+        .createSignedUrls(card.unlocked_photo_paths, 600);
+      const urlByPath = new Map<string, string>();
+      for (const item of signed ?? []) {
+        if (item.path && item.signedUrl) urlByPath.set(item.path, item.signedUrl);
+      }
+
+      return {
+        ...card,
+        unlocked_photo_urls: card.unlocked_photo_paths
+          .map((p) => urlByPath.get(p))
+          .filter((u): u is string => typeof u === 'string'),
+      };
     },
   };
 }

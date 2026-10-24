@@ -269,6 +269,8 @@ export type Database = {
     };
     Functions: {
       add_photo: { Args: { p_position: number; p_storage_path: string }; Returns: string };
+      block_user_from: { Args: { p_target_id: string; p_target_type: string }; Returns: undefined };
+      checkin_mood: { Args: { p_mood: string }; Returns: Json };
       complete_onboarding: {
         Args: {
           p_area_id?: string;
@@ -279,8 +281,38 @@ export type Database = {
         };
         Returns: undefined;
       };
+      create_post: { Args: { p_body: string; p_mood?: string }; Returns: Json };
+      delete_my_post: { Args: { p_post_id: string }; Returns: undefined };
+      delete_my_reply: { Args: { p_reply_id: string }; Returns: undefined };
+      get_conversation: { Args: { p_conversation_id: string }; Returns: Json };
+      get_conversations: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_feed: {
+        Args: {
+          p_before_created_at?: string;
+          p_before_id?: string;
+          p_limit?: number;
+          p_tab?: string;
+        };
+        Returns: Json;
+      };
+      get_messages: {
+        Args: {
+          p_before_created_at?: string;
+          p_before_id?: string;
+          p_conversation_id: string;
+          p_limit?: number;
+        };
+        Returns: Json;
+      };
+      get_my_blocks: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_bubbles: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_drop: { Args: { p_mode: string }; Returns: Json };
+      get_my_matches: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_moderation_history: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_status: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_profile_card: { Args: { p_user_id: string }; Returns: Json };
+      get_replies: { Args: { p_post_id: string }; Returns: Json };
       health: { Args: Record<PropertyKey, never>; Returns: Json };
       join_waitlist: {
         Args: {
@@ -294,10 +326,51 @@ export type Database = {
         };
         Returns: Json;
       };
+      like_post: { Args: { p_post_id: string }; Returns: undefined };
+      mark_conversation_read: { Args: { p_conversation_id: string }; Returns: undefined };
+      mod_get_report: { Args: { p_report_id: string }; Returns: Json };
+      mod_list_reports: { Args: { p_limit?: number; p_status?: string }; Returns: Json };
+      mod_reveal_author: {
+        Args: { p_reason: string; p_target_id: string; p_target_type: string };
+        Returns: Json;
+      };
+      mod_review_appeal: { Args: { p_action_id: string; p_decision: string }; Returns: undefined };
+      mod_take_action: {
+        Args: {
+          p_action: string;
+          p_level: number;
+          p_reason: string;
+          p_report_id?: string;
+          p_target_id?: string;
+          p_target_type?: string;
+          p_until?: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      polite_close: { Args: { p_match_id: string; p_template_id?: string }; Returns: undefined };
       record_consent: { Args: { p_doc: string; p_version: string }; Returns: undefined };
       remove_photo: { Args: { p_photo_id: string }; Returns: string };
+      reply_post: { Args: { p_body: string; p_post_id: string }; Returns: Json };
+      report_target: {
+        Args: { p_details?: string; p_reason: string; p_target_id: string; p_target_type: string };
+        Returns: Json;
+      };
+      request_photo_unlock: { Args: { p_conversation_id: string }; Returns: Json };
+      request_reveal: { Args: { p_conversation_id: string }; Returns: Json };
+      respond_bubble: { Args: { p_accept: boolean; p_bubble_id: string }; Returns: Json };
+      send_bubble: { Args: { p_message: string; p_post_id: string }; Returns: Json };
+      send_message: { Args: { p_body: string; p_conversation_id: string }; Returns: Json };
       set_interests: { Args: { p_interest_ids: string[] }; Returns: undefined };
       set_prompt_answer: { Args: { p_answer: string; p_prompt_id: string }; Returns: undefined };
+      submit_appeal: { Args: { p_action_id: string; p_appeal_text: string }; Returns: undefined };
+      swipe: {
+        Args: { p_candidate_id: string; p_direction: string; p_mode: string };
+        Returns: Json;
+      };
+      unblock_user: { Args: { p_block_id: string }; Returns: undefined };
+      unlike_post: { Args: { p_post_id: string }; Returns: undefined };
+      unmatch: { Args: { p_match_id: string }; Returns: undefined };
       update_my_profile: {
         Args: {
           p_area_id?: string;
