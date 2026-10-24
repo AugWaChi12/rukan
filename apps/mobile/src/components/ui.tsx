@@ -17,25 +17,57 @@ import {
   type TextInputProps,
   type TextProps,
   type ViewStyle,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { haptic } from '@/lib/haptics';
 import { useAppTheme } from '@/theme/theme-provider';
 import { palette, radius, space } from '@/theme/tokens';
 
+const GRID_SIZE = 56;
+
+/** พื้นตารางบางๆ แบบเดียวกับเว็บ rukan.app (.bg-grid ใน apps/web/src/app/globals.css) */
+export function GridBackground() {
+  const { name } = useAppTheme();
+  const { width, height } = useWindowDimensions();
+  const color = name === 'gold' ? 'rgba(242, 234, 219, 0.045)' : '#efeaee';
+  const cols = Math.ceil(width / GRID_SIZE);
+  const rows = Math.ceil(height / GRID_SIZE);
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {Array.from({ length: cols }, (_, i) => (
+        <View
+          key={`c${i}`}
+          style={[styles.gridLineV, { left: i * GRID_SIZE, backgroundColor: color }]}
+        />
+      ))}
+      {Array.from({ length: rows }, (_, i) => (
+        <View
+          key={`r${i}`}
+          style={[styles.gridLineH, { top: i * GRID_SIZE, backgroundColor: color }]}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function Screen({
   children,
   scroll = true,
+  grid = true,
   style,
 }: {
   children: ReactNode;
   scroll?: boolean;
+  /** พื้นตารางบางๆ ด้านหลัง (ค่าเริ่มต้น: เปิด) */
+  grid?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useAppTheme();
   const content = <View style={[styles.content, style]}>{children}</View>;
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+      {grid ? <GridBackground /> : null}
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.scroll}
@@ -623,6 +655,8 @@ const textStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  gridLineV: { position: 'absolute', top: 0, bottom: 0, width: 1 },
+  gridLineH: { position: 'absolute', left: 0, right: 0, height: 1 },
   scroll: { flexGrow: 1, paddingBottom: 24 },
   content: {
     flex: 1,
