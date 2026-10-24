@@ -187,9 +187,7 @@ export function ChatsScreen() {
                           variant="ghost"
                           label={t('chats.bubbleDecline')}
                           disabled={respondBubbleMut.isPending}
-                          onPress={() =>
-                            respondBubbleMut.mutate({ bubbleId: b.id, accept: false })
-                          }
+                          onPress={() => respondBubbleMut.mutate({ bubbleId: b.id, accept: false })}
                         />
                         <Button
                           size="sm"
@@ -436,11 +434,7 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
       <Screen scroll={false} style={{ paddingHorizontal: space.md, gap: space.xs }}>
         {/* Top Bar ติดแน่นด้านบน */}
         <Row style={{ justifyContent: 'space-between', paddingVertical: 4 }}>
-          <BouncyPressable
-            hapticFeedback="selection"
-            onPress={onBack}
-            style={styles.backBtn}
-          >
+          <BouncyPressable hapticFeedback="selection" onPress={onBack} style={styles.backBtn}>
             <AppText variant="subheading">{t('chats.room.back')}</AppText>
           </BouncyPressable>
           <Row>
@@ -570,7 +564,11 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
                       ? [styles.msgBubbleMine, { backgroundColor: colors.accentSoft }]
                       : [
                           styles.msgBubblePeer,
-                          { backgroundColor: colors.card, borderColor: colors.line, borderWidth: 1 },
+                          {
+                            backgroundColor: colors.card,
+                            borderColor: colors.line,
+                            borderWidth: 1,
+                          },
                         ],
                   ]}
                 >
@@ -630,10 +628,7 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
           </Card>
         ) : (
           <View
-            style={[
-              styles.composerBar,
-              { backgroundColor: colors.card, borderColor: colors.line },
-            ]}
+            style={[styles.composerBar, { backgroundColor: colors.card, borderColor: colors.line }]}
           >
             <TextInput
               value={text}
@@ -651,15 +646,12 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
               style={[
                 styles.sendBtnCircle,
                 {
-                  backgroundColor:
-                    text.trim().length === 0 ? colors.line : colors.primary,
+                  backgroundColor: text.trim().length === 0 ? colors.line : colors.primary,
                   opacity: text.trim().length === 0 ? 0.4 : 1,
                 },
               ]}
             >
-              <Text style={{ color: colors.onPrimary, fontWeight: '800', fontSize: 16 }}>
-                ↑
-              </Text>
+              <Text style={{ color: colors.onPrimary, fontWeight: '800', fontSize: 16 }}>↑</Text>
             </BouncyPressable>
           </View>
         )}
@@ -675,7 +667,11 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
           onClose={() => setShowPoliteClose(false)}
         />
 
-        <SafetySheet target={safetyTarget} onClose={() => setSafetyTarget(null)} onBlocked={onBack} />
+        <SafetySheet
+          target={safetyTarget}
+          onClose={() => setSafetyTarget(null)}
+          onBlocked={onBack}
+        />
       </Screen>
     </KeyboardAvoidingView>
   );
@@ -778,10 +774,7 @@ function ProfileCardSheet({ userId, onClose }: { userId: string | null; onClose:
           ) : null}
         </>
       ) : (
-        <EmptyState
-          title={t('common.retry')}
-          body=""
-        />
+        <EmptyState title={t('common.retry')} body="" />
       )}
     </ModalSheet>
   );

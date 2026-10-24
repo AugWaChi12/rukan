@@ -97,9 +97,7 @@ export function SpaceScreen() {
               ? {
                   ...p,
                   liked_by_me: !p.liked_by_me,
-                  like_count: p.liked_by_me
-                    ? Math.max(0, p.like_count - 1)
-                    : p.like_count + 1,
+                  like_count: p.liked_by_me ? Math.max(0, p.like_count - 1) : p.like_count + 1,
                 }
               : p,
           ),
@@ -434,11 +432,7 @@ function RepliesSheet({
         {repliesQuery.isPending ? (
           <Loading />
         ) : (repliesQuery.data ?? []).length === 0 ? (
-          <EmptyState
-            badge="0"
-            title={t('space.emptyTitle')}
-            body={t('space.emptyBody')}
-          />
+          <EmptyState badge="0" title={t('space.emptyTitle')} body={t('space.emptyBody')} />
         ) : (
           (repliesQuery.data ?? []).map((r) => (
             <Card key={r.id} style={{ padding: space.md, gap: space.xs }}>
@@ -482,9 +476,7 @@ function RepliesSheet({
           maxLength={SPACE_LIMITS.replyBody}
           multiline
         />
-        {replyMut.error ? (
-          <AppText variant="error">{errorMessage(replyMut.error)}</AppText>
-        ) : null}
+        {replyMut.error ? <AppText variant="error">{errorMessage(replyMut.error)}</AppText> : null}
         <Button
           variant="primary"
           label={t('space.replySend')}

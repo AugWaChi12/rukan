@@ -25,6 +25,9 @@ export const SUPABASE_RPC = {
   modRevealAuthor: 'mod_reveal_author',
   modTakeAction: 'mod_take_action',
   modReviewAppeal: 'mod_review_appeal',
+  modGetDashboardCounts: 'mod_get_dashboard_counts',
+  modGetWaitlistStats: 'mod_get_waitlist_stats',
+  modListWaitlist: 'mod_list_waitlist',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   createPost: 'create_post',
   getFeed: 'get_feed',
