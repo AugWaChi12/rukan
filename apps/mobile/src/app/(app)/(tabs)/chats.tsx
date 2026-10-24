@@ -1,7 +1,3 @@
-import { useTranslation } from 'react-i18next';
-import { PlaceholderScreen } from '@/features/placeholder-screen';
+import { ChatsScreen } from '@/features/chats/chats-screen';
 
-export default function ChatsTab() {
-  const { t } = useTranslation();
-  return <PlaceholderScreen title={t('tabs.chats')} />;
-}
+export default ChatsScreen;

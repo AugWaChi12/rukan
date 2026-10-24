@@ -1,7 +1,3 @@
-import { useTranslation } from 'react-i18next';
-import { PlaceholderScreen } from '@/features/placeholder-screen';
+import { SpaceScreen } from '@/features/space/space-screen';
 
-export default function SpaceTab() {
-  const { t } = useTranslation();
-  return <PlaceholderScreen title={t('tabs.space')} />;
-}
+export default SpaceScreen;

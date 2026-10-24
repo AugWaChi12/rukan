@@ -63,10 +63,20 @@ export const updateProfileSchema = z.object({
 });
 export type UpdateProfileInput = z.input<typeof updateProfileSchema>;
 
+export const interestsSchema = z
+  .array(z.string().trim().min(1))
+  .max(PROFILE_LIMITS.interests, `เลือกความสนใจได้ไม่เกิน ${PROFILE_LIMITS.interests} อย่าง`);
+
 export const promptAnswerSchema = z.object({
-  promptId: z.string().min(1),
+  promptId: z.string().trim().min(1),
   answer: z.string().trim().max(PROFILE_LIMITS.promptAnswer),
 });
+
+export const photoPositionSchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(PROFILE_LIMITS.photos - 1);
 
 // ---------------------------------------------------------------------------
 // รูปร่างผลลัพธ์ของ RPC (RPC คืน json → parse ด้วย schema เหล่านี้ใน @rukan/api)

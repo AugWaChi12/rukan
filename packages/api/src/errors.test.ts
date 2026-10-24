@@ -18,6 +18,21 @@ describe('toApiError', () => {
     expect(toApiError(new TypeError('Failed to fetch')).code).toBe('network');
   });
 
+  it('ข้อความที่ RPC เฟส 2–5 raise (แม้มี errcode 42501) → แปลงเป็น code เฉพาะของเหตุการณ์นั้น', () => {
+    expect(toApiError({ message: 'same_moderator_cannot_review_appeal', code: '42501' }).code).toBe(
+      'same_moderator_cannot_review_appeal',
+    );
+    expect(toApiError({ message: 'candidate_not_in_drop', code: '42501' }).code).toBe(
+      'candidate_not_in_drop',
+    );
+    expect(toApiError({ message: 'profile_not_accessible', code: '42501' }).code).toBe(
+      'profile_not_accessible',
+    );
+    expect(toApiError({ message: 'contains_prohibited_contact', code: '22023' }).code).toBe(
+      'contains_prohibited_contact',
+    );
+  });
+
   it('ไม่รู้จัก → unknown', () => {
     expect(toApiError({ message: 'boom', code: 'XX000' }).code).toBe('unknown');
   });

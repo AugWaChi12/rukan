@@ -1,7 +1,9 @@
 /** ชื่อ Postgres function ที่ client เรียกผ่าน `supabase.rpc(...)` (ต้องตรงกับ supabase/migrations) */
 export const SUPABASE_RPC = {
+  // ระบบพื้นฐาน & waitlist
   health: 'health',
   joinWaitlist: 'join_waitlist',
+  // เฟส 1: ตัวตน & โปรไฟล์
   getMyStatus: 'get_my_status',
   getMyProfile: 'get_my_profile',
   updateMyProfile: 'update_my_profile',
@@ -11,6 +13,46 @@ export const SUPABASE_RPC = {
   setPromptAnswer: 'set_prompt_answer',
   addPhoto: 'add_photo',
   removePhoto: 'remove_photo',
+  // เฟส 2: ความปลอดภัย & ผู้ดูแล (Moderation)
+  blockUserFrom: 'block_user_from',
+  unblockUser: 'unblock_user',
+  getMyBlocks: 'get_my_blocks',
+  reportTarget: 'report_target',
+  getMyModerationHistory: 'get_my_moderation_history',
+  submitAppeal: 'submit_appeal',
+  modListReports: 'mod_list_reports',
+  modGetReport: 'mod_get_report',
+  modRevealAuthor: 'mod_reveal_author',
+  modTakeAction: 'mod_take_action',
+  modReviewAppeal: 'mod_review_appeal',
+  // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
+  createPost: 'create_post',
+  getFeed: 'get_feed',
+  deleteMyPost: 'delete_my_post',
+  likePost: 'like_post',
+  unlikePost: 'unlike_post',
+  replyPost: 'reply_post',
+  getReplies: 'get_replies',
+  deleteMyReply: 'delete_my_reply',
+  checkinMood: 'checkin_mood',
+  // เฟส 4: Bubble & แชท
+  sendBubble: 'send_bubble',
+  getMyBubbles: 'get_my_bubbles',
+  respondBubble: 'respond_bubble',
+  getConversations: 'get_conversations',
+  getConversation: 'get_conversation',
+  getMessages: 'get_messages',
+  sendMessage: 'send_message',
+  markConversationRead: 'mark_conversation_read',
+  requestReveal: 'request_reveal',
+  requestPhotoUnlock: 'request_photo_unlock',
+  // เฟส 5: Daily Drop & Match
+  getMyDrop: 'get_my_drop',
+  swipe: 'swipe',
+  getMyMatches: 'get_my_matches',
+  politeClose: 'polite_close',
+  unmatch: 'unmatch',
+  getProfileCard: 'get_profile_card',
 } as const;
 
 /** ชื่อ Storage bucket (ต้องตรงกับ supabase/migrations) — ทุก bucket เป็น private */

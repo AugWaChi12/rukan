@@ -20,7 +20,8 @@
     "db:migration": "supabase migration new",
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local --schema public > packages/shared/src/database.types.ts && prettier --write packages/shared/src/database.types.ts",
-    "db:wsl": "wsl -d Ubuntu-24.04 -- bash scripts/wsl/supabase.sh"
+    "db:wsl": "wsl -d Ubuntu-24.04 -- bash scripts/wsl/supabase.sh",
+    "db:proxy": "node scripts/proxy-supabase.js"
   },
   "devDependencies": {
     "prettier": "^3.9.10",
