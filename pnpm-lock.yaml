@@ -311,6 +311,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@rukan/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@rukan/shared':
         specifier: workspace:*
         version: link:../../packages/shared
