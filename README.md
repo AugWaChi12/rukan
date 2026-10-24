@@ -105,6 +105,7 @@ pnpm db:test   # ถ้าแก้ supabase/
 | [AGENTS.md](AGENTS.md)                       | จุดเริ่มต้นสำหรับทุกคนและ AI: โครงสร้าง, คำสั่ง, กฎเหล็ก, สถานะ |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | สถาปัตยกรรม, RLS, auth, env vars, การ deploy                    |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md)   | กฎ git, การตั้งชื่อ, การเขียน migration/RLS, testing            |
+| [docs/DATABASE.md](docs/DATABASE.md)         | สร้าง/sync DB บนเครื่อง, โครงสร้าง schema, เพิ่มตาราง           |
 | [docs/DECISIONS.md](docs/DECISIONS.md)       | การตัดสินใจที่ทำแล้ว + คำถามที่ยังเปิดอยู่                      |
 | [docs/POLICY.md](docs/POLICY.md)             | (ร่าง) ยืนยันตัวตน, กติกาชุมชน, PDPA, การลงโทษ, ความปลอดภัย     |
 | [docs/prompts/](docs/prompts/)               | prompt สำเร็จรูปสำหรับสั่ง AI ทำงานแต่ละขั้น                    |

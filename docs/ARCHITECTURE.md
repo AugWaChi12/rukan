@@ -75,13 +75,9 @@
 - ข้อมูลผู้ใช้: `auth.users` (Supabase จัดการ) ↔ `public.profiles` (1:1, `id` เดียวกัน) — ตารางอื่นอ้าง `profiles.id`
 - Migration: `pnpm db:migration <ชื่อ>` → เขียน SQL → `pnpm db:reset` → `pnpm db:test` → `pnpm db:types`
 
-### ตารางที่มีตอนนี้
+### ตารางที่มีตอนนี้ / วิธีสร้าง DB
 
-| ตาราง / object                                                            | สิทธิ์ (RLS)                                                                                                                                                     |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public.profiles` (`id`, `display_name`, `avatar_url`, `bio`, timestamps) | anon: ไม่มีสิทธิ์ · authenticated: อ่านได้ทุกแถว, แก้ได้เฉพาะของตัวเอง · insert ผ่าน trigger `on_auth_user_created` เท่านั้น · delete ตาม `auth.users` (cascade) |
-| function `public.health()`                                                | anon + authenticated เรียกได้ — คืน `{ status, database, timestamp }`                                                                                            |
-| storage bucket `avatars` (public, ≤5MB, jpeg/png/webp)                    | ทุกคนดูได้ · อัปโหลด/แก้/ลบได้เฉพาะ path `<user id>/...` ของตัวเอง                                                                                               |
+ดู [`DATABASE.md`](DATABASE.md) — schema map (หัวข้อ 3), วิธีสร้าง/sync DB บนเครื่อง (หัวข้อ 2), checklist เพิ่มตาราง (หัวข้อ 4)
 
 ---
 
