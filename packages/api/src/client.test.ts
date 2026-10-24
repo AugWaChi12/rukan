@@ -265,4 +265,37 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Daily Drop/Match
     expect(createSignedUrls).toHaveBeenCalledWith([path0], 600);
     expect(card.unlocked_photo_urls).toEqual(['https://signed.example/photo0.webp']);
   });
+
+  it('auth OAuth: signInWithOAuth, exchangeCodeForSession, setSession', async () => {
+    const signInWithOAuth = vi.fn().mockResolvedValue({
+      data: { provider: 'google', url: 'https://accounts.google.com/o/oauth2/v2/auth' },
+      error: null,
+    });
+    const exchangeCodeForSession = vi.fn().mockResolvedValue({
+      data: { session: { access_token: 'acc-123', refresh_token: 'ref-123' } },
+      error: null,
+    });
+    const setSession = vi.fn().mockResolvedValue({
+      data: { session: { access_token: 'acc-456', refresh_token: 'ref-456' } },
+      error: null,
+    });
+
+    const client = {
+      auth: { signInWithOAuth, exchangeCodeForSession, setSession },
+    } as unknown as RukanSupabaseClient;
+
+    const api = createApi(client);
+    const oauthRes = await api.auth.signInWithOAuth('google', 'rukan://auth/callback');
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: 'rukan://auth/callback', skipBrowserRedirect: true },
+    });
+    expect(oauthRes.url).toBe('https://accounts.google.com/o/oauth2/v2/auth');
+
+    await api.auth.exchangeCodeForSession('test-code');
+    expect(exchangeCodeForSession).toHaveBeenCalledWith('test-code');
+
+    await api.auth.setSession({ access_token: 'acc-456', refresh_token: 'ref-456' });
+    expect(setSession).toHaveBeenCalledWith({ access_token: 'acc-456', refresh_token: 'ref-456' });
+  });
 });

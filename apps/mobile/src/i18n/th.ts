@@ -24,7 +24,11 @@ export const th = {
     toSignUp: 'ยังไม่มีบัญชี? สมัครเลย',
     toSignIn: 'มีบัญชีแล้ว? เข้าสู่ระบบ',
     checkEmail: 'ส่งลิงก์ยืนยันไปที่อีเมลแล้ว — กดลิงก์แล้วกลับมาเข้าสู่ระบบ',
-    socialSoon: 'Apple / Google / LINE เร็วๆ นี้',
+    continueWithGoogle: 'ดำเนินการต่อด้วย Google',
+    continueWithApple: 'ดำเนินการต่อด้วย Apple',
+    comingSoon: '(เร็วๆ นี้)',
+    orDivider: 'หรือใช้อีเมล',
+    socialSoon: 'Apple / LINE เร็วๆ นี้',
   },
   onboarding: {
     step: 'ขั้นที่ {{current}} จาก {{total}}',

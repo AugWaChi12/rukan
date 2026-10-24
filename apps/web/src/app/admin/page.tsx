@@ -769,9 +769,10 @@ export default function AdminPage() {
                     </h2>
                   </div>
                   <p className="mt-1 text-xs text-[#a69d90] max-w-2xl">
-                    กำหนดและปรับแต่งขีดจำกัดการใช้งาน (Limits) และสิทธิ์การเข้าถึงฟีเจอร์ต่างๆ ระหว่าง{' '}
-                    <b className="text-[#f2eadb]">ผู้ใช้ทั่วไป (Free)</b> กับ{' '}
-                    <b className="text-[#d6b36a]">รู้กัน โกลด์ (Premium)</b> ได้แบบ Real-time โดยข้อมูลถูกจัดเก็บในฐานข้อมูลกลาง
+                    กำหนดและปรับแต่งขีดจำกัดการใช้งาน (Limits) และสิทธิ์การเข้าถึงฟีเจอร์ต่างๆ
+                    ระหว่าง <b className="text-[#f2eadb]">ผู้ใช้ทั่วไป (Free)</b> กับ{' '}
+                    <b className="text-[#d6b36a]">รู้กัน โกลด์ (Premium)</b> ได้แบบ Real-time
+                    โดยข้อมูลถูกจัดเก็บในฐานข้อมูลกลาง
                   </p>
                 </div>
                 <button
@@ -856,7 +857,11 @@ export default function AdminPage() {
                             max={50}
                             value={free.daily_golden_bubbles}
                             onChange={(e) =>
-                              updateTierField('free', 'daily_golden_bubbles', Number(e.target.value))
+                              updateTierField(
+                                'free',
+                                'daily_golden_bubbles',
+                                Number(e.target.value),
+                              )
                             }
                             className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
                           />
@@ -927,7 +932,7 @@ export default function AdminPage() {
                                     updateTierField(
                                       'free',
                                       f.key as keyof TierConfig,
-                                      (!val as unknown) as TierConfig[keyof TierConfig],
+                                      !val as unknown as TierConfig[keyof TierConfig],
                                     )
                                   }
                                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
@@ -1136,7 +1141,7 @@ export default function AdminPage() {
                                     updateTierField(
                                       'premium',
                                       f.key as keyof TierConfig,
-                                      (!val as unknown) as TierConfig[keyof TierConfig],
+                                      !val as unknown as TierConfig[keyof TierConfig],
                                     )
                                   }
                                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${

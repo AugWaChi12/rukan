@@ -25,7 +25,11 @@ export const en: Messages = {
     toSignUp: 'New here? Create an account',
     toSignIn: 'Have an account? Sign in',
     checkEmail: 'We sent a confirmation link — open it, then sign in',
-    socialSoon: 'Apple / Google / LINE coming soon',
+    continueWithGoogle: 'Continue with Google',
+    continueWithApple: 'Continue with Apple',
+    comingSoon: '(Coming Soon)',
+    orDivider: 'Or continue with email',
+    socialSoon: 'Apple / LINE coming soon',
   },
   onboarding: {
     step: 'Step {{current}} of {{total}}',

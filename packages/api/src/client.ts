@@ -165,6 +165,30 @@ export function createApi(supabase: RukanSupabaseClient) {
         const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'phone_change' });
         if (error) throw toApiError(error);
       },
+      /** เริ่มกระบวนการ OAuth (เช่น Google / Apple) */
+      async signInWithOAuth(provider: 'google' | 'apple', redirectTo: string) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo,
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) throw toApiError(error);
+        return data;
+      },
+      /** แลกเปลี่ยน authorization code เป็น session (PKCE) */
+      async exchangeCodeForSession(code: string) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) throw toApiError(error);
+        return data;
+      },
+      /** ตั้งค่า session จาก tokens โดยตรง */
+      async setSession(tokens: { access_token: string; refresh_token: string }) {
+        const { data, error } = await supabase.auth.setSession(tokens);
+        if (error) throw toApiError(error);
+        return data;
+      },
     },
 
     // -------------------------------------------------------------------------
