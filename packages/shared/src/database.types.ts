@@ -364,10 +364,7 @@ export type Database = {
         };
         Returns: Json;
       };
-      mod_update_tier_config: {
-        Args: { p_config: Json; p_tier: string };
-        Returns: Json;
-      };
+      mod_update_tier_config: { Args: { p_config: Json; p_tier: string }; Returns: Json };
       polite_close: { Args: { p_match_id: string; p_template_id?: string }; Returns: undefined };
       record_consent: { Args: { p_doc: string; p_version: string }; Returns: undefined };
       remove_photo: { Args: { p_photo_id: string }; Returns: string };
