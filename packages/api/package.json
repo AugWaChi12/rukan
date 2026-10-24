@@ -1,0 +1,50 @@
+{
+  "name": "@rukan/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ฟังก์ชันเรียก Supabase แบบมี type + TanStack Query options ที่ web / mobile ใช้ร่วมกัน",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@rukan/shared": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "@tanstack/react-query": "^5.104.0"
+  },
+  "devDependencies": {
+    "@rukan/eslint-config": "workspace:*",
+    "@rukan/tsconfig": "workspace:*",
+    "@supabase/supabase-js": "^2.118.0",
+    "@tanstack/react-query": "^5.104.5",
+    "eslint": "^9.39.0",
+    "tsup": "^9.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

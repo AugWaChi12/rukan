@@ -50,10 +50,19 @@ stuMatch/                     ← ชื่อ repo/โฟลเดอร์ย�
 │   │   ├── AGENTS.md         ← กฎของ Next.js เอง (Next สร้างให้ — อ่านก่อนแก้ web)
 │   │   └── .env.example
 │   └── mobile/               ← Expo SDK 58 (expo-router)
-│       ├── src/app/          ← หน้าจอ (file-based routing)
+│       ├── src/app/          ← route เท่านั้น (ไฟล์บางๆ import หน้าจอจาก features/) แบ่ง 3 โซน:
+│       │   ├── _layout.tsx   ←   providers + Stack.Protected ตาม session + get_my_status().next_step
+│       │   ├── (auth)/       ←   ยังไม่ login: sign-in
+│       │   ├── (onboarding)/ ←   consents → phone → profile → selfie (เดินตามที่ server บอก ข้ามขั้นไม่ได้)
+│       │   └── (app)/(tabs)/ ←   ยืนยันครบ: space / drop / chats / me
+│       ├── src/features/<ฟีเจอร์>/ ← หน้าจอ + component ของแต่ละฟีเจอร์
+│       ├── src/components/ui.tsx   ← UI พื้นฐาน (Screen, AppText, Button, TextField, Chip, Card)
+│       ├── src/lib/api.ts    ← api / queries / queryClient ตัวเดียวของแอป (จาก @rukan/api)
 │       ├── src/lib/supabase.ts         ← Supabase client ตัวเดียวของแอป
 │       ├── src/lib/large-secure-store.ts ← เก็บ session แบบเข้ารหัส
-│       ├── src/components/
+│       ├── src/providers/    ← SessionProvider
+│       ├── src/i18n/         ← th.ts (หลัก) / en.ts — ห้ามเขียนข้อความตรงใน component
+│       ├── src/theme/        ← token สี light / gold (ชุดเดียวกับเว็บ)
 │       ├── app.config.ts / eas.json
 │       ├── AGENTS.md         ← กฎของ Expo เอง (Expo สร้างให้ — อ่านก่อนแก้ mobile)
 │       └── .env.example
@@ -63,6 +72,7 @@ stuMatch/                     ← ชื่อ repo/โฟลเดอร์ย�
 │   │       ├── database.types.ts ← generate จาก DB ด้วย `pnpm db:types` (ห้ามแก้มือ)
 │   │       ├── schemas/      ← zod schemas สำหรับ validate ฟอร์ม
 │   │       └── constants/    ← ชื่อตาราง / RPC / storage bucket
+│   ├── api/                  ← @rukan/api — ทุกการเรียก Supabase (createApi(client)), ApiError, TanStack Query options
 │   ├── tsconfig/             ← @rukan/tsconfig: base / nextjs
 │   └── eslint-config/        ← @rukan/eslint-config: flat config กลาง (shared ใช้)
 ├── docs/
@@ -151,7 +161,7 @@ URL ตอน dev:
 - [x] ออกแบบระบบ (2026-10-24) → [`docs/SYSTEM_DESIGN.md`](docs/SYSTEM_DESIGN.md) — ยังไม่ได้ implement
 - [ ] เฟส 1–5 ตาม SYSTEM_DESIGN.md หัวข้อ 14
   - [x] เฟส 1 ฝั่ง DB (2026-10-24, branch `feature/identity-core`): security baseline + รั้ว `security_invariants`, ตารางตัวตน, RPC onboarding/โปรไฟล์, bucket `photos` — pgTAP 70/70
-  - [ ] เฟส 1 ฝั่งแอป: `packages/api` + โครง expo-router (auth / onboarding / tabs)
+  - [x] เฟส 1 ฝั่งแอป (2026-10-24, branch `feature/app-structure`): `packages/api` + โครง expo-router (auth / onboarding / tabs) + หน้า "ฉัน" — ทดสอบบน expo web แล้ว
   - [ ] เฟส 1 ที่รอทีม: SMS OTP + liveness vendor (Q14), social login, Edge Functions
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 - [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้
@@ -168,6 +178,7 @@ URL ตอน dev:
 - อ่าน `AGENTS.md` → `docs/PRODUCT.md` → `docs/ARCHITECTURE.md` → `docs/SYSTEM_DESIGN.md` → `docs/DATABASE.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม (งานที่แตะผู้ใช้/ข้อมูลส่วนตัว อ่าน `docs/POLICY.md` ด้วย)
 - **ก่อนรัน/ทดสอบอะไรที่ใช้ database: ทำให้ DB บนเครื่องตรงกับ `supabase/migrations/` ก่อน** — `pnpm db:start` แล้วถ้า `supabase/` เปลี่ยนหลัง pull/สลับ branch → `pnpm db:reset && pnpm db:test` ([`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 2)
 - ฟีเจอร์ที่แตะข้อมูล ทำตามลำดับ: **migration (ตาราง + RLS) → pgTAP test → `pnpm db:types` → zod schema ใน shared → UI** ตาม checklist + template ใน [`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 4 และอัปเดตตาราง "สิ่งที่มีอยู่ตอนนี้" (หัวข้อ 3.3) ทุกครั้ง
+- **แอปเรียก Supabase ผ่าน `@rukan/api` เท่านั้น** (หน้าจอไม่เรียก `supabase.from/rpc` ตรง) — เพิ่ม RPC ใหม่ = เพิ่มฟังก์ชันใน `packages/api/src/client.ts` + test
 - logic ที่ client ไม่ควรทำเอง (เช่น จับคู่ match, ตรวจสิทธิ์ซับซ้อน, เรียก service ภายนอกด้วย secret) ให้ทำเป็น **Postgres function (`security definer` อย่างระวัง)** หรือ **Edge Function** — ห้ามเชื่อข้อมูลจาก client
 - ใช้เวอร์ชัน stable ล่าสุดของ library ณ วันที่ทำงาน และเช็คเอกสารทางการถ้าไม่แน่ใจ (Next.js / Expo / Supabase เปลี่ยนบ่อย)
 - อย่าเพิ่ม library ใหม่ถ้าของที่มีอยู่ทำได้แล้ว ถ้าจำเป็นต้องเพิ่ม ให้บันทึกเหตุผลใน `docs/DECISIONS.md`
@@ -198,5 +209,7 @@ URL ตอน dev:
 - **Next.js 16**: middleware เปลี่ยนชื่อเป็น `proxy.ts` (export function `proxy`) — ถ้าเผลอตั้งชื่อ `middleware.ts` session จะไม่ refresh
 - **ฝั่ง server ของ Next.js เช็ค login ด้วย `supabase.auth.getClaims()`** — ห้ามใช้ `getSession()` ตัดสินสิทธิ์ (ไม่ได้ verify token)
 - **Supabase client ฝั่ง server ต้องสร้างใหม่ทุก request** (`await createClient()` จาก `src/lib/supabase/server.ts`) ห้ามเก็บไว้ใน global
+- **mobile บนมือถือจริงต่อ Supabase ใน WSL ไม่ได้** (WSL รับแค่ localhost ของ Windows) — ทดสอบแอปบนเครื่องด้วย `expo start --web` + `EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`
+- ยืนยันเบอร์ (SMS OTP) บนเครื่องยังใช้ไม่ได้จนกว่าจะเลือกผู้ให้บริการ (Q14) — ทดสอบ flow ด้วยการตั้ง `auth.users.phone_confirmed_at` ผ่าน psql (ห้ามทำทางลัดในโค้ด)
 - `packages/shared` ต้อง build ก่อน app อื่นจะเห็น type ใหม่ — `pnpm dev` ของ turbo build ให้ตอนเริ่ม ถ้าแก้ shared ระหว่าง dev ให้รัน `pnpm --filter @rukan/shared dev` คู่กันไป
 - **Windows + Docker Desktop เปิดไม่ขึ้น** (เครื่องที่ socket file ลบไม่ได้: error "The file cannot be accessed by the system") → ใช้ Docker Engine ใน WSL Ubuntu แทน แล้วเรียก Supabase ด้วย `pnpm db:wsl <คำสั่ง>` แทน `pnpm db:*` — ขั้นตอนใน README หัวข้อ "Windows: ใช้ Docker ใน WSL"
