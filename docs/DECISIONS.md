@@ -85,17 +85,48 @@
 
 ## ❓ Open questions (ต้องให้ทีมตัดสินใจ)
 
-| #   | คำถาม                                                 | หมายเหตุ                                                                                                       |
-| --- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Q3  | GitHub repo                                           | ตอนนี้อยู่ที่ `AugWaChi12/stuMatch` — ย้ายเข้า Organization ไหม                                                |
-| Q4  | ชื่อ domain                                           | ใช้กับ web + Site URL ของ Supabase Auth                                                                        |
-| Q5  | Vercel Pro: สมาชิกทีมที่ push โค้ดต้องมี seat หรือไม่ | เช็คการตั้งค่า team ของเพื่อนที่มี Pro                                                                         |
-| Q6  | LINE login ทำแบบไหน                                   | Supabase ไม่มี provider ในตัว (ต้องเช็คเอกสารล่าสุด) → custom OIDC หรือ Edge Function                          |
-| Q10 | Supabase plan                                         | Free จะ pause project ถ้าไม่มีการใช้งาน 1 สัปดาห์ และไม่มี backup อัตโนมัติ — Pro ~$25/เดือน เมื่อมีผู้ใช้จริง |
-| Q11 | แยก Supabase project dev/staging กับ prod ไหม         | แนะนำแยก: Preview ของ Vercel ชี้ไป project dev, Production ชี้ project prod                                    |
-| Q12 | ใครเป็นคนรัน `supabase db push` ขึ้น prod             | หรือทำ GitHub Action อัตโนมัติหลัง merge                                                                       |
-| Q13 | web ทำอะไรใน MVP                                      | แนะนำ: landing + เอกสารกฎหมาย + moderation console (`/admin`) ก่อน, แอปเต็มบนเว็บทีหลัง                        |
-| Q14 | ผู้ให้บริการ SMS OTP และ selfie liveness              | เทียบราคาต่อครั้ง, ความแม่นยำ, ที่ตั้ง server ของข้อมูล                                                        |
-| Q15 | เก็บ face hash เพื่อกันคนถูกแบนสมัครใหม่ไหม           | ข้อมูลชีวภาพ — ต้องถามทนายเรื่อง PDPA                                                                          |
-| Q16 | โหมดเดท: ถามเพศ / สนใจเพศไหน แบบไหน                   | บังคับไหม, ตัวเลือกมีอะไรบ้าง                                                                                  |
-| Q17 | ย่าน (`areas`) เริ่มต้น                               | ย่านไหนบ้างในกรุงเทพ (ใช้กับแท็บ ใกล้ฉัน + การคัด Drop)                                                        |
+| #   | คำถาม                                                 | หมายเหตุ                                                                                                        |
+| --- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Q3  | GitHub repo                                           | ตอนนี้อยู่ที่ `AugWaChi12/stuMatch` — ย้ายเข้า Organization ไหม                                                 |
+| Q4  | ชื่อ domain                                           | ใช้กับ web + Site URL ของ Supabase Auth                                                                         |
+| Q5  | Vercel Pro: สมาชิกทีมที่ push โค้ดต้องมี seat หรือไม่ | เช็คการตั้งค่า team ของเพื่อนที่มี Pro                                                                          |
+| Q6  | LINE login ทำแบบไหน                                   | Supabase ไม่มี provider ในตัว (ต้องเช็คเอกสารล่าสุด) → custom OIDC หรือ Edge Function                           |
+| Q10 | Supabase plan                                         | Free จะ pause project ถ้าไม่มีการใช้งาน 1 สัปดาห์ และไม่มี backup อัตโนมัติ — Pro ~$25/เดือน เมื่อมีผู้ใช้จริง  |
+| Q11 | แยก Supabase project dev/staging กับ prod ไหม         | แนะนำแยก: Preview ของ Vercel ชี้ไป project dev, Production ชี้ project prod                                     |
+| Q12 | ใครเป็นคนรัน `supabase db push` ขึ้น prod             | หรือทำ GitHub Action อัตโนมัติหลัง merge                                                                        |
+| Q13 | web ทำอะไรใน MVP                                      | แนะนำ: landing + เอกสารกฎหมาย + moderation console (`/admin`) ก่อน, แอปเต็มบนเว็บทีหลัง                         |
+| Q14 | ผู้ให้บริการ SMS OTP และ selfie liveness              | **liveness: มีข้อเสนอแล้ว รอทีมยืนยัน** → ดูหัวข้อ "ข้อเสนอ: selfie liveness" ด้านล่าง · SMS OTP ยังไม่ได้เทียบ |
+| Q15 | เก็บ face hash เพื่อกันคนถูกแบนสมัครใหม่ไหม           | ข้อมูลชีวภาพ — ต้องถามทนายเรื่อง PDPA                                                                           |
+| Q16 | โหมดเดท: ถามเพศ / สนใจเพศไหน แบบไหน                   | บังคับไหม, ตัวเลือกมีอะไรบ้าง                                                                                   |
+| Q17 | ย่าน (`areas`) เริ่มต้น                               | ย่านไหนบ้างในกรุงเทพ (ใช้กับแท็บ ใกล้ฉัน + การคัด Drop)                                                         |
+
+---
+
+## 📝 ข้อเสนอ: selfie liveness (Q14) — คุยเมื่อ 2026-10-24, **ยังไม่ใช่การตัดสินใจ**
+
+> AI: อย่าเริ่มเชื่อม vendor จริงจนกว่าทีมจะยืนยันข้อนี้ — แต่ทำส่วนที่ไม่ผูก vendor ได้ (Edge Function skeleton, ด่านแรกบนมือถือ)
+
+**ราคาที่หาได้** (จากหน้าราคา / เว็บรีวิว ณ 2026-10 — **ต้องเช็คหน้าราคาจริงก่อนตัดสินใจ**, คิด ~34 บาท/USD)
+
+| ตัวเลือก                              | ราคาต่อครั้ง                                          | ขั้นต่ำ/เดือน         | ข้อดี                                                                                             | ข้อเสีย                                                                                                      |
+| ------------------------------------- | ----------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **AWS Rekognition Face Liveness** ⭐  | ~$0.015 (~0.5 บาท), ถูกลงเมื่อเกิน 500K ครั้ง         | ไม่มี                 | ถูกสุด, ตรวจแค่ "คนจริงไหม" (ไม่ต้องสแกนบัตร), ต่อผ่าน Edge Function ได้ตรงดีไซน์, region โตเกียว | ไม่มี SDK React Native ตรงๆ (ต้อง WebView / dev build), **คิดเงินทุกครั้งแม้ไม่ผ่าน**                        |
+| Didit                                 | ฟรี 500 ครั้ง/เดือน แล้ว $0.10 passive / $0.15 active | ไม่มี                 | เริ่มเร็ว, ช่วง beta แทบฟรี                                                                       | แพงกว่า AWS ~7 เท่าเมื่อโต                                                                                   |
+| Sumsub                                | $1.35 (รวมสแกนบัตร)                                   | $149                  | SDK ครบ                                                                                           | แพง, บังคับเก็บบัตรประชาชน (เกินจำเป็น)                                                                      |
+| Veriff                                | ~$0.80–1.89 (รวมสแกนบัตร)                             | $49–209               | SDK ครบ                                                                                           | เหมือน Sumsub                                                                                                |
+| Azure Face Liveness                   | ~$15 / 1,000 ครั้ง (ข้อมูลเก่า ยังไม่ยืนยัน)          | —                     | ถูก                                                                                               | ต้องยื่นขอสิทธิ์กับ Microsoft (Limited Access)                                                               |
+| ทำเองทั้งหมด (MiniFASNet + MediaPipe) | ไม่มีค่าต่อครั้ง                                      | ค่า server ML + ค่าคน | ข้อมูลไม่ออกนอกระบบ                                                                               | แม่นน้อยกว่า, ไม่มีใบรับรอง iBeta PAD, กัน deepfake / virtual camera ยาก, ต้องมี server Python แยก (ขัด D20) |
+
+ตัวอย่างต้นทุน ผู้ใช้ใหม่ 1,000 คน/เดือน (~1,500 ครั้งรวมลองซ้ำ): AWS ~$22 · Didit ~$100 · Sumsub ≥ $149
+
+**แนวทางที่เสนอ: ทำด่านง่ายเอง + ด่านจริงใช้ AWS**
+
+1. **ด่านแรก (บนมือถือ, ฟรี)** — MediaPipe Face Landmarker สั่งท่าสุ่ม (กะพริบตา / หันซ้าย-ขวา) ไม่ผ่านไม่ส่งต่อ → ลดค่าใช้จ่ายรอบที่ไม่ผ่าน
+2. **ด่านจริง (AWS)** — Edge Function `start-liveness` (สร้าง session) → แอปเปิดกล้องผ่านหน้าจอของ AWS → Edge Function `liveness-result` (อ่านผล + confidence) → ผ่านเกณฑ์ → `private.mark_liveness_passed()` → ระดับ `selfie`
+   - AWS key อยู่ใน Edge Function secrets เท่านั้น · จำกัดครั้งต่อคนด้วย `private.check_rate` · เก็บแค่ผล ผ่าน/ไม่ผ่าน + vendor ref ลบรูปอ้างอิง (face hash รอ Q15)
+3. **ด่านหลัง** — ระบบรายงาน / บล็อก (เฟส 2) + เบอร์ห้ามซ้ำ
+4. เปลี่ยน vendor ทีหลัง = แก้แค่ Edge Function (DB / แอปไม่ต้องแก้)
+
+**ต้องทำก่อนใช้จริง**: เช็คราคา AWS จริง · เพิ่มเรื่องส่งข้อมูลใบหน้าไปประมวลผลต่างประเทศ (โตเกียว) ใน `POLICY.md` / นโยบายความเป็นส่วนตัว · consent `biometric` มีแล้ว
+
+แหล่งอ้างอิง: [AWS Rekognition pricing](https://aws.amazon.com/rekognition/pricing/) · [AWS Face Liveness](https://aws.amazon.com/rekognition/face-liveness/) · [AWS re:Post — คิดเงินทุกครั้ง](https://repost.aws/questions/QUvjRd9nCgS66oQ_Vv1rLJUg/how-does-amazon-rekognition-liveness-charges-users-per-successful-or-unsuccessful-attempt-or-both) · [Didit pricing](https://updates.didit.me/pricing/) · [Didit free plan](https://help.didit.me/getting-started/free-plan) · [Sumsub pricing](https://sumsub.com/pricing/) · [Veriff (Signzy)](https://www.signzy.com/blogs/veriff-alternatives) · [Azure Face pricing](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/face-api/) · [Realeyes เทียบราคา](https://realeyes.ai/blog/liveness-age-api-pricing/)

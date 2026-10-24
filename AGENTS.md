@@ -162,7 +162,8 @@ URL ตอน dev:
 - [ ] เฟส 1–5 ตาม SYSTEM_DESIGN.md หัวข้อ 14
   - [x] เฟส 1 ฝั่ง DB (2026-10-24, branch `feature/identity-core`): security baseline + รั้ว `security_invariants`, ตารางตัวตน, RPC onboarding/โปรไฟล์, bucket `photos` — pgTAP 70/70
   - [x] เฟส 1 ฝั่งแอป (2026-10-24, branch `feature/app-structure`): `packages/api` + โครง expo-router (auth / onboarding / tabs) + หน้า "ฉัน" — ทดสอบบน expo web แล้ว
-  - [ ] เฟส 1 ที่รอทีม: SMS OTP + liveness vendor (Q14), social login, Edge Functions
+  - [ ] เฟส 1 ที่รอทีม: SMS OTP + liveness vendor (Q14 — **มีข้อเสนอแล้ว: ด่านแรก MediaPipe + AWS Rekognition** ดู `docs/DECISIONS.md` หัวข้อ "ข้อเสนอ: selfie liveness"), social login, Edge Functions
+  - [ ] งานถัดไปที่ทำได้เลย: selfie PoC (Edge Function `start-liveness` / `liveness-result` + หน้า selfie), ไอคอนแท็บ, ฟอนต์ Prompt/Anuphan, แก้ความสนใจ/คำถาม/รูปในหน้า "ฉัน", หน้า `/rules` `/privacy` `/terms` บนเว็บ
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 - [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้
   - [ ] หน้า `/rules` `/privacy` `/terms`, OG image, analytics, ซื้อโดเมน rukan.app (ดู `docs/WEBSITE.md`)
