@@ -2,6 +2,9 @@ packages:
   - apps/*
   - packages/*
 
+# ป้องกันบั๊ก pnpm 12 engine provisioning ชนกับ nodeLinker: hoisted บน CI/Vercel
+pmOnFail: ignore
+
 # React Native / Expo ต้องการ node_modules แบบ flat (pnpm 11+ อ่าน setting จากไฟล์นี้ ไม่ใช่ .npmrc)
 nodeLinker: hoisted
 
