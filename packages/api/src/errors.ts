@@ -30,9 +30,12 @@ export const API_ERROR_CODES = [
   'cannot_target_self',
   'invalid_report_reason',
   'invalid_report_details',
+  'report_details_too_long',
   'invalid_appeal_text',
   'action_not_found',
+  'moderation_action_not_found',
   'cannot_appeal_action',
+  'cannot_appeal_unban',
   'appeal_already_submitted',
   'appeal_window_expired',
   'invalid_report_status',
@@ -45,6 +48,10 @@ export const API_ERROR_CODES = [
   'invalid_appeal_decision',
   'appeal_not_pending',
   'same_moderator_cannot_review_appeal',
+  // แพ็กเกจ & สมาชิก (Tiers & Subscriptions)
+  'invalid_tier',
+  'invalid_subscription_source',
+  'invalid_subscription_status',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   'invalid_post_body',
   'invalid_mood',

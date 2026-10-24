@@ -1,4 +1,4 @@
-import type { ProfileMode, ReportStatus, SpaceFeedTab } from '@rukan/shared';
+import type { AppealStatus, ProfileMode, ReportStatus, SpaceFeedTab } from '@rukan/shared';
 import { queryOptions } from '@tanstack/react-query';
 import type { RukanApi } from './client';
 
@@ -10,6 +10,7 @@ export const queryKeys = {
   me: ['me'] as const,
   myStatus: ['me', 'status'] as const,
   myProfile: ['me', 'profile'] as const,
+  mySubscription: ['me', 'subscription'] as const,
   myPhotos: ['me', 'photos'] as const,
   myBlocks: ['me', 'blocks'] as const,
   myModerationHistory: ['me', 'moderation-history'] as const,
@@ -25,9 +26,14 @@ export const queryKeys = {
   spaceFeed: (tab: SpaceFeedTab) => ['space', 'feed', tab] as const,
   spaceReplies: (postId: string) => ['space', 'replies', postId] as const,
   moderation: ['moderation'] as const,
+  modDashboardCounts: ['moderation', 'dashboard-counts'] as const,
+  modWaitlistStats: ['moderation', 'waitlist-stats'] as const,
+  modWaitlist: (search = '') => ['moderation', 'waitlist', search] as const,
   modReports: (status: ReportStatus = 'open') => ['moderation', 'reports', status] as const,
   modReport: (reportId: string) => ['moderation', 'report', reportId] as const,
+  modAppeals: (status: AppealStatus = 'pending') => ['moderation', 'appeals', status] as const,
   reference: ['reference'] as const,
+  tierConfigs: ['reference', 'tier-configs'] as const,
   areas: ['reference', 'areas'] as const,
   interests: ['reference', 'interests'] as const,
   prompts: ['reference', 'prompts'] as const,
@@ -39,6 +45,10 @@ export function createQueries(api: RukanApi) {
   return {
     myStatus: () => queryOptions({ queryKey: queryKeys.myStatus, queryFn: api.getMyStatus }),
     myProfile: () => queryOptions({ queryKey: queryKeys.myProfile, queryFn: api.getMyProfile }),
+    mySubscription: () =>
+      queryOptions({ queryKey: queryKeys.mySubscription, queryFn: api.getMySubscription }),
+    tierConfigs: () =>
+      queryOptions({ queryKey: queryKeys.tierConfigs, queryFn: api.getTierConfigs }),
     myPhotos: () => queryOptions({ queryKey: queryKeys.myPhotos, queryFn: api.listMyPhotos }),
     myBlocks: () => queryOptions({ queryKey: queryKeys.myBlocks, queryFn: api.getMyBlocks }),
     myModerationHistory: () =>
@@ -80,6 +90,21 @@ export function createQueries(api: RukanApi) {
         queryKey: queryKeys.spaceReplies(postId),
         queryFn: () => api.getReplies(postId),
       }),
+    modDashboardCounts: () =>
+      queryOptions({
+        queryKey: queryKeys.modDashboardCounts,
+        queryFn: api.moderation.getDashboardCounts,
+      }),
+    modWaitlistStats: () =>
+      queryOptions({
+        queryKey: queryKeys.modWaitlistStats,
+        queryFn: api.moderation.getWaitlistStats,
+      }),
+    modWaitlist: (search = '', limit = 100) =>
+      queryOptions({
+        queryKey: queryKeys.modWaitlist(search),
+        queryFn: () => api.moderation.listWaitlist({ search: search || undefined, limit }),
+      }),
     modReports: (status: ReportStatus = 'open', limit = 50) =>
       queryOptions({
         queryKey: queryKeys.modReports(status),
@@ -89,6 +114,11 @@ export function createQueries(api: RukanApi) {
       queryOptions({
         queryKey: queryKeys.modReport(reportId),
         queryFn: () => api.moderation.getReport(reportId),
+      }),
+    modAppeals: (status: AppealStatus = 'pending', limit = 50) =>
+      queryOptions({
+        queryKey: queryKeys.modAppeals(status),
+        queryFn: () => api.moderation.listAppeals({ status, limit }),
       }),
     areas: () =>
       queryOptions({

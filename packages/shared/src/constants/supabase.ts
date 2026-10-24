@@ -1,8 +1,10 @@
 /** ชื่อ Postgres function ที่ client เรียกผ่าน `supabase.rpc(...)` (ต้องตรงกับ supabase/migrations) */
 export const SUPABASE_RPC = {
-  // ระบบพื้นฐาน & waitlist
+  // ระบบพื้นฐาน & waitlist & แพ็กเกจ
   health: 'health',
   joinWaitlist: 'join_waitlist',
+  getTierConfigs: 'get_tier_configs',
+  getMySubscription: 'get_my_subscription',
   // เฟส 1: ตัวตน & โปรไฟล์
   getMyStatus: 'get_my_status',
   getMyProfile: 'get_my_profile',
@@ -25,9 +27,12 @@ export const SUPABASE_RPC = {
   modRevealAuthor: 'mod_reveal_author',
   modTakeAction: 'mod_take_action',
   modReviewAppeal: 'mod_review_appeal',
+  modListAppeals: 'mod_list_appeals',
   modGetDashboardCounts: 'mod_get_dashboard_counts',
   modGetWaitlistStats: 'mod_get_waitlist_stats',
   modListWaitlist: 'mod_list_waitlist',
+  modUpdateTierConfig: 'mod_update_tier_config',
+  modSetUserSubscription: 'mod_set_user_subscription',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   createPost: 'create_post',
   getFeed: 'get_feed',
@@ -38,7 +43,7 @@ export const SUPABASE_RPC = {
   getReplies: 'get_replies',
   deleteMyReply: 'delete_my_reply',
   checkinMood: 'checkin_mood',
-  // เฟส 4: Bubble & แชท
+  // เฟส 4: Bubble & แชท & Realtime
   sendBubble: 'send_bubble',
   getMyBubbles: 'get_my_bubbles',
   respondBubble: 'respond_bubble',
@@ -49,6 +54,7 @@ export const SUPABASE_RPC = {
   markConversationRead: 'mark_conversation_read',
   requestReveal: 'request_reveal',
   requestPhotoUnlock: 'request_photo_unlock',
+  canAccessRealtimeTopic: 'can_access_realtime_topic',
   // เฟส 5: Daily Drop & Match
   getMyDrop: 'get_my_drop',
   swipe: 'swipe',
