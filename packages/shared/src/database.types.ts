@@ -313,6 +313,7 @@ export type Database = {
       get_my_status: { Args: Record<PropertyKey, never>; Returns: Json };
       get_profile_card: { Args: { p_user_id: string }; Returns: Json };
       get_replies: { Args: { p_post_id: string }; Returns: Json };
+      get_tier_configs: { Args: Record<PropertyKey, never>; Returns: Json };
       health: { Args: Record<PropertyKey, never>; Returns: Json };
       join_waitlist: {
         Args: {
@@ -361,6 +362,10 @@ export type Database = {
           p_until?: string;
           p_user_id: string;
         };
+        Returns: Json;
+      };
+      mod_update_tier_config: {
+        Args: { p_config: Json; p_tier: string };
         Returns: Json;
       };
       polite_close: { Args: { p_match_id: string; p_template_id?: string }; Returns: undefined };

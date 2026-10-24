@@ -3,13 +3,29 @@
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-type TabKey = 'overview' | 'waitlist' | 'reports' | 'appeals' | 'audit';
+type TabKey = 'overview' | 'waitlist' | 'plans' | 'reports' | 'appeals' | 'audit';
 
 interface DashboardCounts {
   waitlist_total: number;
   reports_pending: number;
   appeals_pending: number;
   active_suspensions: number;
+}
+
+interface TierConfig {
+  tier: 'free' | 'premium';
+  display_name: string;
+  daily_drop_limit: number;
+  has_noon_drop: boolean;
+  daily_bubble_limit: number;
+  daily_golden_bubbles: number;
+  allow_rewind: boolean;
+  match_expiry_hours: number;
+  allow_see_likes: boolean;
+  allow_spotlight_post: boolean;
+  allow_advanced_filters: boolean;
+  price_thb_monthly: number;
+  updated_at?: string;
 }
 
 interface WaitlistStats {
@@ -62,9 +78,22 @@ export default function AdminPage() {
   const [searchWaitlist, setSearchWaitlist] = useState('');
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [reportFilter, setReportFilter] = useState<'open' | 'actioned' | 'dismissed'>('open');
+  const [tierConfigs, setTierConfigs] = useState<TierConfig[]>([]);
+  const [savingTier, setSavingTier] = useState<string | null>(null);
 
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  const loadTierConfigs = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_tier_configs');
+      if (!error && data) {
+        setTierConfigs(data as unknown as TierConfig[]);
+      }
+    } catch (err) {
+      console.error('Failed to load tier configs:', err);
+    }
+  }, [supabase]);
 
   // โหลดข้อมูล Dashboard
   const refreshAdminData = useCallback(async () => {
@@ -93,10 +122,12 @@ export default function AdminPage() {
         p_limit: 50,
       });
       if (repData) setReports(repData as unknown as ReportRow[]);
+
+      await loadTierConfigs();
     } catch (err) {
       console.error('Refresh error:', err);
     }
-  }, [supabase]);
+  }, [supabase, loadTierConfigs]);
 
   useEffect(() => {
     let ignore = false;
@@ -142,6 +173,8 @@ export default function AdminPage() {
             p_limit: 50,
           });
           if (!ignore && repData) setReports(repData as unknown as ReportRow[]);
+
+          if (!ignore) await loadTierConfigs();
         }
       } catch (err) {
         console.error('Admin init error:', err);
@@ -156,7 +189,7 @@ export default function AdminPage() {
     return () => {
       ignore = true;
     };
-  }, [supabase]);
+  }, [supabase, loadTierConfigs]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -274,6 +307,56 @@ export default function AdminPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  function updateTierField<K extends keyof TierConfig>(
+    tier: 'free' | 'premium',
+    field: K,
+    value: TierConfig[K],
+  ) {
+    setTierConfigs((prev) =>
+      prev.map((item) => (item.tier === tier ? { ...item, [field]: value } : item)),
+    );
+  }
+
+  async function handleSaveTierConfig(tier: 'free' | 'premium') {
+    const config = tierConfigs.find((c) => c.tier === tier);
+    if (!config) return;
+
+    setSavingTier(tier);
+    try {
+      const { error } = await supabase.rpc('mod_update_tier_config', {
+        p_tier: tier,
+        p_config: {
+          display_name: config.display_name,
+          daily_drop_limit: Number(config.daily_drop_limit),
+          has_noon_drop: Boolean(config.has_noon_drop),
+          daily_bubble_limit: Number(config.daily_bubble_limit),
+          daily_golden_bubbles: Number(config.daily_golden_bubbles),
+          allow_rewind: Boolean(config.allow_rewind),
+          match_expiry_hours: Number(config.match_expiry_hours),
+          allow_see_likes: Boolean(config.allow_see_likes),
+          allow_spotlight_post: Boolean(config.allow_spotlight_post),
+          allow_advanced_filters: Boolean(config.allow_advanced_filters),
+          price_thb_monthly: Number(config.price_thb_monthly),
+        },
+      });
+
+      if (error) {
+        setActionMessage(`เกิดข้อผิดพลาดในการบันทึก: ${error.message}`);
+      } else {
+        setActionMessage(
+          `✅ บันทึกการตั้งค่า ${
+            tier === 'free' ? 'Free Tier (ผู้ใช้ทั่วไป)' : 'Rukan Gold (พรีเมียม)'
+          } เรียบร้อยแล้ว!`,
+        );
+        await loadTierConfigs();
+      }
+    } catch (err: unknown) {
+      setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setSavingTier(null);
+    }
   }
 
   if (loading) {
@@ -410,6 +493,7 @@ export default function AdminPage() {
           {[
             { key: 'overview', label: '📊 ภาพรวม & ย่าน', badge: null },
             { key: 'waitlist', label: '📋 รายชื่อ Waitlist', badge: counts?.waitlist_total },
+            { key: 'plans', label: '💎 จัดการแพ็กเกจ (Free vs Premium)', badge: 'Master' },
             { key: 'reports', label: '🛡️ ตรวจรายงาน', badge: counts?.reports_pending },
             { key: 'appeals', label: '⚖️ คำอุทธรณ์', badge: counts?.appeals_pending },
           ].map((item) => (
@@ -667,6 +751,538 @@ export default function AdminPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: จัดการแพ็กเกจ & ฟีเจอร์ (Plans & Feature Flags) */}
+        {activeTab === 'plans' && (
+          <div className="space-y-8">
+            {/* Header info banner */}
+            <div className="rounded-3xl border border-[#d6b36a]/30 bg-gradient-to-r from-[#2a2419] to-[#1b1917] p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">💎</span>
+                    <h2 className="text-lg font-bold text-[#f2eadb]">
+                      จัดการเงื่อนไข & ฟีเจอร์แพ็กเกจ (Master Feature Flags)
+                    </h2>
+                  </div>
+                  <p className="mt-1 text-xs text-[#a69d90] max-w-2xl">
+                    กำหนดและปรับแต่งขีดจำกัดการใช้งาน (Limits) และสิทธิ์การเข้าถึงฟีเจอร์ต่างๆ ระหว่าง{' '}
+                    <b className="text-[#f2eadb]">ผู้ใช้ทั่วไป (Free)</b> กับ{' '}
+                    <b className="text-[#d6b36a]">รู้กัน โกลด์ (Premium)</b> ได้แบบ Real-time โดยข้อมูลถูกจัดเก็บในฐานข้อมูลกลาง
+                  </p>
+                </div>
+                <button
+                  onClick={loadTierConfigs}
+                  className="self-start md:self-auto rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs font-semibold text-[#f2eadb] hover:border-[#d6b36a] transition"
+                >
+                  🔄 รีเฟรชข้อมูล
+                </button>
+              </div>
+            </div>
+
+            {/* Side-by-Side Configuration Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Free Tier Card */}
+              {(() => {
+                const free = tierConfigs.find((t) => t.tier === 'free');
+                if (!free) return null;
+                return (
+                  <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-6 flex flex-col justify-between">
+                    <div>
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between border-b border-[#2a2724] pb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#25221f] text-lg">
+                            🤍
+                          </span>
+                          <div>
+                            <h3 className="font-display font-bold text-base text-[#f2eadb]">
+                              {free.display_name}
+                            </h3>
+                            <span className="text-xs text-[#a69d90]">
+                              แพ็กเกจพื้นฐานสำหรับสมาชิกทุกคน
+                            </span>
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-[#25221f] px-3 py-1 text-xs font-bold text-[#a69d90]">
+                          0 ฿ / เดือน
+                        </span>
+                      </div>
+
+                      {/* Config Form Fields */}
+                      <div className="mt-6 space-y-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            🎴 การ์ดแนะนำ Daily Drop (คน/วัน)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={free.daily_drop_limit}
+                            onChange={(e) =>
+                              updateTierField('free', 'daily_drop_limit', Number(e.target.value))
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            🫧 โควตาส่ง Bubble ทักทาย (ฟอง/วัน)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={999}
+                            value={free.daily_bubble_limit}
+                            onChange={(e) =>
+                              updateTierField('free', 'daily_bubble_limit', Number(e.target.value))
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            ✨ โควตาฟองทอง Golden Bubble (ฟอง/วัน)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={50}
+                            value={free.daily_golden_bubbles}
+                            onChange={(e) =>
+                              updateTierField('free', 'daily_golden_bubbles', Number(e.target.value))
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            ⏳ เวลา Match หมดอายุ หากไม่มีใครเริ่มทัก (ชั่วโมง)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={720}
+                            value={free.match_expiry_hours}
+                            onChange={(e) =>
+                              updateTierField('free', 'match_expiry_hours', Number(e.target.value))
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        {/* Feature Flags Toggles */}
+                        <div className="pt-2 space-y-3">
+                          <span className="block text-[11px] font-bold text-[#a69d90] uppercase tracking-wider">
+                            สิทธิ์การเข้าถึงฟีเจอร์ (Feature Flags)
+                          </span>
+
+                          {[
+                            {
+                              key: 'has_noon_drop',
+                              label: '☀️ Drop รอบพิเศษตอนเที่ยง (Noon Drop)',
+                              desc: 'ได้รับ Drop เพิ่มอีกรอบตอน 12:00',
+                            },
+                            {
+                              key: 'allow_rewind',
+                              label: '⏪ สิทธิ์ย้อนการ์ดที่ปัดผ่าน (Rewind)',
+                              desc: 'กดย้อนกลับมาดูการ์ดที่เผลอปัดซ้าย',
+                            },
+                            {
+                              key: 'allow_see_likes',
+                              label: '👀 สิทธิ์ดูคนที่กดถูกใจเราก่อน (See Who Liked)',
+                              desc: 'แอบดูได้ว่ามีใครกด Like เราไว้ใน Drop',
+                            },
+                            {
+                              key: 'allow_spotlight_post',
+                              label: '📌 ปักหมุดโพสต์ Spotlight ใน Space',
+                              desc: 'ดันโพสต์ระบายของตัวเองขึ้นอันดับ 1 ในย่าน',
+                            },
+                            {
+                              key: 'allow_advanced_filters',
+                              label: '🎯 ตัวกรองค้นหาขั้นสูง (มหาลัย / วัยทำงาน)',
+                              desc: 'กรองเฉพาะกลุ่มที่ต้องการได้ละเอียดขึ้น',
+                            },
+                          ].map((f) => {
+                            const val = Boolean(free[f.key as keyof TierConfig]);
+                            return (
+                              <div
+                                key={f.key}
+                                className="flex items-center justify-between rounded-xl bg-[#25221f] p-3"
+                              >
+                                <div>
+                                  <p className="text-xs font-semibold text-[#f2eadb]">{f.label}</p>
+                                  <p className="text-[11px] text-[#a69d90]">{f.desc}</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateTierField(
+                                      'free',
+                                      f.key as keyof TierConfig,
+                                      (!val as unknown) as TierConfig[keyof TierConfig],
+                                    )
+                                  }
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                                    val ? 'bg-[#d6b36a]' : 'bg-[#1b1917]'
+                                  }`}
+                                >
+                                  <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                      val ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                  />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-[#2a2724]">
+                      <button
+                        onClick={() => handleSaveTierConfig('free')}
+                        disabled={savingTier === 'free'}
+                        className="w-full rounded-full bg-[#25221f] py-3 text-xs font-bold text-[#f2eadb] hover:bg-[#2a2724] border border-[#2a2724] transition disabled:opacity-50"
+                      >
+                        {savingTier === 'free' ? 'กำลังบันทึก...' : '💾 บันทึกการตั้งค่า Free Tier'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Premium Tier Card */}
+              {(() => {
+                const premium = tierConfigs.find((t) => t.tier === 'premium');
+                if (!premium) return null;
+                return (
+                  <div className="rounded-3xl border border-[#d6b36a]/50 bg-[#1b1917] p-6 space-y-6 flex flex-col justify-between shadow-[0_0_30px_rgba(214,179,106,0.08)]">
+                    <div>
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between border-b border-[#2a2724] pb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#2a2419] text-lg text-[#d6b36a]">
+                            👑
+                          </span>
+                          <div>
+                            <h3 className="font-display font-bold text-base text-[#d6b36a]">
+                              {premium.display_name}
+                            </h3>
+                            <span className="text-xs text-[#a69d90]">
+                              สมาชิกระดับพรีเมียม (Gold Subscription)
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="rounded-full bg-[#2a2419] px-3 py-1 text-xs font-bold text-[#d6b36a]">
+                            {premium.price_thb_monthly} ฿ / เดือน
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Config Form Fields */}
+                      <div className="mt-6 space-y-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            🎴 การ์ดแนะนำ Daily Drop (คน/วัน)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={premium.daily_drop_limit}
+                            onChange={(e) =>
+                              updateTierField('premium', 'daily_drop_limit', Number(e.target.value))
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            🫧 โควตาส่ง Bubble ทักทาย (ฟอง/วัน)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={9999}
+                            value={premium.daily_bubble_limit}
+                            onChange={(e) =>
+                              updateTierField(
+                                'premium',
+                                'daily_bubble_limit',
+                                Number(e.target.value),
+                              )
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            ✨ โควตาฟองทอง Golden Bubble (ฟอง/วัน)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={premium.daily_golden_bubbles}
+                            onChange={(e) =>
+                              updateTierField(
+                                'premium',
+                                'daily_golden_bubbles',
+                                Number(e.target.value),
+                              )
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            ⏳ เวลา Match หมดอายุ หากไม่มีใครเริ่มทัก (ชั่วโมง)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={720}
+                            value={premium.match_expiry_hours}
+                            onChange={(e) =>
+                              updateTierField(
+                                'premium',
+                                'match_expiry_hours',
+                                Number(e.target.value),
+                              )
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                            💳 ค่าบริการสมาชิกรายเดือน (บาท)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={9999}
+                            value={premium.price_thb_monthly}
+                            onChange={(e) =>
+                              updateTierField(
+                                'premium',
+                                'price_thb_monthly',
+                                Number(e.target.value),
+                              )
+                            }
+                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                          />
+                        </div>
+
+                        {/* Feature Flags Toggles */}
+                        <div className="pt-2 space-y-3">
+                          <span className="block text-[11px] font-bold text-[#d6b36a] uppercase tracking-wider">
+                            สิทธิ์การเข้าถึงฟีเจอร์พรีเมียม (Feature Flags)
+                          </span>
+
+                          {[
+                            {
+                              key: 'has_noon_drop',
+                              label: '☀️ Drop รอบพิเศษตอนเที่ยง (Noon Drop)',
+                              desc: 'ได้รับ Drop เพิ่มอีกรอบตอน 12:00',
+                            },
+                            {
+                              key: 'allow_rewind',
+                              label: '⏪ สิทธิ์ย้อนการ์ดที่ปัดผ่าน (Rewind)',
+                              desc: 'กดย้อนกลับมาดูการ์ดที่เผลอปัดซ้าย',
+                            },
+                            {
+                              key: 'allow_see_likes',
+                              label: '👀 สิทธิ์ดูคนที่กดถูกใจเราก่อน (See Who Liked)',
+                              desc: 'แอบดูได้ว่ามีใครกด Like เราไว้ใน Drop',
+                            },
+                            {
+                              key: 'allow_spotlight_post',
+                              label: '📌 ปักหมุดโพสต์ Spotlight ใน Space',
+                              desc: 'ดันโพสต์ระบายของตัวเองขึ้นอันดับ 1 ในย่าน',
+                            },
+                            {
+                              key: 'allow_advanced_filters',
+                              label: '🎯 ตัวกรองค้นหาขั้นสูง (มหาลัย / วัยทำงาน)',
+                              desc: 'กรองเฉพาะกลุ่มที่ต้องการได้ละเอียดขึ้น',
+                            },
+                          ].map((f) => {
+                            const val = Boolean(premium[f.key as keyof TierConfig]);
+                            return (
+                              <div
+                                key={f.key}
+                                className="flex items-center justify-between rounded-xl bg-[#25221f] p-3"
+                              >
+                                <div>
+                                  <p className="text-xs font-semibold text-[#f2eadb]">{f.label}</p>
+                                  <p className="text-[11px] text-[#a69d90]">{f.desc}</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateTierField(
+                                      'premium',
+                                      f.key as keyof TierConfig,
+                                      (!val as unknown) as TierConfig[keyof TierConfig],
+                                    )
+                                  }
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                                    val ? 'bg-[#d6b36a]' : 'bg-[#1b1917]'
+                                  }`}
+                                >
+                                  <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                      val ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                  />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-[#2a2724]">
+                      <button
+                        onClick={() => handleSaveTierConfig('premium')}
+                        disabled={savingTier === 'premium'}
+                        className="w-full rounded-full bg-[#d6b36a] py-3 text-xs font-bold text-[#0f0e0d] hover:bg-[#e4c278] transition disabled:opacity-50"
+                      >
+                        {savingTier === 'premium'
+                          ? 'กำลังบันทึก...'
+                          : '💾 บันทึกการตั้งค่า Rukan Gold (Premium)'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Comparison Table (Feature Matrix) */}
+            <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4">
+              <div>
+                <h3 className="font-display font-bold text-base text-[#f2eadb]">
+                  ⚖️ ตารางเปรียบเทียบสิทธิ์การใช้งาน (Feature Matrix Comparison)
+                </h3>
+                <p className="text-xs text-[#a69d90]">
+                  มุมมองสรุปสำหรับลูกค้า เพื่อนำไปแสดงในหน้า Paywall บน Mobile App
+                </p>
+              </div>
+
+              {(() => {
+                const free = tierConfigs.find((t) => t.tier === 'free');
+                const premium = tierConfigs.find((t) => t.tier === 'premium');
+                if (!free || !premium) return null;
+
+                const comparisonRows = [
+                  {
+                    feature: 'ค่าบริการสมาชิก (Subscription)',
+                    freeVal: 'ฟรีตลอดชีพ',
+                    premVal: `${premium.price_thb_monthly} บาท / เดือน`,
+                    highlight: true,
+                  },
+                  {
+                    feature: 'การ์ดแนะนำ Daily Drop (19:00)',
+                    freeVal: `${free.daily_drop_limit} คน / วัน`,
+                    premVal: `${premium.daily_drop_limit} คน / วัน`,
+                    highlight: true,
+                  },
+                  {
+                    feature: 'Drop รอบพิเศษตอนเที่ยง (Noon Drop 12:00)',
+                    freeVal: free.has_noon_drop ? '✓ เปิดใช้งาน' : '✗ ไม่มี',
+                    premVal: premium.has_noon_drop ? '✓ ได้รับเพิ่มอีกรอบ' : '✗ ปิด',
+                    highlight: premium.has_noon_drop,
+                  },
+                  {
+                    feature: 'โควตาส่ง Bubble ทักทายใน Space',
+                    freeVal: `${free.daily_bubble_limit} ฟอง / วัน`,
+                    premVal: `${premium.daily_bubble_limit} ฟอง / วัน`,
+                    highlight: true,
+                  },
+                  {
+                    feature: 'Golden Bubble (ฟองสีทอง ลอยเด่นสะดุดตา)',
+                    freeVal:
+                      free.daily_golden_bubbles > 0
+                        ? `${free.daily_golden_bubbles} ฟอง/วัน`
+                        : '✗ ไม่มี',
+                    premVal: `${premium.daily_golden_bubbles} ฟอง / วัน`,
+                    highlight: premium.daily_golden_bubbles > 0,
+                  },
+                  {
+                    feature: 'สิทธิ์กดย้อนการ์ดที่เผลอปัดข้าม (Rewind)',
+                    freeVal: free.allow_rewind ? '✓ ใช้งานได้' : '✗ ไม่สามารถย้อนได้',
+                    premVal: premium.allow_rewind ? '✓ ย้อนได้ไม่จำกัด' : '✗ ปิด',
+                    highlight: premium.allow_rewind,
+                  },
+                  {
+                    feature: 'เวลาหมดอายุ Match หากไม่มีใครทัก',
+                    freeVal: `${free.match_expiry_hours} ชม.`,
+                    premVal: `${premium.match_expiry_hours} ชม. (คุยได้สบายใจ)`,
+                    highlight: false,
+                  },
+                  {
+                    feature: 'สิทธิ์แอบดูคนที่กด Like เราไว้ก่อน',
+                    freeVal: free.allow_see_likes ? '✓ ดูได้' : '✗ ต้อง Match ถึงรู้',
+                    premVal: premium.allow_see_likes ? '✓ ดูได้ทันที' : '✗ ปิด',
+                    highlight: premium.allow_see_likes,
+                  },
+                  {
+                    feature: 'ปักหมุดโพสต์ Spotlight ใน Space',
+                    freeVal: free.allow_spotlight_post ? '✓ ได้สิทธิ์' : '✗ ไม่มี',
+                    premVal: premium.allow_spotlight_post ? '✓ ดันโพสต์ขึ้นอันดับ 1' : '✗ ปิด',
+                    highlight: premium.allow_spotlight_post,
+                  },
+                  {
+                    feature: 'ฟิลเตอร์ขั้นสูง (มหาลัย / วัยทำงาน / ย่านเจาะจง)',
+                    freeVal: free.allow_advanced_filters ? '✓ ใช้งานได้' : '✗ ฟิลเตอร์พื้นฐาน',
+                    premVal: premium.allow_advanced_filters ? '✓ กรองได้ทุกเงื่อนไข' : '✗ ปิด',
+                    highlight: premium.allow_advanced_filters,
+                  },
+                ];
+
+                return (
+                  <div className="overflow-x-auto pt-2">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase tracking-wider">
+                          <th className="py-3 px-4">ฟีเจอร์ / สิทธิพิเศษ</th>
+                          <th className="py-3 px-4">ผู้ใช้ทั่วไป (Free)</th>
+                          <th className="py-3 px-4 text-[#d6b36a]">รู้กัน โกลด์ (Premium) 👑</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#2a2724]">
+                        {comparisonRows.map((r) => (
+                          <tr key={r.feature} className="hover:bg-[#25221f]/50 transition">
+                            <td className="py-3.5 px-4 font-medium text-[#f2eadb]">{r.feature}</td>
+                            <td className="py-3.5 px-4 text-[#a69d90]">{r.freeVal}</td>
+                            <td
+                              className={`py-3.5 px-4 font-semibold ${
+                                r.highlight ? 'text-[#d6b36a]' : 'text-[#f2eadb]'
+                              }`}
+                            >
+                              {r.premVal}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

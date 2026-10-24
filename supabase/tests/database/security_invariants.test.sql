@@ -34,7 +34,7 @@ select set_eq(
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')
   $$,
-  array['health', 'join_waitlist'],
+  array['health', 'join_waitlist', 'get_tier_configs'],
   'anon เรียกได้เฉพาะ allowlist'
 );
 
@@ -46,7 +46,7 @@ select set_eq(
     where n.nspname = 'public' and has_function_privilege('authenticated', p.oid, 'execute')
   $$,
   array[
-    'health', 'join_waitlist',
+    'health', 'join_waitlist', 'get_tier_configs',
     -- เฟส 1: ตัวตน + โปรไฟล์ + รูป
     'get_my_status', 'get_my_profile', 'update_my_profile', 'complete_onboarding',
     'record_consent', 'set_interests', 'set_prompt_answer',
@@ -69,7 +69,9 @@ select set_eq(
     'request_reveal', 'request_photo_unlock',
     -- เฟส 5: Daily Drop + Match + Profile Card
     'get_my_drop', 'swipe', 'get_my_matches',
-    'polite_close', 'unmatch', 'get_profile_card'
+    'polite_close', 'unmatch', 'get_profile_card',
+    -- Master & Plans
+    'mod_update_tier_config'
   ],
   'authenticated เรียกได้เฉพาะ API ที่ประกาศไว้'
 );

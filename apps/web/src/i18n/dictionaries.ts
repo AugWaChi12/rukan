@@ -89,7 +89,7 @@ const th = {
     },
     drop: {
       title: 'Daily Drop ทุกคืน 19:00',
-      body: 'คัดคนที่น่าจะคุยกันถูกคอมาให้วันละไม่กี่คน ไม่ต้องปัดเป็นร้อย ไม่ต้องจ่ายเพิ่ม',
+      body: 'คัดคนที่น่าจะคุยกันถูกคอมาให้วันละไม่กี่คน ไม่ต้องเสียเวลาปัดเป็นร้อย สายฟรีเล่นได้ครบ สายพรีเมียมได้เจอก่อน',
     },
     reveal: {
       title: 'รูปค่อยๆ เปิด ตามที่คุยกัน',
@@ -182,7 +182,10 @@ const th = {
   faq: {
     title: 'คำถามที่พบบ่อย',
     items: [
-      { q: 'ใช้ฟรีไหม', a: 'ฟรี และฟีเจอร์หลักไม่ล็อก — ไม่ต้องจ่ายเพื่อดูว่าใครสนใจเรา' },
+      {
+        q: 'ใช้ฟรีไหม',
+        a: 'ใช้งานพื้นฐานได้ฟรีทั้งหมด ทั้ง Space, Daily Drop และแชท 1:1 ส่วนใครที่ต้องการความสะดวกและสิทธิ์พิเศษมากขึ้น เช่น เพิ่มโควตาทัก หรือดูการ์ดเพิ่ม สามารถเลือกสมัคร Rukan Gold ได้',
+      },
       {
         q: 'ไม่ระบุตัวตนจริงไหม',
         a: 'ใน Space คนอื่นเห็นแค่นามแฝง ระบบไม่ส่งตัวตนของคนโพสต์ออกไปให้ใครเลย จะเปิดดูได้เฉพาะทีมดูแลเมื่อมีการรายงานการทำผิดกติกา',
@@ -303,7 +306,7 @@ const en: Dictionary = {
     },
     drop: {
       title: 'Daily Drop, every night at 19:00',
-      body: 'A few people you’d likely click with, picked every day. No endless swiping, no paywall.',
+      body: 'A few curated matches every day. No endless swiping — free to enjoy, with Rukan Gold perks for those who want more.',
     },
     reveal: {
       title: 'Photos unlock as you chat',
@@ -399,7 +402,7 @@ const en: Dictionary = {
     items: [
       {
         q: 'Is it free?',
-        a: 'Yes — and the core features are never locked. You don’t pay to see who likes you.',
+        a: 'Yes — core features like Space, Daily Drop, and chatting are free. We also offer optional Rukan Gold for members who want extra daily quotas and enhanced perks.',
       },
       {
         q: 'Is it really anonymous?',
