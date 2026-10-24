@@ -14,7 +14,10 @@
    ถ้ามีไฟล์ใน `supabase/` เปลี่ยน → `db reset` (ข้อมูลบนเครื่องหายแล้วสร้างใหม่จาก seed — ปกติ ไม่ต้องกลัว)
 3. **เพิ่ม/แก้ตาราง → ทำตาม checklist หัวข้อ 4 ให้ครบทุกข้อ** (migration → pgTAP → types → shared → อัปเดตไฟล์นี้)
 4. **ข้อมูลอ่อนไหวอยู่ใน schema `private`** เข้าได้ทางเดียวคือ RPC ใน `public` (หัวข้อ 3.2)
-5. ห้าม:
+   **client เขียนตารางตรงไม่ได้เลย** — ทุกการเขียนผ่าน RPC (validate + เช็คสิทธิ์ + rate limit ที่ server)
+5. **ของใหม่ปิดเป็นค่าเริ่มต้น** (migration `security_baseline`) — function / table ใหม่ไม่มีใครเข้าได้จนกว่าจะ `grant` เอง
+   และ `security_invariants.test.sql` จะ fail ถ้ามีช่องโหว่ (หัวข้อ 3.5) → เพิ่ม RPC ใหม่ต้องเพิ่มชื่อใน allowlist ของ test นั้นด้วย
+6. ห้าม:
    - แก้ migration ที่ merge เข้า `main` แล้ว → สร้าง migration ใหม่มาแก้แทน
    - `db reset` / `db push --include-seed` กับ Supabase project จริง
    - ใช้ secret / service_role key ใน client
@@ -147,19 +150,44 @@ curl -s -X POST http://127.0.0.1:54321/rest/v1/rpc/health \
 
 ### 3.3 สิ่งที่มีอยู่ตอนนี้ (อัปเดตทุกครั้งที่เพิ่ม migration)
 
-| migration                        | object                                                                          | ใครเข้าได้                                                    | หมายเหตุ                                     |
-| -------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------- |
-| `20261023033015_init_profiles`   | function `public.set_updated_at()`                                              | trigger ใช้                                                   | ใช้กับทุกตารางที่มี `updated_at`             |
-|                                  | table `public.profiles` (`id`, `display_name`, `avatar_url`, `bio`, timestamps) | authenticated อ่านได้ทุกแถว, แก้ได้แค่ของตัวเอง · anon ไม่ได้ | ⚠️ เฟส 1 จะปิด select ตรง (SYSTEM_DESIGN 0)  |
-|                                  | trigger `on_auth_user_created` → `public.handle_new_user()`                     | ระบบ                                                          | สมัครแล้วสร้าง profile ให้                   |
-|                                  | function `public.health()`                                                      | anon, authenticated                                           | health check                                 |
-| `20261023033018_avatars_storage` | bucket `avatars` (public, ≤5MB, jpeg/png/webp)                                  | ทุกคนดู · อัปโหลด/แก้/ลบเฉพาะ `<user id>/...`                 | ⚠️ เฟส 1 แทนด้วย bucket `photos` แบบ private |
-| `20261023194321_waitlist`        | schema `private`                                                                | ไม่มี (revoke หมด)                                            | สร้างครั้งแรกที่นี่                          |
-|                                  | `private.client_ip()`, `private.rate_events`, `private.check_rate()`            | ภายใน                                                         | rate limit กลาง ใช้ซ้ำได้                    |
-|                                  | table `private.waitlist`                                                        | ผ่าน RPC เท่านั้น                                             | อีเมลคนลงชื่อรอใช้ (เว็บ)                    |
-|                                  | function `public.join_waitlist(...)`                                            | anon, authenticated                                           | คืนแค่ `{ok:true}`, 10 ครั้ง/ชม./IP          |
+**ตาราง**
 
-pgTAP: `supabase/tests/database/profiles.test.sql`, `waitlist.test.sql`
+| ตาราง                                                                | client อ่าน           | client เขียน                                     | migration                     |
+| -------------------------------------------------------------------- | --------------------- | ------------------------------------------------ | ----------------------------- |
+| `public.profiles` (ชื่อ, bio, งาน, ย่าน, โหมด, ระดับยืนยัน, ตั้งค่า) | เจ้าของ (แถวตัวเอง)   | `update_my_profile`, `complete_onboarding`       | init_profiles → identity_core |
+| `public.areas` / `interests` / `prompts`                             | ทุกคน (anon ด้วย)     | migration เท่านั้น                               | identity_core                 |
+| `public.profile_interests` / `profile_prompts`                       | เจ้าของ               | `set_interests`, `set_prompt_answer`             | identity_core                 |
+| `public.photos` (metadata รูป)                                       | เจ้าของ               | `add_photo`, `remove_photo`                      | photos_storage                |
+| `private.profile_private` (วันเกิด, เพศ\*, ช่วงอายุที่สนใจ)          | ผ่าน `get_my_profile` | `complete_onboarding` (วันเกิดตั้งได้ครั้งเดียว) | identity_core                 |
+| `private.verifications` (เบอร์, liveness, องค์กร)                    | —                     | trigger เบอร์ / `mark_liveness_passed` (server)  | identity_core                 |
+| `private.aliases` (นามแฝง Space)                                     | ผ่าน `get_my_profile` | trigger ตอนสมัคร                                 | identity_core                 |
+| `private.consents`                                                   | ผ่าน `get_my_status`  | `record_consent` (เวอร์ชันปัจจุบันเท่านั้น)      | identity_core                 |
+| `private.user_status` (ระงับ / แบน)                                  | ผ่าน `get_my_status`  | moderator (เฟส 2)                                | security_baseline             |
+| `private.rate_events`                                                | —                     | `private.check_rate()`                           | waitlist                      |
+| `private.waitlist`                                                   | —                     | `join_waitlist`                                  | waitlist                      |
+
+\* เพศ / สนใจเพศ: มีคอลัมน์แต่ยังไม่มี RPC เขียน — รอทีมตัดสินใจ Q16
+
+**RPC ที่ client เรียกได้** (= allowlist ใน `security_invariants.test.sql`)
+
+| function                                                                                      | ใครเรียก     | ต้องยืนยันถึงระดับ    |
+| --------------------------------------------------------------------------------------------- | ------------ | --------------------- |
+| `health()`, `join_waitlist(...)`                                                              | anon + login | —                     |
+| `get_my_status()`, `get_my_profile()`                                                         | login        | —                     |
+| `record_consent(doc, version)`, `update_my_profile(...)`                                      | login        | none (แค่ไม่ถูกระงับ) |
+| `complete_onboarding(...)`, `set_interests`, `set_prompt_answer`, `add_photo`, `remove_photo` | login        | phone                 |
+
+`get_my_status().next_step`: `restricted` → `consents` → `phone` → `profile` → `selfie` → `done`
+
+**Storage**: bucket `photos` (private, ≤5MB, webp/jpeg, path `<uid>/<uuid>.webp`) — เจ้าของอัปโหลด/อ่าน/ลบได้แค่ของตัวเอง เขียนทับไม่ได้ · bucket `avatars` เดิมปิดเป็น private แล้ว (เลิกใช้)
+
+**Helper ภายใน (`private`, client เรียกไม่ได้)**: `assert_signed_in()`, `assert_active_user(min_level)`, `user_state()`, `is_moderator()`, `age_years()`, `check_rate()`, `client_ip()`, `has_consent()`, `current_consent_version()`, `generate_alias()`, `is_own_photo_path()`, `mark_liveness_passed()` (สำหรับ Edge Function ในอนาคต)
+
+**Trigger**: `on_auth_user_created` (สร้าง profiles + profile_private + verifications + alias) · `on_auth_user_phone_confirmed` (→ ระดับ `phone`) · `*_set_updated_at`
+
+pgTAP: `security_invariants`, `identity`, `photos_storage`, `waitlist` (ใน `supabase/tests/database/`)
+
+ผู้ใช้ใน seed (รหัส `password123`): `demo` (1111…) และ `demo2` (2222…) ยืนยันครบ · `demo3` (3333…) ผู้ใช้ใหม่
 
 ตารางที่จะสร้างต่อ (ตามเฟส) → [`SYSTEM_DESIGN.md`](SYSTEM_DESIGN.md) หัวข้อ 5 (data model) และ 14 (ลำดับการสร้าง)
 
@@ -191,7 +219,21 @@ supabase/
 3. ตาราง → index → `enable row level security` → policy → trigger (ทีละตาราง)
 4. helper functions ใน `private`
 5. RPC ใน `public`
-6. `revoke` / `grant` ท้ายไฟล์ (ทุก function)
+6. `grant` ท้ายไฟล์ — **เฉพาะที่ตั้งใจเปิด** (ของใหม่ปิดอยู่แล้ว ไม่ต้อง revoke)
+
+### 3.5 รั้วความปลอดภัยอัตโนมัติ (`security_invariants.test.sql`)
+
+test นี้ fail ใน CI ทันทีถ้าเจอข้อใดข้อหนึ่ง — **ห้ามแก้ test ให้ผ่านโดยไม่เข้าใจว่าทำไม fail**:
+
+1. ตารางใน `public` / `private` ที่ไม่เปิด RLS
+2. function ที่ไม่ตั้ง `search_path`
+3. anon เรียก function นอก allowlist (`health`, `join_waitlist`)
+4. authenticated เรียก function ที่ไม่อยู่ใน allowlist ของ API → **เพิ่ม RPC ใหม่ = เพิ่มชื่อตรงนี้** (คนรีวิวจะเห็นว่า API เปลี่ยน)
+5. function ใน `private` ที่ client เรียกได้ / client มีสิทธิ์ใช้ schema `private`
+6. client มีสิทธิ์ insert / update / delete ตารางใน `public` ตรงๆ
+7. anon อ่านตารางอื่นนอกจาก `areas` / `interests` / `prompts`
+8. มี storage bucket แบบ public
+9. function `security definer` ที่ไม่ได้เป็นของ `postgres`
 
 ---
 
@@ -207,10 +249,11 @@ pnpm db:test                             # 6. ผ่านหมด
 pnpm db:types                            # 7. อัปเดต packages/shared/src/database.types.ts
 ```
 
-8. `packages/shared`: เพิ่มชื่อใน `constants/supabase.ts` (`TABLES` / `SUPABASE_RPC` / `STORAGE_BUCKETS`) + zod schema ใน `schemas/` + test
-9. อัปเดต **หัวข้อ 3.3 ของไฟล์นี้** + ถ้ามีการตัดสินใจใหม่ → `DECISIONS.md`
-10. `pnpm lint && pnpm typecheck && pnpm test`
-11. commit (`feat(db): ...`) → PR — เขียนใน PR ว่า "มี migration ใหม่ หลัง merge ต้อง `db push`" (หัวข้อ 5)
+8. เพิ่ม RPC ที่ client เรียก → เพิ่มชื่อใน allowlist ของ `security_invariants.test.sql` แล้ว `pnpm db:test` อีกรอบ
+9. `packages/shared`: เพิ่มชื่อใน `constants/supabase.ts` (`TABLES` / `SUPABASE_RPC` / `STORAGE_BUCKETS`) + zod schema ใน `schemas/` + test
+10. อัปเดต **หัวข้อ 3.3 ของไฟล์นี้** + ถ้ามีการตัดสินใจใหม่ → `DECISIONS.md`
+11. `pnpm lint && pnpm typecheck && pnpm test`
+12. commit (`feat(db): ...`) → PR — เขียนใน PR ว่า "มี migration ใหม่ หลัง merge ต้อง `db push`" (หัวข้อ 5)
 
 ถ้า migration ยังไม่ merge แล้วอยากแก้ → แก้ไฟล์เดิมได้ แล้ว `pnpm db:reset` ใหม่
 ถ้า merge เข้า `main` แล้ว → **ห้ามแก้** สร้าง migration ใหม่ (`alter table ...`)
@@ -244,12 +287,9 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_uid uuid := (select auth.uid());
+  v_uid uuid := private.assert_active_user();   -- login + ไม่ถูกระงับ + ยืนยัน selfie แล้ว (ส่ง 'phone' / 'none' ถ้าแค่นั้นพอ)
   v_id uuid;
 begin
-  if v_uid is null then
-    raise exception 'not_authenticated' using errcode = '28000';
-  end if;
   perform private.check_rate('create_thing', v_uid::text, 20, interval '1 hour');
 
   insert into private.things (user_id, body) values (v_uid, p_body)
@@ -259,32 +299,33 @@ begin
 end;
 $$;
 
-revoke execute on function public.create_thing(text) from public, anon;
+-- ของใหม่ปิดอยู่แล้ว (security_baseline) → grant เฉพาะคนที่ควรเรียก
+-- แล้วเพิ่ม 'create_thing' ใน allowlist ข้อ 4 ของ security_invariants.test.sql
 grant execute on function public.create_thing(text) to authenticated;
 ```
 
 ### 4.2 Template: ตารางใน `public` (ข้อมูลไม่อ่อนไหว)
 
 ```sql
-create table public.areas (
-  id text primary key,                         -- เช่น 'ari'
+create table public.moods (
+  id text primary key check (id ~ '^[a-z0-9_]{2,40}$'),   -- เช่น 'tired'
   name_th text not null,
   name_en text not null,
   sort int not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  active boolean not null default true,
+  created_at timestamptz not null default now()
 );
-alter table public.areas enable row level security;
+alter table public.moods enable row level security;
 
-create policy "areas: ทุกคนอ่านได้"
-  on public.areas for select
+-- ของใหม่ไม่มีสิทธิ์ใดๆ (security_baseline) → grant select อย่างเดียว
+-- (ให้ anon อ่าน = ต้องเพิ่มชื่อใน allowlist ข้อ 8 ของ security_invariants.test.sql)
+grant select on public.moods to anon, authenticated;
+
+create policy "moods: ทุกคนอ่านรายการที่เปิดใช้"
+  on public.moods for select
   to anon, authenticated
-  using (true);
--- ไม่มี policy insert/update/delete = แก้ได้ผ่าน migration เท่านั้น
-
-create trigger areas_set_updated_at
-  before update on public.areas
-  for each row execute function public.set_updated_at();
+  using (active);
+-- ไม่ grant insert/update/delete = client แก้ไม่ได้ (แก้ผ่าน migration หรือ RPC ของ moderator)
 ```
 
 ### 4.3 Template: pgTAP
@@ -316,7 +357,9 @@ select * from finish();
 rollback;
 ```
 
-ทุก policy / RPC ต้องทดสอบทั้ง **ทำได้** และ **ทำไม่ได้** (anon, เจ้าของ, คนอื่น) — ผู้ใช้ทดสอบใน seed: `1111...` (demo) และ `2222...` (demo2)
+ทุก policy / RPC ต้องทดสอบทั้ง **ทำได้** และ **ทำไม่ได้** (anon, เจ้าของ, คนอื่น, ยังไม่ยืนยัน, ถูกระงับ) — ผู้ใช้ทดสอบใน seed: `1111...` (demo), `2222...` (demo2), `3333...` (demo3 ยังไม่ยืนยัน) · ตัวอย่างครบ: `identity.test.sql`
+
+เรียก function เพื่อเตรียมข้อมูลในไฟล์ test ให้ใช้ `do $$ begin perform ...; end $$;` (`select` เปล่าๆ จะพ่นแถวที่ไม่ใช่ TAP)
 
 ---
 
@@ -349,13 +392,14 @@ pnpm exec supabase db push
 
 ## 6. แก้ปัญหา
 
-| อาการ                                                   | สาเหตุ / วิธีแก้                                                                                         |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| เว็บ/แอป `ERR_CONNECTION_REFUSED` ที่ `127.0.0.1:54321` | Supabase ไม่ได้รัน → `pnpm db:start` · ถ้าใช้ WSL: WSL ดับเอง → เปิด `sleep infinity` ค้างไว้ (หัวข้อ 2) |
-| `relation "..." does not exist` / function ไม่มี        | DB ไม่ตรงกับ migrations → `pnpm db:reset`                                                                |
-| `db reset` error ใน migration ใหม่                      | แก้ SQL ใน migration นั้น (ถ้ายังไม่ merge) แล้ว reset ใหม่                                              |
-| CI fail "database.types.ts ไม่ตรงกับ schema"            | `pnpm db:types` แล้ว commit                                                                              |
-| app ไม่เห็น type ใหม่                                   | `pnpm --filter @rukan/shared build`                                                                      |
-| `permission denied for function/table` จาก client       | ลืม `grant execute ... to anon/authenticated` หรือ policy ไม่ครอบคลุม role นั้น                          |
-| pgTAP: error ที่คาดว่าจะเกิดไม่ถูกนับใน rate limit      | ใน test ทุก call ที่ error ถูก rollback ด้วย — ต้องเรียกสำเร็จให้ครบจำนวนก่อน (ดู `waitlist.test.sql`)   |
-| `pnpm db:*` บน Windows error เรื่อง Docker              | ใช้ `pnpm db:wsl ...` (หัวข้อ 2)                                                                         |
+| อาการ                                                   | สาเหตุ / วิธีแก้                                                                                                              |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| เว็บ/แอป `ERR_CONNECTION_REFUSED` ที่ `127.0.0.1:54321` | Supabase ไม่ได้รัน → `pnpm db:start` · ถ้าใช้ WSL: WSL ดับเอง → เปิด `sleep infinity` ค้างไว้ (หัวข้อ 2)                      |
+| `relation "..." does not exist` / function ไม่มี        | DB ไม่ตรงกับ migrations → `pnpm db:reset`                                                                                     |
+| `db reset` error ใน migration ใหม่                      | แก้ SQL ใน migration นั้น (ถ้ายังไม่ merge) แล้ว reset ใหม่                                                                   |
+| CI fail "database.types.ts ไม่ตรงกับ schema"            | `pnpm db:types` แล้ว commit                                                                                                   |
+| app ไม่เห็น type ใหม่                                   | `pnpm --filter @rukan/shared build`                                                                                           |
+| `permission denied for function/table` จาก client       | ของใหม่ปิดเป็นค่าเริ่มต้น → ลืม `grant` (แล้วเพิ่มชื่อใน allowlist ของ security_invariants) หรือ policy ไม่ครอบคลุม role นั้น |
+| `security_invariants` fail                              | migration เปิดช่อง (หัวข้อ 3.5) — แก้ migration ไม่ใช่แก้ test เว้นแต่ตั้งใจเปิด API ใหม่จริง                                 |
+| pgTAP: error ที่คาดว่าจะเกิดไม่ถูกนับใน rate limit      | ใน test ทุก call ที่ error ถูก rollback ด้วย — ต้องเรียกสำเร็จให้ครบจำนวนก่อน (ดู `waitlist.test.sql`)                        |
+| `pnpm db:*` บน Windows error เรื่อง Docker              | ใช้ `pnpm db:wsl ...` (หัวข้อ 2)                                                                                              |
