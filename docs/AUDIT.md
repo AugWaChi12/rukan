@@ -61,8 +61,8 @@
 
 ### P1 — แกนหลักให้ใช้ได้จริง
 
-- [x] Daily Drop ตามเวลาไทย: ใช้ `(now() at time zone 'Asia/Bangkok')::date` + เปิดให้เห็นหลัง 19:00 (หรือ 12:00 สำหรับ Noon Drop) + `pg_cron` แจ้งเตือน
-- [x] Tier ต่อผู้ใช้: `private.subscriptions` (tier, source, expires_at) + helper `private.user_limits()` → ใช้ใน `get_my_drop` / `send_bubble` / `swipe` + pgTAP · เลือกช่องทางจ่ายเงิน: RevenueCat (App Store / Google Play IAP) + manual/promo (D58)
+- [x] ~~Daily Drop ตามเวลาไทย 19:00~~ → swipe deck แบบโควตาต่อรอบ 6 ชม. (D60) — migration `20261025090000_swipe_deck_rolling_window`
+- [x] Tier ต่อผู้ใช้: `private.subscriptions` (tier, source, expires_at) + helper `private.user_limits()` → ใช้ใน `get_my_deck` / `send_bubble` / `swipe` + pgTAP · เลือกช่องทางจ่ายเงิน: RevenueCat (App Store / Google Play IAP) + manual/promo (D58)
 - [x] Realtime แชทแบบ private broadcast (D36)
 - [x] ย้าย admin console ไปใช้ `@rukan/api` (เพิ่มฟังก์ชัน `mod*` ใน api + test)
 - [ ] selfie liveness (รอทีมยืนยันข้อเสนอใน DECISIONS) · SMS OTP vendor

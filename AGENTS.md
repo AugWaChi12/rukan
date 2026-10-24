@@ -167,14 +167,14 @@ URL ตอน dev:
     - [x] เฟส 2 ความปลอดภัย & Moderator (`blocks` พร้อมซ่อนตัวตนเมื่อบล็อกจาก Space, `reports`, `moderation_actions`, `identity_reveals_log` + RPC ผู้ใช้/ผู้ดูแล/อุทธรณ์)
     - [x] เฟส 3 Space (`posts`, `post_replies`, `post_likes`, `mood_checkins` + กรองข้อมูลติดต่อ/PII + สัญญาณขอความช่วยเหลือ `care_notice` + ไม่ส่ง `author_id` ออกไปเด็ดขาด)
     - [x] เฟส 4 Bubble & แชท (`bubbles`, `conversations`, `conversation_members`, `messages` + เตือนคำเสี่ยงกลโกง `scam_warning` + กดเปิดตัวสองฝ่าย `request_reveal` + คำนวณ `reveal_stage` 0–3 จากข้อความของทั้งสองฝ่าย + `request_photo_unlock`)
-    - [x] เฟส 5 Daily Drop & Match (`daily_drops`, `swipes`, `matches` + คัดการ์ดไม่เกิน 5 คน/วัน/โหมด + หมดอายุ 48 ชม. ถ้าไม่ทัก + `polite_close` / `unmatch` + `get_profile_card` ปลดล็อกรูปตาม `reveal_stage` และกัน scrape)
+    - [x] เฟส 5 Swipe deck & Match (`swipe_deck`, `swipe_windows`, `swipes`, `matches` + โควตาปัดต่อรอบ + หมดอายุ 48 ชม. ถ้าไม่ทัก + `polite_close` / `unmatch` + `get_profile_card` ปลดล็อกรูปตาม `reveal_stage` และกัน scrape) — เดิมเป็น Daily Drop 5 คน/วัน เปลี่ยนเป็น swipe deck ใน D60
     - [x] `@rukan/shared` (types 36 RPCs + zod schemas) และ `@rukan/api` (`createApi` + `createQueries` ครบทุกเฟส) — ทดสอบ pgTAP 152/152 และ Vitest 57/57 ผ่านทั้งหมด
   - [ ] เฟส 1 ที่รอทีม: SMS OTP + liveness vendor (Q14 — **มีข้อเสนอแล้ว: ด่านแรก MediaPipe + AWS Rekognition** ดู `docs/DECISIONS.md` หัวข้อ "ข้อเสนอ: selfie liveness"), social login, Edge Functions
   - [x] admin console (`admin.rukan.app`), tier config Free / Gold, Google sign-in, แท็บ Space / Drop / แชท / ฉัน บน mobile (2026-10-24, push เข้า `main` ตรง)
   - [x] **Audit รอบแรก (2026-10-24) → [`docs/AUDIT.md`](docs/AUDIT.md)** — แก้ P0 แล้ว 2 ข้อ (moderator จากอีเมล, OAuth ไม่ใช่ PKCE) · pgTAP 155/155
   - [x] **P1 Core Roadmap (2026-10-24)**:
-    - [x] Daily Drop ตามเวลาไทย (`Asia/Bangkok`) + เปิดหลัง 19:00 น. (หรือ 12:00 น. สำหรับ Noon Drop ของ Gold) + `pg_cron`
-    - [x] Tier ต่อผู้ใช้ (`private.subscriptions` รองรับ RevenueCat IAP + manual/promo, `private.user_limits()` บังคับใช้ใน `get_my_drop`, `send_bubble`, `swipe`)
+    - [x] ~~Daily Drop ตามเวลาไทย 19:00~~ → **Swipe deck โควตาต่อรอบ** (D60, 2026-10-25): Free 20 / Gold 40 ใบ รีทุก 6 ชม. หลังปัดใบแรก · รวมโหมด friend/date · เอฟเฟกต์ฟองสลายบนหน้า Drop ของมือถือ
+    - [x] Tier ต่อผู้ใช้ (`private.subscriptions` รองรับ RevenueCat IAP + manual/promo, `private.user_limits()` บังคับใช้ใน `get_my_deck`, `send_bubble`, `swipe`)
     - [x] Realtime แชทแบบ Private Broadcast (`realtime.messages` RLS + `can_access_realtime_topic` + ไม่ส่ง `sender_id`/`user_id` ตาม D36)
     - [x] ย้าย Admin Console (`apps/web/src/app/admin/page.tsx`) มาเรียกผ่าน `@rukan/api` ทั้งหมด — ทดสอบ pgTAP 179/179 และ Vitest 62/62 ผ่านทั้งหมด
   - [ ] **งานถัดไป: ดู roadmap ใน `docs/AUDIT.md` หัวข้อ 4** (เชื่อม SDK RevenueCat จริงเมื่อมี Apple/Google account, selfie / SMS vendor, นโยบายเบอร์รีไซเคิล, P2 UX redesign)
