@@ -13,6 +13,8 @@ web-build/
 coverage/
 *.tsbuildinfo
 next-env.d.ts
+tsup.config.bundled_*
+*.bundled_*.mjs
 
 # Expo native folders (Continuous Native Generation — สร้างใหม่ได้ด้วย `expo prebuild`)
 apps/mobile/ios/

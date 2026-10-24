@@ -5,7 +5,15 @@ import prettier from 'eslint-config-prettier';
 
 export const base = tseslint.config(
   {
-    ignores: ['**/dist/**', '**/.next/**', '**/.expo/**', '**/coverage/**', '**/node_modules/**'],
+    ignores: [
+      '**/dist/**',
+      '**/.next/**',
+      '**/.expo/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      '**/*.bundled_*.mjs',
+      '**/tsup.config.bundled_*',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
