@@ -64,6 +64,8 @@ docs: describe supabase deploy flow
 
 ### เขียน migration
 
+> ขั้นตอน + template → [`DATABASE.md`](DATABASE.md) หัวข้อ 4
+
 - 1 migration = 1 เรื่อง; **ห้ามแก้ migration ที่ merge เข้า `main` แล้ว** — ถ้าผิด ให้สร้าง migration ใหม่มาแก้
 - สร้างตารางใน `public` → ต้องมีใน migration เดียวกัน: `enable row level security` + policy ครบทุก operation ที่ต้องการ
 - policy ระบุ role เสมอ (`to authenticated` / `to anon`) และใช้ `(select auth.uid())` ไม่ใช่ `auth.uid()` ตรงๆ

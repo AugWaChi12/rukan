@@ -68,6 +68,7 @@ stuMatch/                     ← ชื่อ repo/โฟลเดอร์ย�
 ├── docs/
 │   ├── ARCHITECTURE.md       ← ภาพรวมระบบ, auth, RLS, env, deploy
 │   ├── CONVENTIONS.md        ← กฎการเขียนโค้ด, SQL, git, การตั้งชื่อ
+│   ├── DATABASE.md           ← ★ สร้าง/sync DB บนเครื่อง, schema map, checklist เพิ่มตาราง + template
 │   ├── DECISIONS.md          ← บันทึกการตัดสินใจ + เรื่องที่ยังเปิดอยู่
 │   ├── PRODUCT.md            ← แอปนี้คืออะไร, กลุ่มผู้ใช้, ฟีเจอร์ MVP
 │   ├── SYSTEM_DESIGN.md      ← data model, schema private + RPC, flow, cron, Edge Functions, ลำดับการสร้าง
@@ -127,7 +128,7 @@ URL ตอน dev:
 3. **ทุกตารางใน schema `public` ต้อง `enable row level security` + มี policy ครบ** ใน migration เดียวกับที่สร้างตาราง
    - ตารางที่เปิด RLS แต่ไม่มี policy = ไม่มีใครเข้าถึงได้ (ปลอดภัย) / ตารางที่ไม่เปิด RLS = **ทุกคนบนโลกอ่าน/แก้ได้**
    - ทุก policy ใหม่ต้องมี pgTAP test ใน `supabase/tests/database/`
-4. **เปลี่ยน database ต้องทำผ่าน migration เท่านั้น** (`pnpm db:migration <ชื่อ>`) — ห้ามแก้ schema ผ่าน Dashboard/Studio ของ project จริง
+4. **เปลี่ยน database ต้องทำผ่าน migration เท่านั้น** (`pnpm db:migration <ชื่อ>`) — ห้ามแก้ schema ผ่าน Dashboard/Studio ของ project จริง — ขั้นตอนครบใน [`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 4
    - แก้ schema แล้วต้อง `pnpm db:types` และ commit `database.types.ts` ด้วย (CI เช็ค)
 5. **Type ที่ใช้ข้าม app ต้องอยู่ใน `packages/shared`** — ใช้ `Database`, `Tables<'...'>` จาก `@rukan/shared` ห้ามเขียน type ของตารางเอง
 6. **ห้าม push ตรงเข้า `main`** — ทำผ่าน branch + Pull Request เสมอ
@@ -161,8 +162,9 @@ URL ตอน dev:
 
 ## 6. วิธีทำงานสำหรับ AI
 
-- อ่าน `AGENTS.md` → `docs/PRODUCT.md` → `docs/ARCHITECTURE.md` → `docs/SYSTEM_DESIGN.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม (งานที่แตะผู้ใช้/ข้อมูลส่วนตัว อ่าน `docs/POLICY.md` ด้วย)
-- ฟีเจอร์ที่แตะข้อมูล ทำตามลำดับ: **migration (ตาราง + RLS) → pgTAP test → `pnpm db:types` → zod schema ใน shared → UI**
+- อ่าน `AGENTS.md` → `docs/PRODUCT.md` → `docs/ARCHITECTURE.md` → `docs/SYSTEM_DESIGN.md` → `docs/DATABASE.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม (งานที่แตะผู้ใช้/ข้อมูลส่วนตัว อ่าน `docs/POLICY.md` ด้วย)
+- **ก่อนรัน/ทดสอบอะไรที่ใช้ database: ทำให้ DB บนเครื่องตรงกับ `supabase/migrations/` ก่อน** — `pnpm db:start` แล้วถ้า `supabase/` เปลี่ยนหลัง pull/สลับ branch → `pnpm db:reset && pnpm db:test` ([`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 2)
+- ฟีเจอร์ที่แตะข้อมูล ทำตามลำดับ: **migration (ตาราง + RLS) → pgTAP test → `pnpm db:types` → zod schema ใน shared → UI** ตาม checklist + template ใน [`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 4 และอัปเดตตาราง "สิ่งที่มีอยู่ตอนนี้" (หัวข้อ 3.3) ทุกครั้ง
 - logic ที่ client ไม่ควรทำเอง (เช่น จับคู่ match, ตรวจสิทธิ์ซับซ้อน, เรียก service ภายนอกด้วย secret) ให้ทำเป็น **Postgres function (`security definer` อย่างระวัง)** หรือ **Edge Function** — ห้ามเชื่อข้อมูลจาก client
 - ใช้เวอร์ชัน stable ล่าสุดของ library ณ วันที่ทำงาน และเช็คเอกสารทางการถ้าไม่แน่ใจ (Next.js / Expo / Supabase เปลี่ยนบ่อย)
 - อย่าเพิ่ม library ใหม่ถ้าของที่มีอยู่ทำได้แล้ว ถ้าจำเป็นต้องเพิ่ม ให้บันทึกเหตุผลใน `docs/DECISIONS.md`
