@@ -92,7 +92,7 @@ export function DropScreen() {
   const currentCandidate =
     candidates[activeCardIndex]?.action === null
       ? candidates[activeCardIndex]
-      : pendingCandidates[0] ?? candidates[activeCardIndex] ?? candidates[0];
+      : (pendingCandidates[0] ?? candidates[activeCardIndex] ?? candidates[0]);
 
   const modeOptions = PROFILE_MODES.map((m) => ({
     value: m,
@@ -175,7 +175,8 @@ export function DropScreen() {
             ดูครบ 5 คนของวันนี้แล้ว!
           </AppText>
           <AppText variant="muted" style={{ textAlign: 'center', maxWidth: 300 }}>
-            การ์ดรอบใหม่จะส่งตรงถึงคุณทุกวันเวลา 19:00 น. ระหว่างนี้สามารถไปคุยกับเพื่อนใหม่ในห้องแชทได้เลย
+            การ์ดรอบใหม่จะส่งตรงถึงคุณทุกวันเวลา 19:00 น.
+            ระหว่างนี้สามารถไปคุยกับเพื่อนใหม่ในห้องแชทได้เลย
           </AppText>
           <Row style={{ justifyContent: 'center', marginTop: space.sm }}>
             <Button
@@ -183,11 +184,7 @@ export function DropScreen() {
               label={t('drop.matchGoChat')}
               onPress={() => router.push('/(app)/(tabs)/chats')}
             />
-            <Button
-              variant="ghost"
-              label="ดูสรุป 5 คนวันนี้"
-              onPress={() => setViewMode('list')}
-            />
+            <Button variant="ghost" label="ดูสรุป 5 คนวันนี้" onPress={() => setViewMode('list')} />
           </Row>
         </Card>
       ) : viewMode === 'card' && currentCandidate ? (
@@ -283,10 +280,15 @@ export function DropScreen() {
         <Card tone="rose" style={{ alignItems: 'center', paddingVertical: space.xl }}>
           <Text style={{ fontSize: 50 }}>🥳</Text>
           <AppText variant="heading" style={{ textAlign: 'center', marginTop: space.sm }}>
-            {matchedCandidate ? t('drop.matchModalTitle', { name: matchedCandidate.display_name }) : ''}
+            {matchedCandidate
+              ? t('drop.matchModalTitle', { name: matchedCandidate.display_name })
+              : ''}
           </AppText>
           <Badge label="⏳ ตอบกลับภายใน 48 ชั่วโมง" tone="ink" />
-          <AppText variant="body" style={{ textAlign: 'center', maxWidth: 320, marginTop: space.xs }}>
+          <AppText
+            variant="body"
+            style={{ textAlign: 'center', maxWidth: 320, marginTop: space.xs }}
+          >
             {t('drop.matchModalBody')}
           </AppText>
         </Card>
@@ -343,10 +345,7 @@ function SingleCandidateCard({
             ]}
           />
           <View
-            style={[
-              styles.fanCard,
-              { backgroundColor: colors.card, borderColor: colors.line },
-            ]}
+            style={[styles.fanCard, { backgroundColor: colors.card, borderColor: colors.line }]}
           />
           <View
             style={[
@@ -358,10 +357,7 @@ function SingleCandidateCard({
         </View>
 
         <View
-          style={[
-            styles.lockedPill,
-            { backgroundColor: colors.card, borderColor: colors.line },
-          ]}
+          style={[styles.lockedPill, { backgroundColor: colors.card, borderColor: colors.line }]}
         >
           <Text style={[styles.lockedPillText, { color: colors.text }]}>
             {t('drop.lockedBadge')}
@@ -451,10 +447,7 @@ function SingleCandidateCard({
             hapticFeedback="heavy"
             activeScale={0.92}
             onPress={onSkip}
-            style={[
-              styles.skipCircle,
-              { backgroundColor: colors.card, borderColor: colors.line },
-            ]}
+            style={[styles.skipCircle, { backgroundColor: colors.card, borderColor: colors.line }]}
           >
             <Text style={{ fontSize: 20, fontWeight: '700', color: colors.muted }}>✕</Text>
           </BouncyPressable>

@@ -7,8 +7,8 @@ import { supabaseEnv } from './env';
  * Refresh session ของ Supabase ทุก request แล้วส่ง cookie ใหม่ไปทั้ง Server Component และ browser
  * ถ้าจะ redirect/rewrite ต้อง copy cookie จาก response นี้ไปด้วย ไม่งั้นผู้ใช้จะโดน logout
  */
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(request: NextRequest, initialResponse?: NextResponse) {
+  let response = initialResponse ?? NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(supabaseEnv.url, supabaseEnv.publishableKey, {
     cookies: {
