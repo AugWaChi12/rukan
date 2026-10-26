@@ -79,7 +79,7 @@ export const ChevronIcon = (p: IconProps) => (
   </Stroke>
 );
 
-/** โลโก้รู้กัน: สองฟองแชทหันเข้าหากัน ส่วนที่ซ้อนกันคือ "รู้กันแค่เรา" */
+/** โลโก้รู้กัน: สองฟองแชทหันเข้าหากัน ส่วนที่ซ้อนกันคือ "รู้กันแค่เรา" พร้อมประกายดาวตรงกลาง */
 export function LogoMark({ size = 34, title }: { size?: number; title?: string }) {
   return (
     <svg
@@ -92,9 +92,29 @@ export function LogoMark({ size = 34, title }: { size?: number; title?: string }
     >
       <circle cx="26" cy="28" r="22" fill="#E9A9BF" />
       <path d="M10 42 L6 56 L20 47 Z" fill="#E9A9BF" />
+      <path
+        d="M15 17 A16 16 0 0 1 26 12"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeOpacity="0.65"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
       <circle cx="50" cy="28" r="22" fill="#C7BEE3" />
       <path d="M66 42 L70 56 L56 47 Z" fill="#C7BEE3" />
+      <path
+        d="M61 17 A16 16 0 0 0 50 12"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeOpacity="0.65"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
       <path d="M38 13 a22 22 0 0 1 0 30 a22 22 0 0 1 0 -30 z" fill="#2E2238" />
+      <path
+        d="M38 21.5 C38.8 25.2 40.3 26.7 44 27.5 C40.3 28.3 38.8 29.8 38 33.5 C37.2 29.8 35.7 28.3 32 27.5 C35.7 26.7 37.2 25.2 38 21.5 Z"
+        fill="#F2C66D"
+      />
     </svg>
   );
 }

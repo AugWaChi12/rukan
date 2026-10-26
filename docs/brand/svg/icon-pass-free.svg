@@ -1,0 +1,28 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g id="Rukan-Icon-Pass-Free">
+    <rect id="Badge-Base" x="8" y="8" width="48" height="48" rx="16" fill="#E8F4EE" stroke="#2C6B52" stroke-width="3" />
+    <path
+      id="Sprout-Stem"
+      d="M32 46V26"
+      stroke="#2C6B52"
+      stroke-width="3.5"
+      stroke-linecap="round"
+    />
+    <path
+      id="Leaf-Right"
+      d="M32 30C32 22 40 18 46 20C46 28 40 32 32 30Z"
+      fill="#8CC7AE"
+      stroke="#2C6B52"
+      stroke-width="3"
+      stroke-linejoin="round"
+    />
+    <path
+      id="Leaf-Left"
+      d="M32 34C32 27 25 23 19 25C19 32 25 36 32 34Z"
+      fill="#B8E0CE"
+      stroke="#2C6B52"
+      stroke-width="3"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g id="Rukan-Icon-Feature-Bubble">
+    <circle id="Main-Bubble" cx="30" cy="34" r="18" fill="#FCEEF3" stroke="#D4688E" stroke-width="3.5" />
+    <path id="Bubble-Highlight" d="M21 25C23.5 22 26.8 20.5 30.5 20.5" stroke="#D4688E" stroke-width="3" stroke-linecap="round" />
+    <circle id="Mini-Bubble-1" cx="48" cy="18" r="6" fill="#F2ECF9" stroke="#7B5EA7" stroke-width="3" />
+    <circle id="Mini-Bubble-2" cx="53" cy="31" r="3.5" fill="#F2C66D" />
+  </g>
+</svg>

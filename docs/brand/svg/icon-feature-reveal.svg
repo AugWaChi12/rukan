@@ -1,0 +1,8 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g id="Rukan-Icon-Feature-Progressive-Reveal">
+    <circle id="Stage-1-Blur-Ring" cx="32" cy="32" r="23" stroke="#C7BEE3" stroke-width="3" stroke-dasharray="5 5" />
+    <circle id="Stage-2-Half-Ring" cx="32" cy="32" r="16" stroke="#E9A9BF" stroke-width="3.2" />
+    <circle id="Stage-3-Clear-Core" cx="32" cy="32" r="9" fill="#D4688E" stroke="#2E2238" stroke-width="3" />
+    <circle id="Eye-Spark" cx="34.5" cy="29.5" r="2.5" fill="#FFFFFF" />
+  </g>
+</svg>

@@ -1,0 +1,60 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="OrbitBg" x1="40" y1="24" x2="472" y2="488" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF9F5" />
+      <stop offset="100%" stop-color="#F5ECF9" />
+    </linearGradient>
+    <linearGradient id="OrbitHeartGrad" x1="144" y1="140" x2="368" y2="372" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D4688E" />
+      <stop offset="52%" stop-color="#E9A9BF" />
+      <stop offset="100%" stop-color="#9A88C9" />
+    </linearGradient>
+    <linearGradient id="OrbitRingGrad" x1="76" y1="300" x2="436" y2="212" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2E2238" />
+      <stop offset="50%" stop-color="#D4688E" />
+      <stop offset="100%" stop-color="#F2C66D" />
+    </linearGradient>
+  </defs>
+
+  <g id="Rukan-Logo-Concept-B-Whisper-Orbit">
+    <rect id="App-Icon-Squircle" x="24" y="24" width="464" height="464" rx="112" fill="url(#OrbitBg)" stroke="#E6DCEB" stroke-width="4" />
+
+    <g id="Space-Orbit-Back">
+      <ellipse
+        cx="256"
+        cy="262"
+        rx="186"
+        ry="64"
+        transform="rotate(-18 256 262)"
+        stroke="url(#OrbitRingGrad)"
+        stroke-width="14"
+        stroke-linecap="round"
+        stroke-dasharray="220 180"
+      />
+    </g>
+
+    <g id="Heart-Twin-Bubble">
+      <path
+        d="M256 368C256 368 128 294 128 206C128 161.817 163.817 126 208 126C231.6 126 252.8 136.2 267.4 152.5C251.2 172.4 244 198.2 248.5 224.5C254.2 257.8 282.5 282.4 316.2 284.8C298.8 320.2 256 368 256 368Z"
+        fill="url(#OrbitHeartGrad)"
+      />
+      <path
+        d="M256 368C256 368 384 294 384 206C384 161.817 348.183 126 304 126C280.4 126 259.2 136.2 244.6 152.5"
+        fill="#2E2238"
+        fill-opacity="0.9"
+      />
+      <circle cx="204" cy="204" r="14" fill="#FFFFFF" />
+      <circle cx="308" cy="204" r="14" fill="#F2C66D" />
+    </g>
+
+    <g id="Space-Orbit-Front">
+      <path
+        d="M88 316C116 350 202 356 292 326C382 296 438 242 424 204"
+        stroke="url(#OrbitRingGrad)"
+        stroke-width="16"
+        stroke-linecap="round"
+      />
+      <circle id="Satellite-Bubble" cx="394" cy="176" r="22" fill="#F2C66D" stroke="#2E2238" stroke-width="6" />
+    </g>
+  </g>
+</svg>

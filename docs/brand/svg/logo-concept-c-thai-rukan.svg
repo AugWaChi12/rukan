@@ -1,0 +1,37 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="MonogramBg" x1="32" y1="32" x2="480" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2E2238" />
+      <stop offset="100%" stop-color="#191220" />
+    </linearGradient>
+    <linearGradient id="RibbonGrad" x1="136" y1="120" x2="376" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFD4E2" />
+      <stop offset="48%" stop-color="#E9A9BF" />
+      <stop offset="100%" stop-color="#C7BEE3" />
+    </linearGradient>
+  </defs>
+
+  <g id="Rukan-Logo-Concept-C-Thai-Monogram">
+    <rect id="App-Icon-Squircle" x="24" y="24" width="464" height="464" rx="112" fill="url(#MonogramBg)" />
+
+    <g id="Outer-Chat-Halo" opacity="0.18">
+      <circle cx="256" cy="256" r="156" stroke="#E9A9BF" stroke-width="24" />
+    </g>
+
+    <g id="Thai-Ror-Rua-Bubble-Path">
+      <path
+        d="M206 376V264C206 230.863 232.863 204 266 204C294.719 204 318 180.719 318 152C318 123.281 294.719 100 266 100H216C165.19 100 124 141.19 124 192V292C124 342.81 165.19 384 216 384H344L384 408L368 364C382.8 344.2 392 319.2 392 292C392 252 366 218 330 206"
+        stroke="url(#RibbonGrad)"
+        stroke-width="38"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <circle id="Ror-Eye-Loop" cx="264" cy="152" r="22" fill="#F2C66D" />
+      <path
+        id="Sparkle-Accent"
+        d="M352 124L358 142L376 148L358 154L352 172L346 154L328 148L346 142L352 124Z"
+        fill="#F2C66D"
+      />
+    </g>
+  </g>
+</svg>
