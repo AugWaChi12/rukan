@@ -44,6 +44,11 @@ export const SUPABASE_RPC = {
   createTopupOrder: 'create_topup_order',
   getMyTopupOrders: 'get_my_topup_orders',
   modApproveTopupOrder: 'mod_approve_topup_order',
+  // การแจ้งเตือน (Notifications)
+  getMyNotifications: 'get_my_notifications',
+  getUnreadNotificationCount: 'get_unread_notification_count',
+  markNotificationRead: 'mark_notification_read',
+  markAllNotificationsRead: 'mark_all_notifications_read',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   createPost: 'create_post',
   getFeed: 'get_feed',

@@ -631,4 +631,35 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
     await expect(api.moderation.approveTopupOrder(UUID_2)).resolves.toEqual(approveRes);
     expect(rpc).toHaveBeenCalledWith('mod_approve_topup_order', { p_order_id: UUID_2 });
   });
+
+  it('Notifications: getMyNotifications, getUnreadNotificationCount, markNotificationRead, markAllNotificationsRead', async () => {
+    const notifications = [
+      {
+        id: UUID_1,
+        type: 'bubble_received' as const,
+        title: 'มีคนส่ง Bubble ถึงคุณ 🫧',
+        body: 'สวัสดีครับ ยินดีที่ได้รู้จัก',
+        data: { post_id: UUID_2 },
+        read: false,
+        created_at: '2026-10-26T12:00:00Z',
+      },
+    ];
+    const { client, rpc } = fakeClient({ data: notifications, error: null });
+    const api = createApi(client);
+
+    await expect(api.getMyNotifications({ limit: 20, offset: 0 })).resolves.toEqual(notifications);
+    expect(rpc).toHaveBeenCalledWith('get_my_notifications', { p_limit: 20, p_offset: 0 });
+
+    rpc.mockResolvedValueOnce({ data: 3, error: null });
+    await expect(api.getUnreadNotificationCount()).resolves.toBe(3);
+    expect(rpc).toHaveBeenCalledWith('get_unread_notification_count');
+
+    rpc.mockResolvedValueOnce({ data: true, error: null });
+    await expect(api.markNotificationRead(UUID_1)).resolves.toBe(true);
+    expect(rpc).toHaveBeenCalledWith('mark_notification_read', { p_notification_id: UUID_1 });
+
+    rpc.mockResolvedValueOnce({ data: 2, error: null });
+    await expect(api.markAllNotificationsRead()).resolves.toBe(2);
+    expect(rpc).toHaveBeenCalledWith('mark_all_notifications_read');
+  });
 });

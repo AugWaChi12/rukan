@@ -5,7 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Children, Fragment, type ComponentProps, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { AppText } from '@/components/ui';
+import { AppText, Badge } from '@/components/ui';
 import { haptic } from '@/lib/haptics';
 import { useAppTheme } from '@/theme/theme-provider';
 import { radius, space } from '@/theme/tokens';
@@ -40,6 +40,7 @@ export function ListRow({
   tint,
   label,
   value,
+  badge,
   onPress,
   destructive = false,
   checked,
@@ -49,6 +50,7 @@ export function ListRow({
   tint?: string;
   label: string;
   value?: string;
+  badge?: string;
   onPress?: () => void;
   destructive?: boolean;
   /** ใช้เป็นตัวเลือก (radio): true = ติ๊กถูก, false = ว่าง, ไม่ใส่ = แถวเมนูปกติ (มีลูกศร) */
@@ -68,6 +70,7 @@ export function ListRow({
       <AppText style={[styles.label, { color: textColor }]} numberOfLines={1}>
         {label}
       </AppText>
+      {badge ? <Badge label={badge} tone="rose" /> : null}
       {value ? (
         <AppText variant="muted" numberOfLines={1} style={styles.value}>
           {value}

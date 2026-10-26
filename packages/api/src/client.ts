@@ -22,6 +22,10 @@ import {
   exchangeCoinsForPassSchema,
   getFeedSchema,
   getMessagesSchema,
+  getNotificationsInputSchema,
+  notificationsListSchema,
+  type GetNotificationsInput,
+  type NotificationItem,
   getTrendingHashtagsSchema,
   interestsSchema,
   matchListSchema,
@@ -356,6 +360,41 @@ export function createApi(supabase: RukanSupabaseClient) {
         return signedData.signedUrl;
       }
       return storagePath;
+    },
+
+    // -------------------------------------------------------------------------
+    // การแจ้งเตือน (Notifications)
+    // -------------------------------------------------------------------------
+
+    async getMyNotifications(input: GetNotificationsInput = {}): Promise<NotificationItem[]> {
+      const v = getNotificationsInputSchema.parse(input);
+      return parse(
+        notificationsListSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.getMyNotifications, {
+            p_limit: v.limit ?? undefined,
+            p_offset: v.offset ?? undefined,
+          }),
+        ),
+      );
+    },
+
+    async getUnreadNotificationCount(): Promise<number> {
+      return (unwrap(await supabase.rpc(SUPABASE_RPC.getUnreadNotificationCount)) ?? 0) as number;
+    },
+
+    async markNotificationRead(notificationId: string): Promise<boolean> {
+      return Boolean(
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.markNotificationRead, {
+            p_notification_id: notificationId,
+          }),
+        ),
+      );
+    },
+
+    async markAllNotificationsRead(): Promise<number> {
+      return (unwrap(await supabase.rpc(SUPABASE_RPC.markAllNotificationsRead)) ?? 0) as number;
     },
 
     async updateMyProfile(input: UpdateProfileInput): Promise<void> {

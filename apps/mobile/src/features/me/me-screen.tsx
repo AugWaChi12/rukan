@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { AiSparkleIcon, RukanCoinIcon, TierPassIcon } from '@/components/brand-icons';
 import { ListGroup, ListRow } from '@/components/list';
+import { NotificationBellButton } from '@/components/notification-bell';
 import {
   AliasAvatar,
   AppText,
@@ -41,6 +42,7 @@ function MeMenu({ profile }: { profile: MyProfile }) {
   const blocks = useQuery(queries.myBlocks());
   const subQuery = useQuery(queries.mySubscription());
   const tierConfigsQuery = useQuery(queries.tierConfigs());
+  const unreadCountQuery = useQuery(queries.unreadNotificationCount());
   const [showPassSheet, setShowPassSheet] = useState(false);
   const [passNotice, setPassNotice] = useState<string | null>(null);
 
@@ -86,9 +88,14 @@ function MeMenu({ profile }: { profile: MyProfile }) {
     .filter(Boolean)
     .join(' · ');
 
+  const unreadCount = unreadCountQuery.data ?? 0;
+
   return (
     <Screen>
-      <AppText style={[styles.pageTitle, { color: colors.text }]}>{t('tabs.me')}</AppText>
+      <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <AppText style={[styles.pageTitle, { color: colors.text }]}>{t('tabs.me')}</AppText>
+        <NotificationBellButton />
+      </Row>
 
       {/* การ์ดโปรไฟล์ */}
       <Pressable
@@ -198,6 +205,13 @@ function MeMenu({ profile }: { profile: MyProfile }) {
       </View>
 
       <ListGroup title={t('me.menu.groupProfile')}>
+        <ListRow
+          icon="notifications-outline"
+          tint={colors.accentTint}
+          label={t('me.menu.notifications')}
+          badge={unreadCount > 0 ? `${unreadCount}` : undefined}
+          onPress={() => go('/me/notifications')}
+        />
         <ListRow
           icon="person-outline"
           tint={colors.accentTint}

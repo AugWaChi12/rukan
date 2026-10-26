@@ -26,6 +26,7 @@ import {
   View,
 } from 'react-native';
 import { AiSparkleIcon } from '@/components/brand-icons';
+import { NotificationBellButton } from '@/components/notification-bell';
 import { CareNoticeBanner, SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
   AliasAvatar,
@@ -293,35 +294,38 @@ export function SpaceScreen() {
           </AppText>
         </View>
 
-        {profileQuery.data ? (
-          <View
-            style={[
-              styles.aliasPill,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.line,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4,
-                elevation: 1,
-              },
-            ]}
-          >
-            <AliasAvatar
-              alias={profileQuery.data.alias}
-              color={profileQuery.data.alias_color}
-              size={24}
-            />
-            <AppText
-              variant="small"
-              numberOfLines={1}
-              style={{ fontWeight: '700', color: colors.text, fontSize: 12, maxWidth: 110 }}
+        <Row style={{ alignItems: 'center', gap: 8 }}>
+          {profileQuery.data ? (
+            <View
+              style={[
+                styles.aliasPill,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.line,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 1,
+                },
+              ]}
             >
-              {profileQuery.data.alias}
-            </AppText>
-          </View>
-        ) : null}
+              <AliasAvatar
+                alias={profileQuery.data.alias}
+                color={profileQuery.data.alias_color}
+                size={24}
+              />
+              <AppText
+                variant="small"
+                numberOfLines={1}
+                style={{ fontWeight: '700', color: colors.text, fontSize: 12, maxWidth: 110 }}
+              >
+                {profileQuery.data.alias}
+              </AppText>
+            </View>
+          ) : null}
+          <NotificationBellButton />
+        </Row>
       </View>
 
       {showCareNotice ? <CareNoticeBanner onDismiss={() => setShowCareNotice(false)} /> : null}
