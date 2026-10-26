@@ -694,32 +694,41 @@ export function createApi(supabase: RukanSupabaseClient) {
 
     async getFeed(input: GetFeedInput = {}): Promise<SpacePost[]> {
       const v = getFeedSchema.parse(input);
-      return parse(
-        spaceFeedSchema,
-        unwrap(
-          await supabase.rpc(SUPABASE_RPC.getFeed, {
-            p_tab: v.tab,
-            p_before_created_at: v.beforeCreatedAt,
-            p_before_id: v.beforeId,
-            p_limit: v.limit,
-            p_hashtag: v.hashtag,
-            p_sort: v.sort,
-          }),
-        ),
-      );
+      let res = await supabase.rpc(SUPABASE_RPC.getFeed, {
+        p_tab: v.tab,
+        p_before_created_at: v.beforeCreatedAt,
+        p_before_id: v.beforeId,
+        p_limit: v.limit,
+        p_hashtag: v.hashtag,
+        p_sort: v.sort,
+      });
+
+      // Backward-compatibility: if backend has legacy get_feed(p_tab, p_before_created_at, p_before_id, p_limit)
+      if (res.error && (res.error.code === 'PGRST202' || res.error.message?.includes('PGRST202'))) {
+        res = await supabase.rpc(SUPABASE_RPC.getFeed, {
+          p_tab: v.tab,
+          p_before_created_at: v.beforeCreatedAt,
+          p_before_id: v.beforeId,
+          p_limit: v.limit,
+        });
+      }
+
+      return parse(spaceFeedSchema, unwrap(res));
     },
 
     async getTrendingHashtags(input: GetTrendingHashtagsInput = {}): Promise<TrendingHashtag[]> {
       const v = getTrendingHashtagsSchema.parse(input);
-      return parse(
-        trendingHashtagsSchema,
-        unwrap(
-          await supabase.rpc(SUPABASE_RPC.getTrendingHashtags, {
-            p_hours: v.hours,
-            p_limit: v.limit,
-          }),
-        ),
-      );
+      const res = await supabase.rpc(SUPABASE_RPC.getTrendingHashtags, {
+        p_hours: v.hours,
+        p_limit: v.limit,
+      });
+
+      // Gracefully return empty array if backend has not run hashtag migration yet
+      if (res.error && (res.error.code === 'PGRST202' || res.error.message?.includes('PGRST202'))) {
+        return [];
+      }
+
+      return parse(trendingHashtagsSchema, unwrap(res));
     },
 
     async deleteMyPost(postId: string): Promise<void> {
