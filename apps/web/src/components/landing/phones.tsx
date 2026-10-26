@@ -1,5 +1,6 @@
 // ภาพมือถือ 3 เครื่องใน hero (Feed นามแฝง · ปัดๆ · แชท) + การ์ดแจ้งเตือนลอย — เป็นภาพประกอบล้วน ไม่มี interaction
-// รูปบนการ์ดเป็นภาพวาด (SVG) ไม่ใช่รูปคนจริง
+// รูปบนการ์ดเป็น pixel art (public/landing/card-photo.png)
+import Image from 'next/image';
 import type { Dictionary } from '@/i18n/dictionaries';
 import { ChatIcon, CheckIcon, HeartIcon, LockIcon } from './icons';
 
@@ -73,7 +74,15 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
           </div>
           <div className="flex grow flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_22px_rgba(46,34,56,0.08)]">
             <div className="relative mx-2 mt-2 h-[210px] overflow-hidden rounded-[18px]">
-              <PhotoArt />
+              {/* pixel art จากรูปจริงของทีม (เจ้าของรูปอนุญาต) — 48×42 px ขยายแบบ pixelated */}
+              <Image
+                src="/landing/card-photo.png"
+                alt=""
+                fill
+                sizes="240px"
+                unoptimized
+                className="object-cover [image-rendering:pixelated]"
+              />
               {/* เห็น 3 รูปแรก ที่เหลือล็อกไว้ */}
               <div className="absolute inset-x-2.5 top-2.5 grid grid-cols-6 gap-1">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -179,43 +188,5 @@ function Toast({
         <p className="text-xs text-muted">{sub}</p>
       </div>
     </div>
-  );
-}
-
-/** ภาพวาดแทนรูปโปรไฟล์ (คนนั่งคาเฟ่ตอนเย็น) — ไม่ใช้รูปคนจริงบนหน้าโปรโมท */
-function PhotoArt() {
-  return (
-    <svg viewBox="0 0 240 210" preserveAspectRatio="xMidYMid slice" className="size-full">
-      <defs>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f5e9ee" />
-          <stop offset="1" stopColor="#eeebf3" />
-        </linearGradient>
-      </defs>
-      <rect width="240" height="210" fill="url(#sky)" />
-      <circle cx="182" cy="58" r="26" fill="#f6d7c3" />
-      <path d="M0 150 Q60 120 120 140 T240 128 V210 H0 Z" fill="#e6f0ea" />
-      <path d="M0 172 Q80 150 160 168 T240 160 V210 H0 Z" fill="#bbdacb" opacity="0.7" />
-      {/* คน (ไม่มีหน้า — ภาพบรรยากาศ ไม่ใช่การ์ตูน) */}
-      <path d="M78 210 C80 160 160 160 162 210 Z" fill="#e9a9bf" />
-      <rect x="111" y="132" width="18" height="22" rx="8" fill="#e8c3ad" />
-      <circle cx="120" cy="112" r="28" fill="#f1d3bf" />
-      <path
-        d="M90 112 C88 80 152 78 150 112 C150 98 136 90 120 92 C104 90 92 98 90 112 Z"
-        fill="#2e2238"
-      />
-      <path d="M90 108 C86 130 92 146 98 150 C96 134 96 120 98 110 Z" fill="#2e2238" />
-      <path d="M150 108 C154 130 148 146 142 150 C144 134 144 120 142 110 Z" fill="#2e2238" />
-      {/* แก้วกาแฟ */}
-      <rect x="172" y="170" width="22" height="26" rx="5" fill="#ffffff" />
-      <path d="M194 176 q9 0 9 8 t-9 8" stroke="#ffffff" strokeWidth="4" fill="none" />
-      <path
-        d="M178 162 q4 -6 0 -12 M188 162 q4 -6 0 -12"
-        stroke="#c7bee3"
-        strokeWidth="2.5"
-        fill="none"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }
