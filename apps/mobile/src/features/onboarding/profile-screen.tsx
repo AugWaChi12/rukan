@@ -2,15 +2,19 @@ import { onboardingSchema, PROFILE_MODES, type ProfileMode } from '@rukan/shared
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppText, Button, Chip, Row, Screen, TextField } from '@/components/ui';
+import { Text } from 'react-native';
+import { AppText, BouncyPressable, Button, Chip, Row, Screen, TextField } from '@/components/ui';
 import { useRefreshStatus } from '@/hooks/use-my-status';
 import { errorMessage } from '@/i18n';
 import { api, queries } from '@/lib/api';
+import { detectCurrentProvince } from '@/lib/location';
+import { useAppTheme } from '@/theme/theme-provider';
 import { StepHeader } from './step-header';
 
 /** ขั้น 3: ข้อมูลพื้นฐาน → complete_onboarding() (เช็คอายุ 18+ ทั้งที่แอปและ DB) */
 export function ProfileScreen() {
   const { t, i18n } = useTranslation();
+  const { colors } = useAppTheme();
   const refreshStatus = useRefreshStatus();
   const areas = useQuery(queries.areas());
 
@@ -19,6 +23,7 @@ export function ProfileScreen() {
   const [modes, setModes] = useState<ProfileMode[]>([]);
   const [areaId, setAreaId] = useState<string | undefined>();
   const [occupation, setOccupation] = useState('');
+  const [detectingGps, setDetectingGps] = useState(false);
 
   const input = { displayName, birthdate, modes, areaId, occupation: occupation || undefined };
   const validation = onboardingSchema.safeParse(input);
@@ -63,11 +68,42 @@ export function ProfileScreen() {
         ))}
       </Row>
 
-      <AppText variant="small">
-        {t('onboarding.profile.area')} {t('common.optional')}
-      </AppText>
+      <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <AppText variant="small">
+          {t('onboarding.profile.area')} {t('common.optional')}
+        </AppText>
+        <BouncyPressable
+          hapticFeedback="selection"
+          disabled={detectingGps}
+          onPress={async () => {
+            setDetectingGps(true);
+            const res = await detectCurrentProvince();
+            setDetectingGps(false);
+            if (res.success && res.province) {
+              setAreaId(res.province.id);
+            }
+          }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            paddingVertical: 4,
+            paddingHorizontal: 8,
+            borderRadius: 99,
+            backgroundColor: colors.accentTint,
+          }}
+        >
+          <Text style={{ fontSize: 11 }}>{detectingGps ? '⏳' : '🎯'}</Text>
+          <AppText
+            variant="small"
+            style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}
+          >
+            {detectingGps ? t('space.detectingGps') : t('space.detectGps')}
+          </AppText>
+        </BouncyPressable>
+      </Row>
       <Row>
-        {(areas.data ?? []).map((area) => (
+        {(areas.data ?? []).slice(0, 15).map((area) => (
           <Chip
             key={area.id}
             label={i18n.language === 'en' ? area.name_en : area.name_th}

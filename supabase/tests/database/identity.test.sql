@@ -49,7 +49,7 @@ set local role anon;
 select throws_ok('select * from public.profiles', '42501', null, 'anon อ่าน profiles ไม่ได้');
 select throws_ok('select public.get_my_status()', '42501', null, 'anon เรียก get_my_status ไม่ได้');
 select is((public.health() ->> 'status'), 'ok', 'anon เรียก health() ได้');
-select is((select count(*)::int from public.areas), 8, 'anon อ่านรายชื่อย่านได้');
+select cmp_ok((select count(*)::int from public.areas), '>=', 85, 'anon อ่านรายชื่อย่านได้ (ครอบคลุมทั่วประเทศ)');
 
 -- ===========================================================================
 -- demo3 — ผู้ใช้ใหม่เดิน onboarding ตามลำดับ

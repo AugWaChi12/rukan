@@ -3,10 +3,12 @@ import { PROFILE_LIMITS, PROFILE_MODES, type MyProfile, type ProfileMode } from 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
-import { AppText, Button, Chip, Row, TextField } from '@/components/ui';
+import { StyleSheet, Text, View } from 'react-native';
+import { AppText, BouncyPressable, Button, Chip, Row, TextField } from '@/components/ui';
 import { errorMessage } from '@/i18n';
 import { api, queries } from '@/lib/api';
+import { detectCurrentProvince } from '@/lib/location';
+import { useAppTheme } from '@/theme/theme-provider';
 import { space } from '@/theme/tokens';
 import { sameSet, SubScreen, WithProfile } from './shared';
 
@@ -21,6 +23,7 @@ export function ProfileEditScreen() {
 
 function ProfileForm({ profile }: { profile: MyProfile }) {
   const { t, i18n } = useTranslation();
+  const { colors } = useAppTheme();
   const queryClient = useQueryClient();
   const areas = useQuery(queries.areas());
 
@@ -29,6 +32,7 @@ function ProfileForm({ profile }: { profile: MyProfile }) {
   const [bio, setBio] = useState(profile.bio ?? '');
   const [modes, setModes] = useState<ProfileMode[]>(profile.modes);
   const [areaId, setAreaId] = useState<string>(profile.area_id ?? '');
+  const [detectingGps, setDetectingGps] = useState(false);
 
   const toggleMode = (mode: ProfileMode) =>
     setModes((prev) => (prev.includes(mode) ? prev.filter((x) => x !== mode) : [...prev, mode]));
@@ -88,11 +92,42 @@ function ProfileForm({ profile }: { profile: MyProfile }) {
       </View>
 
       <View style={styles.block}>
-        <AppText variant="small" style={styles.label}>
-          {t('me.area')} {t('common.optional')}
-        </AppText>
+        <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <AppText variant="small" style={styles.label}>
+            {t('me.area')} {t('common.optional')}
+          </AppText>
+          <BouncyPressable
+            hapticFeedback="selection"
+            disabled={detectingGps}
+            onPress={async () => {
+              setDetectingGps(true);
+              const res = await detectCurrentProvince();
+              setDetectingGps(false);
+              if (res.success && res.province) {
+                setAreaId(res.province.id);
+              }
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              paddingVertical: 3,
+              paddingHorizontal: 8,
+              borderRadius: 99,
+              backgroundColor: colors.accentTint,
+            }}
+          >
+            <Text style={{ fontSize: 11 }}>{detectingGps ? '⏳' : '🎯'}</Text>
+            <AppText
+              variant="small"
+              style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}
+            >
+              {detectingGps ? t('space.detectingGps') : t('space.detectGps')}
+            </AppText>
+          </BouncyPressable>
+        </Row>
         <Row>
-          {(areas.data ?? []).map((area) => (
+          {(areas.data ?? []).slice(0, 15).map((area) => (
             <Chip
               key={area.id}
               tone="lilac"
