@@ -5,6 +5,7 @@ import { AppText, Button, Loading, Screen } from '@/components/ui';
 import { useMyStatus } from '@/hooks/use-my-status';
 import { errorMessage } from '@/i18n'; // import นี้ init i18n ด้วย
 import { queryClient } from '@/lib/api';
+import { InAppNotificationProvider } from '@/providers/in-app-notification-provider';
 import { SessionProvider, useSession } from '@/providers/session-provider';
 import { AppThemeProvider, useAppTheme } from '@/theme/theme-provider';
 
@@ -13,7 +14,9 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AppThemeProvider>
         <SessionProvider>
-          <RootNavigator />
+          <InAppNotificationProvider>
+            <RootNavigator />
+          </InAppNotificationProvider>
         </SessionProvider>
       </AppThemeProvider>
     </QueryClientProvider>
