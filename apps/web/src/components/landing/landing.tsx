@@ -175,7 +175,7 @@ export function Landing({ locale }: { locale: Locale }) {
               <div className="-ml-[30px] h-[92px] w-[70px] rounded-[14px] bg-rose-tint" />
               <div className="-ml-[30px] h-[92px] w-[70px] rotate-[8deg] rounded-[14px] bg-sage-tint" />
               <span className="absolute top-3 right-3.5 rounded-full bg-ink px-2.5 py-1 font-display text-[13px] text-white">
-                19:00
+                3 / 6
               </span>
             </div>
             <FeatureText

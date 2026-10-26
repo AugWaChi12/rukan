@@ -1,6 +1,15 @@
-// ภาพมือถือ 3 เครื่องใน hero (Space · Drop คืนนี้ · แชท) + การ์ดแจ้งเตือนลอย — เป็นภาพประกอบล้วน ไม่มี interaction
+// ภาพมือถือ 3 เครื่องใน hero (Feed นามแฝง · ปัดๆ · แชท) + การ์ดแจ้งเตือนลอย — เป็นภาพประกอบล้วน ไม่มี interaction
+// รูปบนการ์ดเป็น pixel art (public/landing/card-photo.png)
+import Image from 'next/image';
 import type { Dictionary } from '@/i18n/dictionaries';
-import { CheckIcon, HeartIcon, LockIcon, MoonIcon } from './icons';
+import { ChatIcon, CheckIcon, HeartIcon, LockIcon } from './icons';
+
+const STORY_RINGS = [
+  'from-rose to-lilac',
+  'from-lilac to-sage',
+  'from-sage to-rose',
+  'from-rose-deep to-lilac',
+];
 
 function Frame({
   children,
@@ -29,7 +38,17 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
     <div className="relative mx-auto max-w-[1120px] px-5 pt-2.5 pb-20" aria-hidden="true">
       <div className="flex items-end justify-center">
         <Frame side className="translate-x-10 -rotate-6">
-          <p className="mb-1 font-display text-base font-semibold">{t.space}</p>
+          <p className="font-display text-base font-semibold">{t.space}</p>
+          {/* story ของนามแฝง */}
+          <div className="mb-1 flex gap-2">
+            {STORY_RINGS.map((ring, i) => (
+              <span key={ring} className={`rounded-full bg-gradient-to-br p-[2px] ${ring}`}>
+                <span className="flex size-9 items-center justify-center rounded-full bg-cream font-display text-[11px] font-semibold">
+                  {(t.posts[i % t.posts.length]?.alias ?? '').slice(0, 1)}
+                </span>
+              </span>
+            ))}
+          </div>
           {t.posts.map((post, i) => (
             <div
               key={post.alias}
@@ -54,9 +73,27 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
             <p className="text-[10px] text-muted">{t.dropMeta}</p>
           </div>
           <div className="flex grow flex-col overflow-hidden rounded-3xl bg-white shadow-[0_8px_22px_rgba(46,34,56,0.08)]">
-            <div className="mx-2 mt-2 flex h-[210px] items-center justify-center rounded-[18px] bg-rose-tint">
-              <span className="flex items-center gap-1.5 rounded-xl bg-white/85 px-3 py-2 font-display text-[11px]">
-                <LockIcon size={13} /> {t.locked}
+            <div className="relative mx-2 mt-2 h-[210px] overflow-hidden rounded-[18px]">
+              {/* pixel art จากรูปจริงของทีม (เจ้าของรูปอนุญาต) — 48×42 px ขยายแบบ pixelated */}
+              <Image
+                src="/landing/card-photo.png"
+                alt=""
+                fill
+                sizes="240px"
+                unoptimized
+                className="object-cover [image-rendering:pixelated]"
+              />
+              {/* เห็น 3 รูปแรก ที่เหลือล็อกไว้ */}
+              <div className="absolute inset-x-2.5 top-2.5 grid grid-cols-6 gap-1">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <span
+                    key={i}
+                    className={`h-[3px] rounded-full ${i === 0 ? 'bg-white' : i < 3 ? 'bg-white/55' : 'bg-white/20'}`}
+                  />
+                ))}
+              </div>
+              <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 font-display text-[10px]">
+                <LockIcon size={11} /> {t.locked}
               </span>
             </div>
             <div className="flex flex-col gap-1.5 px-3 py-2.5">
@@ -80,10 +117,13 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
         <Frame side className="-translate-x-10 rotate-6">
           <div className="flex flex-col gap-1.5 rounded-[14px] bg-white px-2.5 py-2 shadow-[0_3px_10px_rgba(46,34,56,0.06)]">
             <p className="font-display text-[11px]">{t.reveal}</p>
-            <div className="grid grid-cols-3 gap-1">
-              <div className="h-[5px] rounded-full bg-rose" />
-              <div className="h-[5px] rounded-full bg-rose-tint" />
-              <div className="h-[5px] rounded-full bg-line" />
+            <div className="grid grid-cols-6 gap-1">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className={`h-[5px] rounded-full ${i < 3 ? 'bg-rose' : i === 3 ? 'bg-rose-tint' : 'bg-line'}`}
+                />
+              ))}
             </div>
           </div>
           {t.chat.map((m) => (
@@ -110,7 +150,7 @@ export function Phones({ t }: { t: Dictionary['phones'] }) {
       />
       <Toast
         className="top-[200px] right-[4%] [animation-delay:1.2s]"
-        icon={<MoonIcon size={18} />}
+        icon={<ChatIcon size={18} />}
         bg="bg-lilac-tint"
         title={t.toastDrop}
         sub={t.toastDropSub}
