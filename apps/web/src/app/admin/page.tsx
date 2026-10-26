@@ -288,6 +288,19 @@ export default function AdminPage() {
     }
   }
 
+  async function handleQuickSetUserModes(userId: string, modes: ('friend' | 'date')[]) {
+    setBusyUserId(userId);
+    try {
+      await api.moderation.setUserModes({ userId, modes });
+      setActionMessage(`🔄 ปรับโหมดเป็น [${modes.join(', ')}] สำเร็จ!`);
+      await loadUsers();
+    } catch (err: unknown) {
+      setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
   async function handleQuickUserStateAction(
     userId: string,
     action: 'suspend' | 'ban' | 'unban',
@@ -945,6 +958,7 @@ export default function AdminPage() {
                       <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase">
                         <th className="py-3 px-3">ผู้ใช้ / นามแฝง Space</th>
                         <th className="py-3 px-3">อีเมล & UUID</th>
+                        <th className="py-3 px-3">โหมดหาเพื่อน/เดท</th>
                         <th className="py-3 px-3">ยืนยันตัวตน</th>
                         <th className="py-3 px-3">ระดับ Pass</th>
                         <th className="py-3 px-3">เหรียญ Rukan Coin</th>
@@ -1004,6 +1018,43 @@ export default function AdminPage() {
                               >
                                 {u.user_id.slice(0, 8)}…{u.user_id.slice(-4)} 📋
                               </button>
+                            </td>
+
+                            {/* 2.5 โหมดหาเพื่อน / เดท (ปรับเปลี่ยนได้ทันที) */}
+                            <td className="py-3.5 px-3">
+                              <div className="flex items-center gap-1">
+                                {(['friend', 'date'] as const).map((m) => {
+                                  const active = u.modes.includes(m);
+                                  return (
+                                    <button
+                                      key={m}
+                                      type="button"
+                                      disabled={isBusy}
+                                      onClick={() => {
+                                        let nextModes: ('friend' | 'date')[] = [];
+                                        if (active) {
+                                          nextModes = u.modes.filter((item) => item !== m) as (
+                                            'friend' | 'date'
+                                          )[];
+                                          if (nextModes.length === 0) nextModes = [m]; // บังคับมีอย่างน้อย 1 โหมด
+                                        } else {
+                                          nextModes = [...u.modes, m] as ('friend' | 'date')[];
+                                        }
+                                        void handleQuickSetUserModes(u.user_id, nextModes);
+                                      }}
+                                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold border transition ${
+                                        active
+                                          ? m === 'friend'
+                                            ? 'border-[#bbdacb]/60 bg-[#bbdacb]/20 text-[#bbdacb]'
+                                            : 'border-[#e9a9bf]/60 bg-[#e9a9bf]/20 text-[#e9a9bf]'
+                                          : 'border-[#2a2724] bg-[#25221f] text-[#a69d90] opacity-50'
+                                      }`}
+                                    >
+                                      {m === 'friend' ? '🌱 เพื่อน' : '💖 เดท'}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </td>
 
                             {/* 3. ระดับยืนยันตัวตน (ปรับเปลี่ยนได้ทันที) */}

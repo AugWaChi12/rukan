@@ -74,7 +74,7 @@ select set_eq(
     -- Master & Plans & Subscriptions & Rukan Coins & AI Wingman & Admin Users
     'get_my_subscription', 'mod_update_tier_config', 'mod_set_user_subscription',
     'exchange_coins_for_pass', 'mod_grant_user_coins', 'use_ai_wingman',
-    'mod_list_users', 'mod_set_user_verification'
+    'mod_list_users', 'mod_set_user_verification', 'mod_set_user_modes'
   ],
   'authenticated เรียกได้เฉพาะ API ที่ประกาศไว้'
 );

@@ -169,3 +169,43 @@ end;
 $$;
 
 grant execute on function public.mod_set_user_verification(uuid, public.verification_level) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 3) RPC: ปรับโหมดของผู้ใช้ (modes: array['friend', 'date']) โดย Admin
+-- ---------------------------------------------------------------------------
+create or replace function public.mod_set_user_modes(
+  p_user_id uuid,
+  p_modes text[]
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_mod uuid := private.assert_moderator();
+  v_profile public.profiles%rowtype;
+begin
+  if p_user_id is null or not exists (select 1 from public.profiles where id = p_user_id) then
+    raise exception 'target_not_found' using errcode = '22023';
+  end if;
+
+  if p_modes is null or cardinality(p_modes) = 0 or not (p_modes <@ array['friend', 'date']::text[]) then
+    raise exception 'modes_required' using errcode = '22023';
+  end if;
+
+  update public.profiles
+  set
+    modes = p_modes,
+    updated_at = now()
+  where id = p_user_id
+  returning * into v_profile;
+
+  return jsonb_build_object(
+    'user_id', v_profile.id,
+    'modes', v_profile.modes
+  );
+end;
+$$;
+
+grant execute on function public.mod_set_user_modes(uuid, text[]) to authenticated;
