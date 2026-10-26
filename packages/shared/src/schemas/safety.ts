@@ -457,3 +457,15 @@ export const modSetUserVerificationResultSchema = z.object({
   onboarded_at: z.string().nullable(),
 });
 export type ModSetUserVerificationResult = z.infer<typeof modSetUserVerificationResultSchema>;
+
+export const modSetUserModesSchema = z.object({
+  userId: z.guid(),
+  modes: z.array(z.enum(['friend', 'date'] as const)).min(1),
+});
+export type ModSetUserModesInput = z.input<typeof modSetUserModesSchema>;
+
+export const modSetUserModesResultSchema = z.object({
+  user_id: z.guid(),
+  modes: z.array(z.string()),
+});
+export type ModSetUserModesResult = z.infer<typeof modSetUserModesResultSchema>;

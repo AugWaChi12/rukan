@@ -33,6 +33,8 @@ import {
   modSetUserSubscriptionSchema,
   modSetUserVerificationResultSchema,
   modSetUserVerificationSchema,
+  modSetUserModesResultSchema,
+  modSetUserModesSchema,
   modTakeActionResultSchema,
   modTakeActionSchema,
   modUpdateTierConfigSchema,
@@ -108,6 +110,8 @@ import {
   type ModSetUserSubscriptionResult,
   type ModSetUserVerificationInput,
   type ModSetUserVerificationResult,
+  type ModSetUserModesInput,
+  type ModSetUserModesResult,
   type ModTakeActionInput,
   type ModTakeActionResult,
   type ModUpdateTierConfigInput,
@@ -652,6 +656,19 @@ export function createApi(supabase: RukanSupabaseClient) {
             await supabase.rpc(SUPABASE_RPC.modSetUserVerification, {
               p_user_id: v.userId,
               p_level: v.level,
+            }),
+          ),
+        );
+      },
+
+      async setUserModes(input: ModSetUserModesInput): Promise<ModSetUserModesResult> {
+        const v = modSetUserModesSchema.parse(input);
+        return parse(
+          modSetUserModesResultSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modSetUserModes, {
+              p_user_id: v.userId,
+              p_modes: v.modes,
             }),
           ),
         );
