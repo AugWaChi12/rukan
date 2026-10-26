@@ -54,12 +54,12 @@ export function GridBackground() {
 export function Screen({
   children,
   scroll = true,
-  grid = true,
+  grid = false,
   style,
 }: {
   children: ReactNode;
   scroll?: boolean;
-  /** พื้นตารางบางๆ ด้านหลัง (ค่าเริ่มต้น: เปิด) */
+  /** พื้นตารางบางๆ ด้านหลัง (ค่าเริ่มต้น: ปิด เพื่อความสะอาดแบบ native app) */
   grid?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -418,7 +418,7 @@ export function SegmentedControl<T extends string>({
   const { colors } = useAppTheme();
   return (
     <View
-      style={[styles.segmentedWrap, { backgroundColor: colors.card, borderColor: colors.line }]}
+      style={[styles.segmentedWrap, { backgroundColor: colors.subtle, borderColor: colors.line }]}
     >
       {options.map((opt) => {
         const active = opt.value === value;
@@ -437,21 +437,21 @@ export function SegmentedControl<T extends string>({
               styles.segmentedTab,
               active
                 ? {
-                    backgroundColor: colors.accentSoft,
-                    shadowColor: colors.accentSoft,
+                    backgroundColor: colors.card,
+                    shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
+                    shadowOpacity: 0.08,
                     shadowRadius: 4,
-                    elevation: 1,
+                    elevation: 2,
                   }
                 : null,
-              { transform: [{ scale: pressed ? 0.96 : 1 }] },
+              { transform: [{ scale: pressed ? 0.97 : 1 }] },
             ]}
           >
             <Text
               style={[
                 styles.segmentedLabel,
-                { color: active ? palette.ink : colors.muted },
+                { color: active ? colors.text : colors.muted },
                 active ? styles.segmentedLabelActive : null,
               ]}
             >
@@ -691,31 +691,35 @@ export function ConfirmDialog({
 }
 
 export function EmptyState({
+  icon = '🫧',
   badge,
   title,
   body,
   actionLabel,
   onAction,
 }: {
+  icon?: string;
   badge?: string;
   title: string;
   body: string;
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const { colors } = useAppTheme();
   return (
-    <Card tone="cream" style={styles.emptyCard}>
-      {badge ? <Badge label={badge} tone="lilac" /> : null}
-      <AppText variant="heading" style={{ textAlign: 'center' }}>
+    <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
+      <Text style={{ fontSize: 36, marginBottom: 2 }}>{icon}</Text>
+      {badge ? <Badge label={badge} tone="rose" /> : null}
+      <AppText variant="subheading" style={{ textAlign: 'center', fontWeight: '700', color: colors.text }}>
         {title}
       </AppText>
-      <AppText variant="muted" style={{ textAlign: 'center', maxWidth: 300 }}>
+      <AppText variant="muted" style={{ textAlign: 'center', maxWidth: 280, fontSize: 13, lineHeight: 19 }}>
         {body}
       </AppText>
       {actionLabel && onAction ? (
-        <Button variant="rose" label={actionLabel} onPress={onAction} />
+        <Button variant="rose" size="sm" label={actionLabel} onPress={onAction} />
       ) : null}
-    </Card>
+    </View>
   );
 }
 
@@ -903,8 +907,11 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     alignItems: 'center',
-    paddingVertical: space.xxl,
-    gap: space.sm,
+    paddingVertical: space.xl,
+    paddingHorizontal: space.lg,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: space.xs,
   },
   confirmBackdrop: {
     flex: 1,

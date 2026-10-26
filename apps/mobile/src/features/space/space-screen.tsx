@@ -15,7 +15,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AiSparkleIcon } from '@/components/brand-icons';
 import { CareNoticeBanner, SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
@@ -236,31 +236,55 @@ export function SpaceScreen() {
 
   return (
     <Screen>
-      {/* Header สไตล์ Soft Bubble */}
+      {/* Header สไตล์ Modern Social App */}
       <View style={styles.header}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <AppText variant="small" style={{ color: colors.accent, fontWeight: '700' }}>
-            {t('space.eyebrow')}
+        <View style={{ flex: 1 }}>
+          <Row style={{ alignItems: 'center', gap: 8 }}>
+            <AppText variant="title" style={styles.titleText}>
+              {t('space.title')}
+            </AppText>
+            <View style={[styles.anonPill, { backgroundColor: colors.accentTint }]}>
+              <Text style={{ fontSize: 10 }}>✨</Text>
+              <AppText variant="small" style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}>
+                {t('space.eyebrow')}
+              </AppText>
+            </View>
+          </Row>
+          <AppText variant="muted" style={styles.subtitleText}>
+            {t('space.subtitle')}
           </AppText>
-          <AppText variant="title">{t('space.title')}</AppText>
         </View>
+
         {profileQuery.data ? (
           <View
-            style={[styles.aliasPill, { backgroundColor: colors.card, borderColor: colors.line }]}
+            style={[
+              styles.aliasPill,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.line,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 1,
+              },
+            ]}
           >
             <AliasAvatar
               alias={profileQuery.data.alias}
               color={profileQuery.data.alias_color}
-              size={26}
+              size={24}
             />
-            <AppText variant="small" style={{ fontWeight: '700', color: colors.text }}>
+            <AppText
+              variant="small"
+              numberOfLines={1}
+              style={{ fontWeight: '700', color: colors.text, fontSize: 12, maxWidth: 110 }}
+            >
               {profileQuery.data.alias}
             </AppText>
           </View>
         ) : null}
       </View>
-
-      <AppText variant="muted">{t('space.subtitle')}</AppText>
 
       {showCareNotice ? <CareNoticeBanner onDismiss={() => setShowCareNotice(false)} /> : null}
       {bubbleToast ? (
@@ -277,7 +301,7 @@ export function SpaceScreen() {
         </Card>
       ) : null}
 
-      {/* แถบเรื่องราว 24 ชม. (Ephemeral Stories Bar) */}
+      {/* แถบเรื่องราว 24 ชม. (Ephemeral Stories Bar) สไตล์ Instagram / BeReal */}
       <View style={styles.storiesSection}>
         <ScrollView
           horizontal
@@ -289,60 +313,66 @@ export function SpaceScreen() {
             hapticFeedback="medium"
             disabled={isUploadingStory}
             onPress={handleAddStory}
-            style={styles.storyAddBtn}
+            style={styles.storyItem}
           >
-            <View
-              style={[
-                styles.storyAvatarWrap,
-                { borderColor: colors.accent, borderStyle: 'dashed' },
-              ]}
-            >
-              {profileQuery.data ? (
-                <AliasAvatar
-                  alias={profileQuery.data.alias}
-                  color={profileQuery.data.alias_color}
-                  size={52}
-                />
-              ) : (
-                <View style={[styles.storyPlaceholder, { backgroundColor: colors.card }]}>
+            <View style={styles.storyRingWrapper}>
+              <View
+                style={[
+                  styles.myStoryDashedRing,
+                  { borderColor: colors.accentSoft, backgroundColor: colors.card },
+                ]}
+              >
+                {profileQuery.data ? (
+                  <AliasAvatar
+                    alias={profileQuery.data.alias}
+                    color={profileQuery.data.alias_color}
+                    size={48}
+                  />
+                ) : (
                   <Text style={{ fontSize: 20 }}>📸</Text>
-                </View>
-              )}
+                )}
+              </View>
               <View style={[styles.storyAddBadge, { backgroundColor: colors.accent }]}>
-                <Text style={{ color: '#fff', fontSize: 13, fontWeight: '900', lineHeight: 14 }}>
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '900', lineHeight: 14 }}>
                   {isUploadingStory ? '⏳' : '+'}
                 </Text>
               </View>
             </View>
-            <AppText variant="small" style={styles.storyAuthorName}>
-              {isUploadingStory ? 'กำลังอัปโหลด' : t('space.addStory')}
+            <AppText variant="small" numberOfLines={1} style={styles.storyAuthorName}>
+              {isUploadingStory ? t('space.uploadingImage') : t('space.addStory')}
             </AppText>
           </BouncyPressable>
 
-          {/* รายการสตอรี่ */}
-          {(storiesQuery.data ?? []).map((story) => (
-            <BouncyPressable
-              key={story.id}
-              hapticFeedback="selection"
-              onPress={() => setActiveStory(story)}
-              style={styles.storyItem}
-            >
-              <View
-                style={[
-                  styles.storyRing,
-                  {
-                    borderColor: colors.accent,
-                    backgroundColor: colors.card,
-                  },
-                ]}
+          {/* รายการสตอรี่ของผู้อื่น */}
+          {(storiesQuery.data ?? []).map((story) => {
+            const ringColor =
+              story.tier === 'premium'
+                ? '#8B5CF6'
+                : story.tier === 'gold'
+                  ? '#F59E0B'
+                  : colors.accent;
+            return (
+              <BouncyPressable
+                key={story.id}
+                hapticFeedback="selection"
+                onPress={() => setActiveStory(story)}
+                style={styles.storyItem}
               >
-                <AliasAvatar alias={story.alias} color={story.alias_color} size={48} />
-              </View>
-              <AppText variant="small" numberOfLines={1} style={styles.storyAuthorName}>
-                {story.is_mine ? t('space.myStory') : story.alias}
-              </AppText>
-            </BouncyPressable>
-          ))}
+                <View
+                  style={[
+                    styles.storyRingWrapper,
+                    styles.storyOuterRing,
+                    { borderColor: ringColor, backgroundColor: colors.card },
+                  ]}
+                >
+                  <AliasAvatar alias={story.alias} color={story.alias_color} size={48} />
+                </View>
+                <AppText variant="small" numberOfLines={1} style={styles.storyAuthorName}>
+                  {story.is_mine ? t('space.myStory') : story.alias}
+                </AppText>
+              </BouncyPressable>
+            );
+          })}
         </ScrollView>
       </View>
 
@@ -350,14 +380,16 @@ export function SpaceScreen() {
       <View style={styles.moodSection}>
         <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
           <Row style={{ gap: 6, alignItems: 'center' }}>
-            <Text style={{ fontSize: 15 }}>🫧</Text>
+            <Text style={{ fontSize: 14 }}>🫧</Text>
             <AppText variant="small" style={{ fontWeight: '700', color: colors.text }}>
               {checkedMood
                 ? `${t('space.moodCheckedIn')} ${t(`space.moods.${checkedMood}`)}`
                 : t('space.moodTitle')}
             </AppText>
           </Row>
-          {checkedMood ? <Badge label={t(`space.moods.${checkedMood}`)} tone="gold" /> : null}
+          {checkedMood ? (
+            <Badge label={`✓ ${t(`space.moods.${checkedMood}`)}`} tone="rose" />
+          ) : null}
         </Row>
         <ScrollView
           horizontal
@@ -388,6 +420,7 @@ export function SpaceScreen() {
                   style={{
                     color: isSelected ? colors.accent : colors.text,
                     fontWeight: isSelected ? '700' : '500',
+                    fontSize: 12.5,
                   }}
                 >
                   {t(`space.moods.${m}`)}
@@ -398,72 +431,120 @@ export function SpaceScreen() {
         </ScrollView>
       </View>
 
-      {/* กล่องเขียนโพสต์ไม่ระบุตัวตน สไตล์ Liquid Glass */}
+      {/* กล่องเขียนโพสต์ไม่ระบุตัวตน สไตล์ Threads / Twitter */}
       <View
         style={[
           styles.composerCard,
           {
             backgroundColor: colors.card,
-            borderColor: colors.accentSoft,
+            borderColor: colors.line,
             shadowColor: '#000',
           },
         ]}
       >
-        <TextField
-          label={`${body.trim().length}/${SPACE_LIMITS.postBody}`}
-          hint={t('space.composeHint')}
-          value={body}
-          onChangeText={setBody}
-          placeholder={t('space.composePlaceholder')}
-          maxLength={SPACE_LIMITS.postBody}
-          multiline
-        />
+        <Row style={{ alignItems: 'flex-start', gap: 10 }}>
+          {profileQuery.data ? (
+            <AliasAvatar
+              alias={profileQuery.data.alias}
+              color={profileQuery.data.alias_color}
+              size={36}
+            />
+          ) : null}
+          <View style={{ flex: 1, minHeight: 74 }}>
+            <TextInput
+              placeholder={t('space.composePlaceholder')}
+              placeholderTextColor={colors.muted}
+              value={body}
+              onChangeText={setBody}
+              maxLength={SPACE_LIMITS.postBody}
+              multiline
+              style={[
+                styles.composerInput,
+                { color: colors.text },
+              ]}
+            />
+          </View>
+        </Row>
 
         {/* รูปภาพที่แนบกับโพสต์ */}
         {attachedImage ? (
           <View style={styles.previewImageWrap}>
-            <Image source={{ uri: attachedImage }} style={styles.previewImage} />
+            <Image source={{ uri: attachedImage }} style={styles.previewImage} resizeMode="cover" />
             <BouncyPressable
               hapticFeedback="light"
               onPress={() => setAttachedImage(null)}
               style={styles.removeImageBtn}
             >
-              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>✕</Text>
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✕</Text>
             </BouncyPressable>
           </View>
         ) : null}
 
         {composeHashtags.length > 0 ? (
-          <Row style={{ gap: space.xs, marginTop: -4 }}>
+          <Row style={{ gap: space.xs, marginTop: 2 }}>
             {composeHashtags.map((tag) => (
-              <Badge key={tag} label={`#${tag}`} tone="gold" />
+              <Badge key={tag} label={`#${tag}`} tone="rose" />
             ))}
           </Row>
         ) : null}
+
         {createPostMut.error ? (
           <AppText variant="error">{errorMessage(createPostMut.error)}</AppText>
         ) : null}
-        <Row style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-          <BouncyPressable
-            hapticFeedback="light"
-            disabled={isUploadingImage}
-            onPress={handlePickPostImage}
-            style={[styles.attachBtn, { borderColor: colors.line }]}
-          >
-            <Text style={{ fontSize: 14 }}>📷</Text>
-            <AppText variant="small" style={{ fontSize: 12, color: colors.muted }}>
-              {isUploadingImage ? t('space.uploadingImage') : t('space.addImage')}
+
+        <View style={[styles.composerDivider, { backgroundColor: colors.line }]} />
+
+        <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <Row style={{ alignItems: 'center', gap: 10 }}>
+            <BouncyPressable
+              hapticFeedback="light"
+              disabled={isUploadingImage}
+              onPress={handlePickPostImage}
+              style={[
+                styles.attachBtn,
+                {
+                  backgroundColor: attachedImage ? colors.accentTint : colors.subtle,
+                  borderColor: attachedImage ? colors.accentSoft : colors.line,
+                },
+              ]}
+            >
+              <Text style={{ fontSize: 14 }}>📷</Text>
+              <AppText
+                variant="small"
+                style={{
+                  fontSize: 12,
+                  fontWeight: '600',
+                  color: attachedImage ? colors.accent : colors.muted,
+                }}
+              >
+                {isUploadingImage
+                  ? t('space.uploadingImage')
+                  : attachedImage
+                    ? t('space.removeImage')
+                    : t('space.addImage')}
+              </AppText>
+            </BouncyPressable>
+
+            <AppText variant="small" style={{ fontSize: 11, color: colors.muted }}>
+              {body.trim().length}/{SPACE_LIMITS.postBody}
             </AppText>
-          </BouncyPressable>
+          </Row>
 
           <Button
             variant="primary"
-            size="md"
+            size="sm"
             label={t('space.postButton')}
             loading={createPostMut.isPending || isUploadingImage}
             disabled={body.trim().length === 0}
             onPress={() => createPostMut.mutate()}
           />
+        </Row>
+
+        <Row style={{ alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <Text style={{ fontSize: 11 }}>🔒</Text>
+          <AppText variant="muted" style={{ fontSize: 11 }}>
+            {t('space.composeHint')}
+          </AppText>
         </Row>
       </View>
 
@@ -586,7 +667,11 @@ export function SpaceScreen() {
       {feedQuery.isPending ? (
         <Loading />
       ) : (feedQuery.data ?? []).length === 0 ? (
-        <EmptyState badge="Space" title={t('space.emptyTitle')} body={t('space.emptyBody')} />
+        <EmptyState
+          icon="🫧"
+          title={t('space.emptyTitle')}
+          body={t('space.emptyBody')}
+        />
       ) : (
         (feedQuery.data ?? []).map((post) => {
           const areaName = post.area_id ? (areaMap.get(post.area_id) ?? post.area_id) : null;
@@ -600,18 +685,28 @@ export function SpaceScreen() {
           ].filter(Boolean);
 
           return (
-            <Card key={post.id} style={styles.postCard}>
+            <Card
+              key={post.id}
+              style={[
+                styles.postCard,
+                { backgroundColor: colors.card, borderColor: colors.line },
+              ]}
+            >
               <View style={styles.postHeader}>
-                <AliasAvatar alias={post.alias} color={post.alias_color} size={38} />
-                <View style={{ flex: 1 }}>
-                  <Row>
-                    <AppText variant="subheading">{post.alias}</AppText>
+                <AliasAvatar alias={post.alias} color={post.alias_color} size={40} />
+                <View style={{ flex: 1, gap: 1 }}>
+                  <Row style={{ alignItems: 'center', gap: 6 }}>
+                    <AppText variant="subheading" style={{ fontWeight: '700', fontSize: 14.5 }}>
+                      {post.alias}
+                    </AppText>
                     {post.is_mine ? <Badge label={t('space.mineTag')} tone="sage" /> : null}
                     {post.mood ? (
                       <Badge label={t(`space.moods.${post.mood}`)} tone="lilac" />
                     ) : null}
                   </Row>
-                  <AppText variant="small">{metaParts.join(' · ')}</AppText>
+                  <AppText variant="small" style={{ color: colors.muted, fontSize: 11.5 }}>
+                    {metaParts.join(' · ')}
+                  </AppText>
                 </View>
                 {post.is_mine ? (
                   <BouncyPressable
@@ -621,9 +716,7 @@ export function SpaceScreen() {
                     onPress={() => setPostToDelete(post.id)}
                     style={[styles.iconBtn, { borderColor: colors.line }]}
                   >
-                    <AppText variant="small" style={{ color: colors.muted }}>
-                      {t('common.delete')}
-                    </AppText>
+                    <Text style={{ fontSize: 13 }}>🗑️</Text>
                   </BouncyPressable>
                 ) : (
                   <BouncyPressable
@@ -639,7 +732,7 @@ export function SpaceScreen() {
                     }
                     style={[styles.iconBtn, { borderColor: colors.line }]}
                   >
-                    <Text style={{ color: colors.muted, fontWeight: '700' }}>⋯</Text>
+                    <Text style={{ color: colors.muted, fontWeight: '700', fontSize: 14 }}>⋯</Text>
                   </BouncyPressable>
                 )}
               </View>
@@ -681,8 +774,8 @@ export function SpaceScreen() {
                   style={[
                     styles.actionPill,
                     {
-                      backgroundColor: post.liked_by_me ? colors.accentTint : colors.background,
-                      borderColor: post.liked_by_me ? colors.accentSoft : colors.line,
+                      backgroundColor: post.liked_by_me ? colors.accentTint : colors.subtle,
+                      borderColor: post.liked_by_me ? colors.accentSoft : 'transparent',
                     },
                   ]}
                 >
@@ -693,7 +786,7 @@ export function SpaceScreen() {
                       color: post.liked_by_me ? colors.accent : colors.text,
                     }}
                   >
-                    ♥ {t('space.like', { count: post.like_count })}
+                    {post.liked_by_me ? '❤️' : '🤍'} {t('space.like', { count: post.like_count })}
                   </Text>
                 </BouncyPressable>
 
@@ -703,7 +796,7 @@ export function SpaceScreen() {
                   onPress={() => setActiveReplyPost(post)}
                   style={[
                     styles.actionPill,
-                    { backgroundColor: colors.background, borderColor: colors.line },
+                    { backgroundColor: colors.subtle, borderColor: 'transparent' },
                   ]}
                 >
                   <Text style={{ fontSize: 13, fontWeight: '600', color: colors.text }}>
@@ -718,10 +811,18 @@ export function SpaceScreen() {
                     onPress={() => setActiveBubblePost(post)}
                     style={[
                       styles.bubblePill,
-                      { backgroundColor: colors.lilacTint, borderColor: colors.lilac },
+                      {
+                        backgroundColor: '#F3E8FF',
+                        borderColor: '#DDD6FE',
+                        shadowColor: '#8B5CF6',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 4,
+                        elevation: 1,
+                      },
                     ]}
                   >
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.lilacDeep }}>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#7C3AED' }}>
                       🫧 {t('space.sendBubble')}
                     </Text>
                   </BouncyPressable>
@@ -1193,9 +1294,28 @@ function StoryViewerModal({
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: space.sm,
+    paddingTop: 2,
+  },
+  titleText: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  anonPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
+  subtitleText: {
+    fontSize: 12.5,
+    marginTop: 2,
+    lineHeight: 18,
   },
   aliasPill: {
     flexDirection: 'row',
@@ -1210,7 +1330,8 @@ const styles = StyleSheet.create({
     padding: space.md,
   },
   moodSection: {
-    gap: space.xs,
+    gap: 8,
+    marginTop: 2,
   },
   moodScroll: {
     gap: 8,
@@ -1220,20 +1341,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 13,
     paddingVertical: 7,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   composerCard: {
-    borderRadius: radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
-    padding: space.md,
-    gap: space.xs,
+    padding: 14,
+    gap: 10,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
+  },
+  composerInput: {
+    fontSize: 15,
+    lineHeight: 22,
+    paddingTop: 4,
+    textAlignVertical: 'top',
+  },
+  composerDivider: {
+    height: 1,
+    width: '100%',
+    marginVertical: 2,
   },
   locationBanner: {
     padding: space.sm,
@@ -1254,7 +1386,14 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   postCard: {
-    gap: space.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    gap: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   postHeader: {
     flexDirection: 'row',
@@ -1292,17 +1431,41 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   storiesSection: {
-    gap: 8,
     marginVertical: 4,
   },
   storiesScroll: {
-    gap: 12,
+    gap: 14,
     paddingVertical: 4,
     paddingHorizontal: 2,
   },
   storyItem: {
     alignItems: 'center',
     width: 68,
+  },
+  storyRingWrapper: {
+    position: 'relative',
+    width: 62,
+    height: 62,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  myStoryDashedRing: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyOuterRing: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    borderWidth: 2.5,
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   storyRing: {
     width: 64,
@@ -1313,12 +1476,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   storyAddBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 68,
     alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
   },
   storyAvatarWrap: {
     width: 56,
@@ -1330,8 +1489,8 @@ const styles = StyleSheet.create({
   },
   storyAddBadge: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
+    bottom: 0,
+    right: 0,
     width: 20,
     height: 20,
     borderRadius: 10,
@@ -1341,20 +1500,21 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   storyPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
   storyAuthorName: {
-    marginTop: 4,
+    marginTop: 5,
     fontSize: 11,
     textAlign: 'center',
+    fontWeight: '500',
   },
   previewImageWrap: {
     position: 'relative',
-    marginTop: 8,
+    marginTop: 6,
     borderRadius: radius.md,
     overflow: 'hidden',
     alignSelf: 'flex-start',
@@ -1371,7 +1531,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1380,14 +1540,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   postMediaImage: {
     width: '100%',
-    height: 240,
-    borderRadius: radius.lg,
+    height: 230,
+    borderRadius: 16,
     borderWidth: 1,
     marginTop: 4,
   },
