@@ -138,6 +138,9 @@ export const th = {
     bubbleModalHint: 'ส่งข้อความทักทายได้ 1 ข้อความสั้นๆ ถ้าอีกฝ่ายกดรับ จะเปิดห้องแชทนามแฝงทันที',
     bubblePlaceholder: 'เช่น ชอบร้านนี้เหมือนกัน! อยู่แถวไหนหรอ…',
     bubbleSend: 'ส่ง bubble ทักทาย →',
+    aiWingmanFreeBtn: '✨ ให้ AI ช่วยคิดคำทัก (ฟรี VIP)',
+    aiWingmanCoinBtn: '✨ ให้ AI ช่วยคิดคำทัก ({{coins}} 🪙)',
+    aiWingmanHint: 'แตะเลือกประโยคที่ชอบเพื่อนำไปแก้ต่อหรือส่งได้เลย:',
     repliesTitle: 'การตอบกลับโพสต์ของ {{alias}}',
     replyPlaceholder: 'พิมพ์ข้อความตอบกลับด้วยนามแฝง…',
     replySend: 'ส่งคำตอบ',
@@ -227,6 +230,8 @@ export const th = {
       closedBanner: 'ห้องแชทนี้ปิดแล้ว',
       inputPlaceholder: 'พิมพ์ข้อความ…',
       send: 'ส่ง',
+      aiChatFreeBtn: '✨ AI ช่วยชวนคุย (ฟรี VIP)',
+      aiChatCoinBtn: '✨ AI ช่วยชวนคุย ({{coins}} 🪙)',
     },
     profileCard: {
       title: 'โปรไฟล์ของ {{name}}',
@@ -339,6 +344,12 @@ export const th = {
       quotaSummary:
         '🎴 ปัด {{swipes}} ใบ/รอบ · 🫧 ทัก {{bubbles}} ฟอง/วัน · ✨ ฟองทอง {{golden}}/วัน',
       exchangeSuccess: 'อัปเกรด Pass สำเร็จ! สิทธิพิเศษของคุณเปิดใช้งานทันที 🎉',
+      topupPackagesTitle: 'แพ็กเกจเติมเหรียญ Rukan Coin',
+      topupWebBonusTag: 'เติมบนเว็บได้โบนัสเพิ่มสูงสุด +25%',
+      topupPackStarter: 'ชุดเริ่มต้น 300 🪙 (บนเว็บรับ 350 🪙) · 39฿',
+      topupPackPopular: 'ชุดยอดฮิต 900 🪙 (บนเว็บรับ 1,080 🪙) · 99฿',
+      topupPackGold: 'ชุดคุ้ม Gold 2,500 🪙 (บนเว็บรับ 3,000 🪙) · 249฿',
+      topupPackVip: 'ชุด VIP 6,000 🪙 (บนเว็บรับ 7,500 🪙) · 590฿',
     },
   },
   errors: {

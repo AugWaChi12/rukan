@@ -1,7 +1,7 @@
 -- ทดสอบ swipe deck แบบ rolling window, Tier ต่อผู้ใช้ (private.subscriptions + user_limits) และ Realtime private broadcast (D36)
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(37);
+select plan(39);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'private.subscriptions'::regclass),
@@ -332,6 +332,28 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}';
 select throws_ok('select * from private.subscriptions', '42501', null, 'อ่าน private.subscriptions ตรงไม่ได้');
 select throws_ok('select * from private.coin_wallets', '42501', null, 'อ่าน private.coin_wallets ตรงไม่ได้');
+
+-- ทดสอบ use_ai_wingman: ผู้ใช้ Premium Pass (user 1111...) ใช้ฟรี 0 เหรียญ และได้ประโยคแนะนำ 3 ข้อ
+select is(
+  (
+    select jsonb_build_object(
+      'coins_charged', (r ->> 'coins_charged')::int,
+      'is_free_vip', (r ->> 'is_free_vip')::boolean,
+      'count', jsonb_array_length(r -> 'suggestions')
+    )
+    from (select public.use_ai_wingman('bubble', 'คืนนี้เหงาจัง #เหงาๆ') as r) s
+  ),
+  '{"coins_charged": 0, "count": 3, "is_free_vip": true}'::jsonb,
+  'Premium Pass ใช้ AI Wingman ได้ฟรี (0 เหรียญ) และได้ 3 ประโยคทักทาย'
+);
+
+-- ผู้ใช้ทั่วไป (user 2222...) ที่ไม่มีเหรียญ เรียก use_ai_wingman ต้องขึ้น insufficient_coins
+set local request.jwt.claims = '{"sub": "22222222-2222-2222-2222-222222222222", "role": "authenticated"}';
+select throws_ok(
+  $$ select public.use_ai_wingman('chat', 'สวัสดีครับ') $$,
+  'P0001', 'insufficient_coins',
+  'ผู้ใช้ Free ที่เหรียญไม่พอเรียก AI Wingman จะได้ insufficient_coins'
+);
 
 select * from finish();
 rollback;

@@ -399,3 +399,18 @@ export const modGrantUserCoinsResultSchema = z.object({
   delta: z.number().int(),
 });
 export type ModGrantUserCoinsResult = z.infer<typeof modGrantUserCoinsResultSchema>;
+
+export const useAiWingmanSchema = z.object({
+  contextType: z.enum(['bubble', 'chat']).default('bubble'),
+  contextText: z.string().max(500).default(''),
+});
+export type UseAiWingmanInput = z.input<typeof useAiWingmanSchema>;
+
+export const aiWingmanResultSchema = z.object({
+  suggestions: z.array(z.string()),
+  coins_charged: z.number().int(),
+  coin_balance: z.number().int(),
+  tier: z.enum(SUBSCRIPTION_TIERS),
+  is_free_vip: z.boolean(),
+});
+export type AiWingmanResult = z.infer<typeof aiWingmanResultSchema>;

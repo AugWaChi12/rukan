@@ -71,9 +71,9 @@ select set_eq(
     -- เฟส 5: Daily Drop + Match + Profile Card
     'get_my_deck', 'swipe', 'get_my_matches',
     'polite_close', 'unmatch', 'get_profile_card',
-    -- Master & Plans & Subscriptions & Rukan Coins
+    -- Master & Plans & Subscriptions & Rukan Coins & AI Wingman
     'get_my_subscription', 'mod_update_tier_config', 'mod_set_user_subscription',
-    'exchange_coins_for_pass', 'mod_grant_user_coins'
+    'exchange_coins_for_pass', 'mod_grant_user_coins', 'use_ai_wingman'
   ],
   'authenticated เรียกได้เฉพาะ API ที่ประกาศไว้'
 );

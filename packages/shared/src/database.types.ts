@@ -412,6 +412,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      use_ai_wingman: { Args: { p_context_text?: string; p_context_type?: string }; Returns: Json };
     };
     Enums: {
       verification_level: 'none' | 'phone' | 'selfie';

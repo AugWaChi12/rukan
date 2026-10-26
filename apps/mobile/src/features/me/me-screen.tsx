@@ -8,6 +8,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { AiSparkleIcon, RukanCoinIcon, TierPassIcon } from '@/components/brand-icons';
 import { ListGroup, ListRow } from '@/components/list';
 import {
   AliasAvatar,
@@ -153,19 +154,30 @@ function MeMenu({ profile }: { profile: MyProfile }) {
           },
         ]}
       >
-        <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flex: 1, gap: 6 }}>
           <Row style={{ justifyContent: 'space-between' }}>
-            <Badge
-              label={t(`me.wallet.tiers.${currentTier}`)}
-              tone={currentTier === 'premium' ? 'rose' : currentTier === 'gold' ? 'gold' : 'muted'}
-            />
-            <Badge label={t('me.wallet.coinsValue', { count: coinBalance })} tone="ink" />
+            <Row style={{ gap: 6 }}>
+              <TierPassIcon tier={currentTier} size={20} />
+              <Badge
+                label={t(`me.wallet.tiers.${currentTier}`)}
+                tone={
+                  currentTier === 'premium' ? 'rose' : currentTier === 'gold' ? 'gold' : 'muted'
+                }
+              />
+            </Row>
+            <Row style={{ gap: 6 }}>
+              <RukanCoinIcon size={20} />
+              <Badge label={t('me.wallet.coinsValue', { count: coinBalance })} tone="ink" />
+            </Row>
           </Row>
-          <AppText variant="small" style={{ color: palette.ink, fontWeight: '600', marginTop: 2 }}>
-            {sub?.limits.allow_ai_assistant
-              ? t('me.wallet.aiIncluded')
-              : t('me.wallet.aiPerUse', { coins: sub?.limits.ai_coin_cost_per_use ?? 30 })}
-          </AppText>
+          <Row style={{ gap: 6, marginTop: 2 }}>
+            <AiSparkleIcon size={16} />
+            <AppText variant="small" style={{ color: palette.ink, fontWeight: '600', flex: 1 }}>
+              {sub?.limits.allow_ai_assistant
+                ? t('me.wallet.aiIncluded')
+                : t('me.wallet.aiPerUse', { coins: sub?.limits.ai_coin_cost_per_use ?? 30 })}
+            </AppText>
+          </Row>
           <AppText variant="small" style={{ color: colors.accent, fontWeight: '700' }}>
             {t('me.wallet.managePassBtn')} →
           </AppText>
@@ -266,8 +278,14 @@ function MeMenu({ profile }: { profile: MyProfile }) {
         onClose={() => setShowPassSheet(false)}
       >
         <Row style={{ justifyContent: 'space-between' }}>
-          <Badge label={t(`me.wallet.tiers.${currentTier}`)} tone="gold" />
-          <Badge label={t('me.wallet.coinsValue', { count: coinBalance })} tone="ink" />
+          <Row style={{ gap: 6 }}>
+            <TierPassIcon tier={currentTier} size={20} />
+            <Badge label={t(`me.wallet.tiers.${currentTier}`)} tone="gold" />
+          </Row>
+          <Row style={{ gap: 6 }}>
+            <RukanCoinIcon size={20} />
+            <Badge label={t('me.wallet.coinsValue', { count: coinBalance })} tone="ink" />
+          </Row>
         </Row>
 
         <AppText variant="muted">{t('me.wallet.sheetSub')}</AppText>
@@ -294,7 +312,10 @@ function MeMenu({ profile }: { profile: MyProfile }) {
           return (
             <Card key={tierKey} tone={cardTone} style={{ gap: space.sm }}>
               <Row style={{ justifyContent: 'space-between' }}>
-                <AppText variant="subheading">{cfg.display_name}</AppText>
+                <Row style={{ gap: 6 }}>
+                  <TierPassIcon tier={tierKey} size={18} />
+                  <AppText variant="subheading">{cfg.display_name}</AppText>
+                </Row>
                 {isCurrent ? <Badge label={t('me.wallet.activeBadge')} tone="sage" /> : null}
               </Row>
 
@@ -306,11 +327,17 @@ function MeMenu({ profile }: { profile: MyProfile }) {
                 })}
               </AppText>
 
-              <AppText variant="small" style={{ fontWeight: '700', color: colors.accent }}>
-                {cfg.allow_ai_assistant
-                  ? t('me.wallet.aiIncluded')
-                  : t('me.wallet.aiPerUse', { coins: cfg.ai_coin_cost_per_use })}
-              </AppText>
+              <Row style={{ gap: 6 }}>
+                <AiSparkleIcon size={15} />
+                <AppText
+                  variant="small"
+                  style={{ fontWeight: '700', color: colors.accent, flex: 1 }}
+                >
+                  {cfg.allow_ai_assistant
+                    ? t('me.wallet.aiIncluded')
+                    : t('me.wallet.aiPerUse', { coins: cfg.ai_coin_cost_per_use })}
+                </AppText>
+              </Row>
 
               {tierKey !== 'free' ? (
                 <Row style={{ marginTop: 4 }}>
@@ -333,6 +360,27 @@ function MeMenu({ profile }: { profile: MyProfile }) {
             </Card>
           );
         })}
+
+        {/* แพ็กเกจเติมเหรียญ Rukan Coin */}
+        <Card tone="lilac" style={{ gap: space.xs }}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Row style={{ gap: 6 }}>
+              <RukanCoinIcon size={18} />
+              <AppText variant="subheading">{t('me.wallet.topupPackagesTitle')}</AppText>
+            </Row>
+            <Badge label={t('me.wallet.topupWebBonusTag')} tone="rose" />
+          </Row>
+          <AppText variant="small">• {t('me.wallet.topupPackStarter')}</AppText>
+          <AppText variant="small" style={{ fontWeight: '700' }}>
+            • {t('me.wallet.topupPackPopular')}
+          </AppText>
+          <AppText variant="small" style={{ fontWeight: '700' }}>
+            • {t('me.wallet.topupPackGold')}
+          </AppText>
+          <AppText variant="small" style={{ fontWeight: '700', color: colors.accent }}>
+            • {t('me.wallet.topupPackVip')}
+          </AppText>
+        </Card>
 
         <Button variant="lilac" label={t('me.wallet.webTopupBtn')} onPress={() => openSite('')} />
       </ModalSheet>
