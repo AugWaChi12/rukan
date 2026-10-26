@@ -1,4 +1,5 @@
 // ข้อความทั้งหมดของเว็บโปรโมท (ไทย / อังกฤษ) — แก้คำที่นี่ที่เดียว ห้ามเขียนข้อความตรงใน component
+import { provinceOptions } from './provinces';
 export type Locale = 'th' | 'en';
 
 const th = {
@@ -154,10 +155,11 @@ const th = {
     sub: 'ลงชื่อไว้ เราจะส่งอีเมลบอกทันทีที่เปิดให้ใช้',
     email: 'อีเมล',
     emailPlaceholder: 'you@example.com',
-    area: 'ย่าน / มหาลัย',
-    areaPlaceholder: 'เลือก…',
-    areaOtherPlaceholder: 'พิมพ์ย่านหรือมหาลัยของคุณ',
+    area: 'จังหวัด',
+    areaPlaceholder: 'เลือกจังหวัด…',
+    areaOtherPlaceholder: 'พิมพ์ประเทศ / เมืองของคุณ',
     age: 'ช่วงอายุ',
+    agePlaceholder: 'เลือก…',
     optional: '(ไม่บังคับ)',
     intents: 'มาหาอะไร',
     intentLabels: { friend: 'เพื่อน', talk: 'คนคุย', date: 'เดท' },
@@ -170,23 +172,13 @@ const th = {
     again: 'ลงชื่ออีเมลอื่น',
     errors: {
       email: 'อีเมลไม่ถูกต้อง',
-      area: 'เลือกย่านหรือมหาลัย',
+      area: 'เลือกจังหวัด',
       consent: 'ต้องติ๊กยินยอมก่อนลงชื่อ',
       rate: 'ลงชื่อบ่อยเกินไป ลองใหม่ในอีกสักพัก',
       generic: 'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง',
     },
   },
-  areas: [
-    { value: 'siam', label: 'สยาม / ปทุมวัน (จุฬาฯ)' },
-    { value: 'ari', label: 'อารีย์ / พหลโยธิน' },
-    { value: 'asok', label: 'อโศก / สุขุมวิท' },
-    { value: 'silom', label: 'สีลม / สาทร' },
-    { value: 'bangkhen', label: 'บางเขน (เกษตรฯ)' },
-    { value: 'rangsit', label: 'รังสิต (ธรรมศาสตร์)' },
-    { value: 'salaya', label: 'ศาลายา (มหิดล)' },
-    { value: 'bangna', label: 'บางนา' },
-    { value: 'other', label: 'อื่นๆ' },
-  ],
+  areas: provinceOptions('th'),
   faq: {
     title: 'คำถามที่พบบ่อย',
     items: [
@@ -379,10 +371,11 @@ const en: Dictionary = {
     sub: 'Sign up and we’ll email you the moment rukan opens',
     email: 'Email',
     emailPlaceholder: 'you@example.com',
-    area: 'Area / university',
-    areaPlaceholder: 'Choose…',
-    areaOtherPlaceholder: 'Type your area or university',
+    area: 'Province',
+    areaPlaceholder: 'Choose a province…',
+    areaOtherPlaceholder: 'Type your country / city',
     age: 'Age range',
+    agePlaceholder: 'Choose…',
     optional: '(optional)',
     intents: 'Looking for',
     intentLabels: { friend: 'Friends', talk: 'Someone to talk to', date: 'Dating' },
@@ -396,23 +389,13 @@ const en: Dictionary = {
     again: 'Add another email',
     errors: {
       email: 'Please enter a valid email',
-      area: 'Please choose an area or university',
+      area: 'Please choose a province',
       consent: 'Please tick the consent box first',
       rate: 'Too many tries — please wait a moment',
       generic: 'Something went wrong, please try again',
     },
   },
-  areas: [
-    { value: 'siam', label: 'Siam / Pathum Wan (Chula)' },
-    { value: 'ari', label: 'Ari / Phahon Yothin' },
-    { value: 'asok', label: 'Asok / Sukhumvit' },
-    { value: 'silom', label: 'Silom / Sathorn' },
-    { value: 'bangkhen', label: 'Bang Khen (Kasetsart)' },
-    { value: 'rangsit', label: 'Rangsit (Thammasat)' },
-    { value: 'salaya', label: 'Salaya (Mahidol)' },
-    { value: 'bangna', label: 'Bang Na' },
-    { value: 'other', label: 'Other' },
-  ],
+  areas: provinceOptions('en'),
   faq: {
     title: 'FAQ',
     items: [

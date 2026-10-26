@@ -177,7 +177,7 @@ export function WaitlistForm({
             {t.age} <span className="font-normal text-muted">{t.optional}</span>
           </label>
           <select id="wl-age" name="ageBand" defaultValue="" className={fieldClass}>
-            <option value="">{t.areaPlaceholder}</option>
+            <option value="">{t.agePlaceholder}</option>
             {AGE_BANDS.map((band) => (
               <option key={band} value={band}>
                 {band.replace('-', '–')}
