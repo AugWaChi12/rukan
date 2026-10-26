@@ -30,15 +30,15 @@ export function Landing({ locale }: { locale: Locale }) {
   return (
     <div className="bg-grid overflow-x-clip">
       <div className="bg-glow relative">
-        {/* Nav */}
-        <div className="flex justify-center px-4 pt-5">
+        {/* Nav (Liquid Glass Pill + แถบลัดบนมือถือ) */}
+        <div className="sticky top-3 z-40 flex flex-col items-center gap-2 px-3 pt-2 sm:px-4 sm:pt-4">
           <nav
             aria-label={t.brand}
-            className="flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 rounded-full border border-line bg-white/80 py-2.5 pr-3 pl-5 shadow-[0_8px_30px_rgba(46,34,56,0.06)] backdrop-blur"
+            className="flex w-full max-w-[1120px] items-center justify-between gap-2 rounded-full border border-white/80 bg-white/82 py-2 pr-2.5 pl-4 shadow-[0_10px_32px_rgba(46,34,56,0.08)] backdrop-blur-xl sm:gap-3 sm:py-2.5 sm:pr-3 sm:pl-5"
           >
-            <a href={base || '/'} className="flex items-center gap-2 no-underline">
-              <LogoMark size={34} title={t.brand} />
-              <span className="font-display text-[21px] font-bold">{t.brand}</span>
+            <a href={base || '/'} className="flex shrink-0 items-center gap-2 no-underline">
+              <LogoMark size={32} title={t.brand} />
+              <span className="font-display text-[19px] font-bold sm:text-[21px]">{t.brand}</span>
             </a>
             <div className="hidden gap-7 text-[15px] font-medium md:flex">
               <a href="#features" className="hover:text-rose-deep">
@@ -54,46 +54,77 @@ export function Landing({ locale }: { locale: Locale }) {
                 {t.nav.faq}
               </a>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <a
                 href={t.nav.switchHref}
                 hrefLang={locale === 'en' ? 'th' : 'en'}
-                className="text-sm font-semibold text-muted hover:text-ink"
+                className="rounded-full px-2 py-1 text-xs font-semibold text-muted hover:text-ink sm:text-sm"
               >
                 {t.nav.switchLabel}
               </a>
               <a
                 href="#waitlist"
-                className="rounded-full bg-ink px-[18px] py-2.5 font-display text-[15px] font-medium text-white hover:bg-ink/90"
+                className="rounded-full bg-ink px-4 py-2 font-display text-[13px] font-medium whitespace-nowrap text-white shadow-sm hover:bg-ink/90 sm:px-[18px] sm:py-2.5 sm:text-[15px]"
               >
                 {t.nav.cta}
               </a>
             </div>
           </nav>
+
+          {/* แถบเมนูลัดสำหรับจอโทรศัพท์ (ให้กดข้ามหมวดได้สะดวกเหมือนบนคอม) */}
+          <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-white/75 bg-white/75 px-2 py-1 text-[12px] font-medium shadow-[0_6px_20px_rgba(46,34,56,0.05)] backdrop-blur-md md:hidden">
+            <a
+              href="#features"
+              className="rounded-full px-3 py-1 whitespace-nowrap text-ink/80 active:bg-rose-tint active:text-rose-deep"
+            >
+              {t.nav.features}
+            </a>
+            <span className="text-line-strong">·</span>
+            <a
+              href="#how"
+              className="rounded-full px-3 py-1 whitespace-nowrap text-ink/80 active:bg-rose-tint active:text-rose-deep"
+            >
+              {t.nav.how}
+            </a>
+            <span className="text-line-strong">·</span>
+            <a
+              href="#safety"
+              className="rounded-full px-3 py-1 whitespace-nowrap text-ink/80 active:bg-rose-tint active:text-rose-deep"
+            >
+              {t.nav.safety}
+            </a>
+            <span className="text-line-strong">·</span>
+            <a
+              href="#faq"
+              className="rounded-full px-3 py-1 whitespace-nowrap text-ink/80 active:bg-rose-tint active:text-rose-deep"
+            >
+              {t.nav.faq}
+            </a>
+          </div>
         </div>
 
         {/* Hero */}
-        <header className="mx-auto flex max-w-[1120px] flex-col items-center gap-[22px] px-5 pt-[72px] pb-10 text-center">
-          <div className="flex items-center gap-4">
-            <span className="w-[clamp(64px,9vw,110px)] [&>svg]:h-auto [&>svg]:w-full">
+        <header className="mx-auto flex max-w-[1120px] flex-col items-center gap-4 px-4 pt-8 pb-6 text-center sm:gap-[22px] sm:px-5 sm:pt-14 sm:pb-10">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="w-[clamp(56px,11vw,110px)] [&>svg]:h-auto [&>svg]:w-full">
               <LogoMark size={110} />
             </span>
-            <p className="font-display text-[clamp(64px,11vw,140px)] leading-none font-extrabold tracking-tight">
+            <p className="font-display text-[clamp(56px,13vw,140px)] leading-none font-extrabold tracking-tight">
               {t.brand}
             </p>
           </div>
-          <h1 className="font-display text-[clamp(30px,5vw,60px)] leading-tight font-bold">
+          <h1 className="font-display text-[clamp(27px,5.5vw,60px)] leading-[1.18] font-bold">
             {t.hero.titleA} <span className="text-gradient">{t.hero.titleB}</span>
           </h1>
-          <p className="max-w-[640px] text-[clamp(17px,1.8vw,20px)] leading-relaxed text-ink/75">
+          <p className="max-w-[640px] text-[clamp(15.5px,2vw,20px)] leading-relaxed text-ink/75">
             {t.hero.sub}
           </p>
           {/* หนึ่งคน สองตัวตน */}
-          <div className="flex w-full max-w-[560px] items-stretch justify-center gap-2 sm:gap-3">
+          <div className="grid w-full max-w-[580px] grid-cols-2 items-stretch gap-2.5 sm:flex sm:justify-center sm:gap-3">
             <IdentityPill
-              tone="bg-lilac-tint"
+              tone="bg-lilac-tint border border-lilac/40"
               avatar={
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lilac to-rose font-display text-lg font-bold text-white">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lilac to-rose font-display text-base font-bold text-white sm:size-11 sm:text-lg">
                   {t.features.space.sampleAlias.slice(0, 1)}
                 </span>
               }
@@ -101,15 +132,15 @@ export function Landing({ locale }: { locale: Locale }) {
               place={t.hero.identities.alias.place}
               desc={t.hero.identities.alias.desc}
             />
-            <span className="flex shrink-0 flex-col items-center justify-center gap-1 font-display text-[11px] font-semibold text-muted sm:text-xs">
+            <span className="hidden shrink-0 flex-col items-center justify-center gap-1 font-display text-[11px] font-semibold text-muted sm:flex sm:text-xs">
               <span className="h-4 w-px bg-line-strong" />
               {t.hero.identities.link}
               <span className="h-4 w-px bg-line-strong" />
             </span>
             <IdentityPill
-              tone="bg-rose-tint"
+              tone="bg-rose-tint border border-rose/40"
               avatar={
-                <span className="relative size-11 shrink-0 overflow-hidden rounded-full">
+                <span className="relative size-10 shrink-0 overflow-hidden rounded-full sm:size-11">
                   <Image
                     src={PHOTO}
                     alt=""
@@ -125,21 +156,24 @@ export function Landing({ locale }: { locale: Locale }) {
               desc={t.hero.identities.real.desc}
             />
           </div>
-          <div className="mt-1 flex flex-wrap justify-center gap-3">
+          <span className="-mt-2 rounded-full border border-line bg-white/85 px-3 py-0.5 font-display text-[11px] font-semibold text-muted shadow-2xs sm:hidden">
+            🔗 {t.hero.identities.link}
+          </span>
+          <div className="mt-1 flex w-full max-w-[420px] flex-wrap justify-center gap-2.5 sm:max-w-none sm:gap-3">
             <a
               href="#waitlist"
-              className="rounded-full bg-rose px-7 py-[15px] font-display text-[17px] font-semibold shadow-[0_10px_28px_rgba(194,58,114,0.22)] hover:brightness-105"
+              className="flex-1 rounded-full bg-rose px-5 py-3.5 text-center font-display text-[15.5px] font-semibold whitespace-nowrap shadow-[0_10px_28px_rgba(194,58,114,0.22)] hover:brightness-105 sm:flex-initial sm:px-7 sm:py-[15px] sm:text-[17px]"
             >
               {t.hero.ctaPrimary}
             </a>
             <a
               href="#how"
-              className="rounded-full border border-line-strong bg-white px-[26px] py-[14px] font-display text-[17px] font-medium hover:border-ink"
+              className="flex-1 rounded-full border border-line-strong bg-white px-5 py-3.5 text-center font-display text-[15.5px] font-medium whitespace-nowrap hover:border-ink sm:flex-initial sm:px-[26px] sm:py-[14px] sm:text-[17px]"
             >
               {t.hero.ctaSecondary}
             </a>
           </div>
-          <p className="text-sm text-muted">{t.hero.note}</p>
+          <p className="text-xs text-muted sm:text-sm">{t.hero.note}</p>
         </header>
 
         <Phones t={t.phones} />
@@ -212,11 +246,11 @@ export function Landing({ locale }: { locale: Locale }) {
           </article>
 
           <article className={`${card} flex flex-[1_1_300px] flex-col gap-3.5`}>
-            <div className="relative flex h-[130px] items-center justify-center gap-2 rounded-[18px] bg-cream px-3">
+            <div className="relative flex min-h-[136px] items-center justify-center gap-1.5 rounded-[18px] bg-cream px-2.5 pt-5 pb-3 sm:gap-2 sm:px-3 sm:pt-3">
               {['object-[30%_40%]', 'object-center', 'object-[70%_30%]'].map((pos, i) => (
                 <span
                   key={pos}
-                  className={`relative h-[96px] w-[64px] overflow-hidden rounded-[12px] shadow-[0_6px_14px_rgba(46,34,56,0.10)] ${['-rotate-[5deg]', '', 'rotate-[5deg]'][i]}`}
+                  className={`relative h-[88px] w-[56px] overflow-hidden rounded-[12px] shadow-[0_6px_14px_rgba(46,34,56,0.10)] sm:h-[96px] sm:w-[64px] ${['-rotate-[5deg]', '', 'rotate-[5deg]'][i]}`}
                 >
                   <Image
                     src={PHOTO}
@@ -228,11 +262,11 @@ export function Landing({ locale }: { locale: Locale }) {
                   />
                 </span>
               ))}
-              <span className="flex h-[96px] w-[64px] flex-col items-center justify-center gap-1 rounded-[12px] border border-dashed border-line-strong bg-white/70 text-muted">
+              <span className="flex h-[88px] w-[56px] flex-col items-center justify-center gap-1 rounded-[12px] border border-dashed border-line-strong bg-white/70 text-muted sm:h-[96px] sm:w-[64px]">
                 <LockIcon size={16} />
                 <span className="font-display text-[11px]">+3</span>
               </span>
-              <span className="absolute top-2.5 right-3 rounded-full bg-ink px-2.5 py-1 font-display text-[13px] text-white">
+              <span className="absolute top-2 right-2.5 rounded-full bg-ink px-2.5 py-0.5 font-display text-[11px] text-white sm:top-2.5 sm:right-3 sm:py-1 sm:text-[13px]">
                 3 / 6
               </span>
             </div>
@@ -245,7 +279,7 @@ export function Landing({ locale }: { locale: Locale }) {
           </article>
 
           <article className={`${card} flex flex-[1_1_300px] flex-col gap-3.5`}>
-            <div className="flex h-[110px] flex-col justify-center gap-2.5 rounded-[18px] bg-cream p-4">
+            <div className="flex min-h-[116px] flex-col justify-center gap-2.5 rounded-[18px] bg-cream p-4">
               <p className="font-display text-sm">{t.features.reveal.progress}</p>
               <div className="grid grid-cols-3 gap-1.5">
                 <div className="h-2 rounded-full bg-rose" />
@@ -263,14 +297,14 @@ export function Landing({ locale }: { locale: Locale }) {
           </article>
 
           <article className={`${card} flex flex-[1_1_300px] flex-col gap-3.5`}>
-            <div className="flex h-[110px] flex-col justify-center gap-2 rounded-[18px] bg-cream p-4 text-[15px]">
+            <div className="flex min-h-[116px] flex-col justify-center gap-2 rounded-[18px] bg-cream p-4 text-[14.5px] sm:text-[15px]">
               {t.features.verified.checks.map((c) => (
                 <p key={c} className="flex items-center gap-2">
-                  <CheckIcon size={15} className="text-[#3E9A74]" /> {c}
+                  <CheckIcon size={15} className="shrink-0 text-[#3E9A74]" /> {c}
                 </p>
               ))}
               <p className="flex items-center gap-2 text-muted">
-                <PlusIcon size={15} /> {t.features.verified.optional}
+                <PlusIcon size={15} className="shrink-0" /> {t.features.verified.optional}
               </p>
             </div>
             <FeatureText
@@ -282,11 +316,11 @@ export function Landing({ locale }: { locale: Locale }) {
           </article>
 
           <article className={`${card} flex flex-[2_1_520px] flex-col gap-3.5`}>
-            <div className="flex flex-col items-stretch gap-3 rounded-[18px] bg-cream p-4 sm:flex-row sm:items-center">
+            <div className="flex flex-col items-stretch gap-2.5 rounded-[18px] bg-cream p-3.5 sm:flex-row sm:items-center sm:gap-3 sm:p-4">
               <MiniProfile
                 tone="bg-lilac-tint"
                 avatar={
-                  <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lilac to-rose font-display text-xl font-bold text-white">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lilac to-rose font-display text-lg font-bold text-white sm:size-14 sm:text-xl">
                     {t.features.space.sampleAlias.slice(0, 1)}
                   </span>
                 }
@@ -294,13 +328,13 @@ export function Landing({ locale }: { locale: Locale }) {
                 name={t.features.space.sampleAlias}
                 meta={t.features.modes.aliasMeta}
               />
-              <span className="flex shrink-0 items-center justify-center text-muted">
-                <LockIcon size={18} />
+              <span className="mx-auto flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-muted shadow-2xs">
+                <LockIcon size={16} />
               </span>
               <MiniProfile
                 tone="bg-rose-tint"
                 avatar={
-                  <span className="relative size-14 shrink-0 overflow-hidden rounded-full">
+                  <span className="relative size-12 shrink-0 overflow-hidden rounded-full sm:size-14">
                     <Image
                       src={PHOTO}
                       alt=""
@@ -489,14 +523,14 @@ function IdentityPill({
 }) {
   return (
     <div
-      className={`flex flex-1 flex-col items-center gap-1.5 rounded-[22px] px-3 py-3 text-center sm:flex-row sm:text-left ${tone}`}
+      className={`flex flex-1 flex-col items-center gap-1.5 rounded-[22px] px-3 py-3 text-center shadow-[0_4px_16px_rgba(46,34,56,0.04)] sm:flex-row sm:gap-2.5 sm:px-4 sm:text-left ${tone}`}
     >
       {avatar}
       <div className="min-w-0">
-        <p className="font-display text-[15px] font-bold sm:text-base">
+        <p className="font-display text-[14px] leading-snug font-bold sm:text-base">
           {label} <span className="font-medium text-muted">· {place}</span>
         </p>
-        <p className="text-[13px] leading-snug text-ink/70 sm:text-sm">{desc}</p>
+        <p className="mt-0.5 text-[12px] leading-snug text-ink/70 sm:text-sm">{desc}</p>
       </div>
     </div>
   );

@@ -177,6 +177,7 @@ URL ตอน dev:
     - [x] Tier ต่อผู้ใช้ (`private.subscriptions` รองรับ RevenueCat IAP + manual/promo, `private.user_limits()` บังคับใช้ใน `get_my_deck`, `send_bubble`, `swipe`)
     - [x] Realtime แชทแบบ Private Broadcast (`realtime.messages` RLS + `can_access_realtime_topic` + ไม่ส่ง `sender_id`/`user_id` ตาม D36)
     - [x] ย้าย Admin Console (`apps/web/src/app/admin/page.tsx`) มาเรียกผ่าน `@rukan/api` ทั้งหมด — ทดสอบ pgTAP 179/179 และ Vitest 62/62 ผ่านทั้งหมด
+    - [x] **Space `#Hashtag` & High-Scale Feed + 3-Tier Pass (`free` / `gold` / `premium`) + Rukan Coin (`🪙`) + Liquid Glass Bottom Bar + Mobile-Responsive Landing Page** (D61–D62, 2026-10-26) — ทดสอบ pgTAP 202/202 และ Vitest 66/66 ผ่านทั้งหมด
   - [ ] **งานถัดไป: ดู roadmap ใน `docs/AUDIT.md` หัวข้อ 4** (เชื่อม SDK RevenueCat จริงเมื่อมี Apple/Google account, selfie / SMS vendor, นโยบายเบอร์รีไซเคิล, P2 UX redesign)
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 - [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้

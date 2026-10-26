@@ -15,15 +15,17 @@ export function LegalPage({ locale, docKey }: { locale: Locale; docKey: LegalDoc
   return (
     <div className="bg-grid min-h-dvh flex flex-col overflow-x-clip">
       <div className="bg-glow flex-1">
-        {/* Nav */}
-        <div className="flex justify-center px-4 pt-5">
+        {/* Nav (Liquid Glass Pill) */}
+        <div className="sticky top-3 z-40 flex justify-center px-3 pt-2 sm:px-4 sm:pt-4">
           <nav
             aria-label={site.brand}
-            className="flex w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 rounded-full border border-line bg-white/85 py-2.5 pr-3 pl-5 shadow-[0_8px_30px_rgba(46,34,56,0.06)] backdrop-blur"
+            className="flex w-full max-w-[1120px] items-center justify-between gap-2 rounded-full border border-white/80 bg-white/80 py-2 pr-2.5 pl-4 shadow-[0_12px_36px_rgba(46,34,56,0.08)] backdrop-blur-xl sm:gap-3 sm:py-2.5 sm:pr-3 sm:pl-5"
           >
-            <a href={base || '/'} className="flex items-center gap-2 no-underline">
-              <LogoMark size={34} title={site.brand} />
-              <span className="font-display text-[21px] font-bold">{site.brand}</span>
+            <a href={base || '/'} className="flex shrink-0 items-center gap-2 no-underline">
+              <LogoMark size={32} title={site.brand} />
+              <span className="font-display text-[19px] font-bold sm:text-[21px]">
+                {site.brand}
+              </span>
             </a>
 
             <div className="hidden items-center gap-2 md:flex">
@@ -46,17 +48,17 @@ export function LegalPage({ locale, docKey }: { locale: Locale; docKey: LegalDoc
               })}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
               <a
                 href={`${switchBase}/${docKey}`}
                 hrefLang={locale === 'en' ? 'th' : 'en'}
-                className="flex min-h-[44px] items-center px-2 text-sm font-semibold text-muted hover:text-ink"
+                className="flex min-h-[38px] items-center rounded-full border border-line/80 bg-white/70 px-3 text-xs font-semibold text-muted hover:text-ink sm:min-h-[42px] sm:border-transparent sm:bg-transparent sm:px-2 sm:text-sm"
               >
                 {site.nav.switchLabel}
               </a>
               <a
                 href={`${base || '/'}#waitlist`}
-                className="flex min-h-[44px] items-center rounded-full bg-ink px-[18px] py-2 font-display text-[15px] font-medium text-white hover:bg-ink/90"
+                className="flex min-h-[38px] items-center rounded-full bg-ink px-4 py-1.5 font-display text-[13px] font-medium text-white shadow-sm hover:bg-ink/90 sm:min-h-[42px] sm:px-[18px] sm:py-2 sm:text-[15px]"
               >
                 {site.nav.cta}
               </a>

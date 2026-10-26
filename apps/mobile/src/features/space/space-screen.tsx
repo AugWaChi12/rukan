@@ -1,8 +1,11 @@
 import {
   CHAT_LIMITS,
+  extractHashtags,
+  SPACE_FEED_SORTS,
   SPACE_FEED_TABS,
   SPACE_LIMITS,
   SPACE_MOODS,
+  type SpaceFeedSort,
   type SpaceFeedTab,
   type SpaceMood,
   type SpacePost,
@@ -39,6 +42,8 @@ export function SpaceScreen() {
   const { colors } = useAppTheme();
 
   const [tab, setTab] = useState<SpaceFeedTab>('all');
+  const [sort, setSort] = useState<SpaceFeedSort>('latest');
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [body, setBody] = useState('');
   const [mood, setMood] = useState<SpaceMood | undefined>(undefined);
   const [checkedMood, setCheckedMood] = useState<SpaceMood | null>(null);
@@ -51,7 +56,10 @@ export function SpaceScreen() {
 
   const profileQuery = useQuery(queries.myProfile());
   const areasQuery = useQuery(queries.areas());
-  const feedQuery = useQuery(queries.spaceFeed(tab));
+  const trendingQuery = useQuery(queries.spaceTrending());
+  const feedQuery = useQuery(queries.spaceFeed(tab, { hashtag: selectedHashtag, sort }));
+  const currentFeedKey = queryKeys.spaceFeed(tab, selectedHashtag, sort);
+  const composeHashtags = extractHashtags(body);
 
   const areaMap = new Map(
     (areasQuery.data ?? []).map((a) => [a.id, i18n.language === 'en' ? a.name_en : a.name_th]),
@@ -87,11 +95,11 @@ export function SpaceScreen() {
     },
     onMutate: async (post: SpacePost) => {
       haptic.light();
-      await queryClient.cancelQueries({ queryKey: queryKeys.spaceFeed(tab) });
-      const previousFeed = queryClient.getQueryData<SpacePost[]>(queryKeys.spaceFeed(tab));
+      await queryClient.cancelQueries({ queryKey: currentFeedKey });
+      const previousFeed = queryClient.getQueryData<SpacePost[]>(currentFeedKey);
       if (previousFeed) {
         queryClient.setQueryData<SpacePost[]>(
-          queryKeys.spaceFeed(tab),
+          currentFeedKey,
           previousFeed.map((p) =>
             p.id === post.id
               ? {
@@ -107,11 +115,11 @@ export function SpaceScreen() {
     },
     onError: (_err, _post, context) => {
       if (context?.previousFeed) {
-        queryClient.setQueryData(queryKeys.spaceFeed(tab), context.previousFeed);
+        queryClient.setQueryData(currentFeedKey, context.previousFeed);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.spaceFeed(tab) });
+      queryClient.invalidateQueries({ queryKey: currentFeedKey });
     },
   });
 
@@ -126,6 +134,11 @@ export function SpaceScreen() {
   const tabOptions = SPACE_FEED_TABS.map((v) => ({
     value: v,
     label: t(`space.tabs.${v}`),
+  }));
+
+  const sortOptions = SPACE_FEED_SORTS.map((v) => ({
+    value: v,
+    label: t(`space.sorts.${v}`),
   }));
 
   return (
@@ -208,6 +221,13 @@ export function SpaceScreen() {
           maxLength={SPACE_LIMITS.postBody}
           multiline
         />
+        {composeHashtags.length > 0 ? (
+          <Row style={{ gap: space.xs }}>
+            {composeHashtags.map((tag) => (
+              <Badge key={tag} label={`#${tag}`} tone="rose" />
+            ))}
+          </Row>
+        ) : null}
         {createPostMut.error ? (
           <AppText variant="error">{errorMessage(createPostMut.error)}</AppText>
         ) : null}
@@ -220,8 +240,61 @@ export function SpaceScreen() {
         />
       </Card>
 
-      {/* แท็บกรองโพสต์ */}
+      {/* แถบ #แฮชแท็กมาแรง สไตล์ X */}
+      {(trendingQuery.data ?? []).length > 0 ? (
+        <View style={{ gap: space.xs }}>
+          <AppText variant="small" style={{ fontWeight: '700', color: colors.muted }}>
+            {t('space.trendingTitle')}
+          </AppText>
+          <Row>
+            {(trendingQuery.data ?? []).map((item) => {
+              const active = selectedHashtag === item.tag;
+              return (
+                <Chip
+                  key={item.tag}
+                  tone="rose"
+                  label={`#${item.tag} (${item.post_count})`}
+                  selected={active}
+                  onPress={() => {
+                    haptic.selection();
+                    setSelectedHashtag(active ? null : item.tag);
+                  }}
+                />
+              );
+            })}
+          </Row>
+        </View>
+      ) : null}
+
+      {/* แท็บกรองโพสต์ + เรียงลำดับ (ล่าสุด / มาแรง) */}
       <SegmentedControl options={tabOptions} value={tab} onChange={setTab} />
+      <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <Row style={{ gap: space.xs }}>
+          {sortOptions.map((opt) => (
+            <Chip
+              key={opt.value}
+              tone="sage"
+              label={opt.label}
+              selected={sort === opt.value}
+              onPress={() => {
+                haptic.selection();
+                setSort(opt.value);
+              }}
+            />
+          ))}
+        </Row>
+        {selectedHashtag ? (
+          <Chip
+            tone="rose"
+            selected
+            label={`${t('space.activeHashtag', { tag: selectedHashtag })} ✕`}
+            onPress={() => {
+              haptic.light();
+              setSelectedHashtag(null);
+            }}
+          />
+        ) : null}
+      </Row>
 
       {/* รายการโพสต์ */}
       {feedQuery.isPending ? (
@@ -286,6 +359,23 @@ export function SpaceScreen() {
               <AppText variant="body" style={styles.postBody}>
                 {post.body}
               </AppText>
+
+              {(post.hashtags ?? []).length > 0 ? (
+                <Row style={{ gap: space.xs }}>
+                  {post.hashtags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      tone="rose"
+                      label={`#${tag}`}
+                      selected={selectedHashtag === tag}
+                      onPress={() => {
+                        haptic.selection();
+                        setSelectedHashtag(selectedHashtag === tag ? null : tag);
+                      }}
+                    />
+                  ))}
+                </Row>
+              ) : null}
 
               <Row style={styles.postActions}>
                 <BouncyPressable

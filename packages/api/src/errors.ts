@@ -48,15 +48,21 @@ export const API_ERROR_CODES = [
   'invalid_appeal_decision',
   'appeal_not_pending',
   'same_moderator_cannot_review_appeal',
-  // แพ็กเกจ & สมาชิก (Tiers & Subscriptions)
+  // แพ็กเกจ & สมาชิก & เหรียญ Rukan Coin (Tiers & Subscriptions & Coins)
   'invalid_tier',
   'invalid_subscription_source',
   'invalid_subscription_status',
+  'invalid_pass_duration',
+  'pass_exchange_unavailable',
+  'insufficient_coins',
+  'invalid_coin_amount',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   'invalid_post_body',
   'invalid_mood',
   'contains_prohibited_contact',
   'invalid_feed_tab',
+  'invalid_feed_sort',
+  'invalid_hashtag',
   'post_not_found',
   'invalid_reply_body',
   'reply_not_found',

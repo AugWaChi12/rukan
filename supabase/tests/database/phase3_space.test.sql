@@ -1,7 +1,7 @@
 -- ทดสอบเฟส 3 (Space): โพสต์ไม่ระบุตัวตน, กรองข้อมูลติดต่อ, ห้ามมี user_id/author_id หลุดใน JSON, ถูกใจ, ตอบกลับ, บล็อกแล้วไม่เห็นกัน
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(27);
 
 -- 1) ผู้ใช้ที่ยังไม่ยืนยัน selfie (demo3) โพสต์ไม่ได้
 set local role authenticated;
@@ -170,6 +170,70 @@ select lives_ok(
 );
 
 select throws_ok('select * from private.posts', '42501', null, 'อ่าน private.posts ตรงไม่ได้');
+
+-- 10) ระบบ #Hashtag + Trending + Hot Feed (สไตล์ X)
+select is(
+  (
+    select (
+      public.create_post(
+        'คืนนี้ฝนตก #เหงาๆ อยากหาเพื่อนคุย #Dek69 #เหงาๆ #แท็ก3 #แท็ก4 #แท็ก5 #แท็ก6เกินลิมิต',
+        'anxious'
+      ) -> 'hashtags'
+    )::jsonb
+  ),
+  '["เหงาๆ", "dek69", "แท็ก3", "แท็ก4", "แท็ก5"]'::jsonb,
+  'create_post สกัด #แท็ก ไทย/อังกฤษ แปลงตัวพิมพ์เล็ก ลบซ้ำ และจำกัดสูงสุด 5 แท็ก'
+);
+
+select is(
+  json_array_length(public.get_feed('all', null, null, 20, '#เหงาๆ', 'latest')),
+  1,
+  'get_feed กรองตาม #เหงาๆ ได้ถูกต้อง (ส่งทั้งมี # หรือไม่มี # ก็ได้)'
+);
+
+select is(
+  json_array_length(public.get_feed('all', null, null, 20, 'ไม่มีแท็กนี้แน่นอน', 'latest')),
+  0,
+  'get_feed กรองแท็กที่ไม่มีโพสต์ คืนรายการว่าง'
+);
+
+select is(
+  (
+    select (t ->> 'post_count')::int
+    from json_array_elements(public.get_trending_hashtags(24, 10)) as t
+    where t ->> 'tag' = 'เหงาๆ'
+  ),
+  1,
+  'get_trending_hashtags นับจำนวนโพสต์ของ #เหงาๆ ในชั่วโมงปัจจุบันทันที'
+);
+
+-- สร้างอีกโพสต์แล้วกดถูกใจ เพื่อให้คะแนน Hot สูงกว่าโพสต์แรก
+do $$
+declare
+  v_hot_id uuid;
+begin
+  select (public.create_post('โพสต์มาแรง #เหงาๆ คนคุยกันเยอะ', 'excited') ->> 'id')::uuid into v_hot_id;
+  perform public.like_post(v_hot_id);
+  perform set_config('test.hot_post_id', v_hot_id::text, true);
+end $$;
+
+select is(
+  (public.get_feed('all', null, null, 20, 'เหงาๆ', 'hot') -> 0 ->> 'id'),
+  current_setting('test.hot_post_id'),
+  'get_feed แบบ p_sort = hot เรียงโพสต์ที่มี engagement สูงขึ้นก่อน'
+);
+
+select throws_ok(
+  $$ select public.get_feed('all', null, null, 20, 'invalid tag with spaces!', 'latest') $$,
+  '22023', 'invalid_hashtag',
+  'get_feed ปฏิเสธชื่อ hashtag ที่ผิดรูปแบบ'
+);
+
+select throws_ok(
+  'select * from private.hashtag_hourly_stats',
+  '42501', null,
+  'อ่าน private.hashtag_hourly_stats ตรงไม่ได้'
+);
 
 select * from finish();
 rollback;

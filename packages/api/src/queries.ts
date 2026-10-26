@@ -1,4 +1,4 @@
-import type { AppealStatus, ReportStatus, SpaceFeedTab } from '@rukan/shared';
+import type { AppealStatus, ReportStatus, SpaceFeedSort, SpaceFeedTab } from '@rukan/shared';
 import { queryOptions } from '@tanstack/react-query';
 import type { RukanApi } from './client';
 
@@ -23,7 +23,9 @@ export const queryKeys = {
   myMatches: ['me', 'matches'] as const,
   profileCard: (userId: string) => ['me', 'profile-card', userId] as const,
   space: ['space'] as const,
-  spaceFeed: (tab: SpaceFeedTab) => ['space', 'feed', tab] as const,
+  spaceFeed: (tab: SpaceFeedTab, hashtag: string | null = null, sort: SpaceFeedSort = 'latest') =>
+    ['space', 'feed', tab, hashtag ?? '', sort] as const,
+  spaceTrending: (hours = 24) => ['space', 'trending', hours] as const,
   spaceReplies: (postId: string) => ['space', 'replies', postId] as const,
   moderation: ['moderation'] as const,
   modDashboardCounts: ['moderation', 'dashboard-counts'] as const,
@@ -76,10 +78,29 @@ export function createQueries(api: RukanApi) {
         queryKey: queryKeys.profileCard(userId),
         queryFn: () => api.getProfileCard(userId),
       }),
-    spaceFeed: (tab: SpaceFeedTab = 'all', limit = 20) =>
+    spaceFeed: (
+      tab: SpaceFeedTab = 'all',
+      optionsOrLimit?: number | { hashtag?: string | null; sort?: SpaceFeedSort; limit?: number },
+    ) => {
+      const opts =
+        typeof optionsOrLimit === 'number' ? { limit: optionsOrLimit } : (optionsOrLimit ?? {});
+      const hashtag = opts.hashtag ?? null;
+      const sort = opts.sort ?? 'latest';
+      return queryOptions({
+        queryKey: queryKeys.spaceFeed(tab, hashtag, sort),
+        queryFn: () =>
+          api.getFeed({
+            tab,
+            hashtag: hashtag ?? undefined,
+            sort,
+            limit: opts.limit,
+          }),
+      });
+    },
+    spaceTrending: (hours = 24, limit = 10) =>
       queryOptions({
-        queryKey: queryKeys.spaceFeed(tab),
-        queryFn: () => api.getFeed({ tab, limit }),
+        queryKey: queryKeys.spaceTrending(hours),
+        queryFn: () => api.getTrendingHashtags({ hours, limit }),
       }),
     spaceReplies: (postId: string) =>
       queryOptions({

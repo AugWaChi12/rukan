@@ -285,13 +285,16 @@ export type Database = {
       create_post: { Args: { p_body: string; p_mood?: string }; Returns: Json };
       delete_my_post: { Args: { p_post_id: string }; Returns: undefined };
       delete_my_reply: { Args: { p_reply_id: string }; Returns: undefined };
+      exchange_coins_for_pass: { Args: { p_duration?: string; p_tier: string }; Returns: Json };
       get_conversation: { Args: { p_conversation_id: string }; Returns: Json };
       get_conversations: { Args: Record<PropertyKey, never>; Returns: Json };
       get_feed: {
         Args: {
           p_before_created_at?: string;
           p_before_id?: string;
+          p_hashtag?: string;
           p_limit?: number;
+          p_sort?: string;
           p_tab?: string;
         };
         Returns: Json;
@@ -316,6 +319,7 @@ export type Database = {
       get_profile_card: { Args: { p_user_id: string }; Returns: Json };
       get_replies: { Args: { p_post_id: string }; Returns: Json };
       get_tier_configs: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_trending_hashtags: { Args: { p_hours?: number; p_limit?: number }; Returns: Json };
       health: { Args: Record<PropertyKey, never>; Returns: Json };
       join_waitlist: {
         Args: {
@@ -334,6 +338,10 @@ export type Database = {
       mod_get_dashboard_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_get_report: { Args: { p_report_id: string }; Returns: Json };
       mod_get_waitlist_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      mod_grant_user_coins: {
+        Args: { p_amount: number; p_note?: string; p_user_id: string };
+        Returns: Json;
+      };
       mod_list_appeals: { Args: { p_limit?: number; p_status?: string }; Returns: Json };
       mod_list_reports: { Args: { p_limit?: number; p_status?: string }; Returns: Json };
       mod_list_waitlist: {

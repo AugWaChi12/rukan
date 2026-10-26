@@ -61,7 +61,7 @@ select set_eq(
     'create_post', 'get_feed', 'delete_my_post',
     'like_post', 'unlike_post',
     'reply_post', 'get_replies', 'delete_my_reply',
-    'checkin_mood',
+    'checkin_mood', 'get_trending_hashtags',
     -- เฟส 4: Bubble + แชท + Realtime Private Broadcast
     'send_bubble', 'get_my_bubbles', 'respond_bubble',
     'get_conversations', 'get_conversation', 'get_messages',
@@ -71,8 +71,9 @@ select set_eq(
     -- เฟส 5: Daily Drop + Match + Profile Card
     'get_my_deck', 'swipe', 'get_my_matches',
     'polite_close', 'unmatch', 'get_profile_card',
-    -- Master & Plans & Subscriptions
-    'get_my_subscription', 'mod_update_tier_config', 'mod_set_user_subscription'
+    -- Master & Plans & Subscriptions & Rukan Coins
+    'get_my_subscription', 'mod_update_tier_config', 'mod_set_user_subscription',
+    'exchange_coins_for_pass', 'mod_grant_user_coins'
   ],
   'authenticated เรียกได้เฉพาะ API ที่ประกาศไว้'
 );

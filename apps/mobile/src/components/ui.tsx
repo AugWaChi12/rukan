@@ -64,7 +64,11 @@ export function Screen({
   style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useAppTheme();
-  const content = <View style={[styles.content, style]}>{children}</View>;
+  const content = (
+    <View style={[styles.content, !scroll ? styles.contentFixedBottom : null, style]}>
+      {children}
+    </View>
+  );
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       {grid ? <GridBackground /> : null}
@@ -657,7 +661,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   gridLineV: { position: 'absolute', top: 0, bottom: 0, width: 1 },
   gridLineH: { position: 'absolute', left: 0, right: 0, height: 1 },
-  scroll: { flexGrow: 1, paddingBottom: 24 },
+  scroll: { flexGrow: 1, paddingBottom: 104 },
   content: {
     flex: 1,
     paddingHorizontal: space.lg,
@@ -666,6 +670,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 540,
     alignSelf: 'center',
+  },
+  contentFixedBottom: {
+    paddingBottom: 84,
   },
   button: {
     minHeight: 48,

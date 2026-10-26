@@ -1,17 +1,29 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { MyProfile } from '@rukan/shared';
-import { useQuery } from '@tanstack/react-query';
+import type { MyProfile, PassDuration } from '@rukan/shared';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { ListGroup, ListRow } from '@/components/list';
-import { AliasAvatar, AppText, Screen } from '@/components/ui';
-import { api, queries } from '@/lib/api';
+import {
+  AliasAvatar,
+  AppText,
+  Badge,
+  Button,
+  Card,
+  ModalSheet,
+  Row,
+  Screen,
+} from '@/components/ui';
+import { errorMessage } from '@/i18n';
+import { api, queries, queryClient, queryKeys } from '@/lib/api';
+import { haptic } from '@/lib/haptics';
 import { useAppTheme } from '@/theme/theme-provider';
-import { radius, space } from '@/theme/tokens';
+import { palette, radius, space } from '@/theme/tokens';
 import { WithProfile } from './shared';
 
 const SITE = 'https://rukan.app';
@@ -26,6 +38,28 @@ function MeMenu({ profile }: { profile: MyProfile }) {
   const { colors, preference } = useAppTheme();
   const photos = useQuery(queries.myPhotos());
   const blocks = useQuery(queries.myBlocks());
+  const subQuery = useQuery(queries.mySubscription());
+  const tierConfigsQuery = useQuery(queries.tierConfigs());
+  const [showPassSheet, setShowPassSheet] = useState(false);
+  const [passNotice, setPassNotice] = useState<string | null>(null);
+
+  const exchangeMut = useMutation({
+    mutationFn: (vars: { tier: 'gold' | 'premium'; duration: PassDuration }) =>
+      api.exchangeCoinsForPass(vars),
+    onSuccess: async () => {
+      haptic.success();
+      setPassNotice(t('me.wallet.exchangeSuccess'));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.mySubscription }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.myDeck }),
+      ]);
+    },
+  });
+
+  const sub = subQuery.data;
+  const currentTier = sub?.tier ?? 'free';
+  const coinBalance = sub?.coin_balance ?? 0;
+  const tierConfigs = tierConfigsQuery.data ?? [];
 
   const go = (href: string) => router.push(href as Href);
   const openSite = (path: string) =>
@@ -100,6 +134,42 @@ function MeMenu({ profile }: { profile: MyProfile }) {
           </View>
         </View>
         <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+      </Pressable>
+
+      {/* กระเป๋าเหรียญ Rukan Coin & ระดับ Pass (Free | Gold | Premium + AI) */}
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          haptic.selection();
+          setPassNotice(null);
+          setShowPassSheet(true);
+        }}
+        style={({ pressed }) => [
+          styles.walletCard,
+          {
+            backgroundColor: currentTier === 'premium' ? colors.accentTint : colors.goldTint,
+            borderColor: currentTier === 'premium' ? colors.accentSoft : colors.gold,
+            opacity: pressed ? 0.9 : 1,
+          },
+        ]}
+      >
+        <View style={{ flex: 1, gap: 4 }}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Badge
+              label={t(`me.wallet.tiers.${currentTier}`)}
+              tone={currentTier === 'premium' ? 'rose' : currentTier === 'gold' ? 'gold' : 'muted'}
+            />
+            <Badge label={t('me.wallet.coinsValue', { count: coinBalance })} tone="ink" />
+          </Row>
+          <AppText variant="small" style={{ color: palette.ink, fontWeight: '600', marginTop: 2 }}>
+            {sub?.limits.allow_ai_assistant
+              ? t('me.wallet.aiIncluded')
+              : t('me.wallet.aiPerUse', { coins: sub?.limits.ai_coin_cost_per_use ?? 30 })}
+          </AppText>
+          <AppText variant="small" style={{ color: colors.accent, fontWeight: '700' }}>
+            {t('me.wallet.managePassBtn')} →
+          </AppText>
+        </View>
       </Pressable>
 
       {/* นามแฝง */}
@@ -188,6 +258,84 @@ function MeMenu({ profile }: { profile: MyProfile }) {
         {t('common.appName')} ·{' '}
         {t('me.menu.version', { version: Constants.expoConfig?.version ?? '' })}
       </AppText>
+
+      {/* Modal แลกเหรียญ Rukan Coin เป็น Gold Pass / Premium Pass */}
+      <ModalSheet
+        visible={showPassSheet}
+        title={t('me.wallet.sheetTitle')}
+        onClose={() => setShowPassSheet(false)}
+      >
+        <Row style={{ justifyContent: 'space-between' }}>
+          <Badge label={t(`me.wallet.tiers.${currentTier}`)} tone="gold" />
+          <Badge label={t('me.wallet.coinsValue', { count: coinBalance })} tone="ink" />
+        </Row>
+
+        <AppText variant="muted">{t('me.wallet.sheetSub')}</AppText>
+
+        {passNotice ? (
+          <Card tone="sage">
+            <AppText variant="small" style={{ color: colors.sageDeep, fontWeight: '700' }}>
+              {passNotice}
+            </AppText>
+          </Card>
+        ) : null}
+
+        {exchangeMut.error ? (
+          <AppText variant="error">{errorMessage(exchangeMut.error)}</AppText>
+        ) : null}
+
+        {(['free', 'gold', 'premium'] as const).map((tierKey) => {
+          const cfg = tierConfigs.find((item) => item.tier === tierKey);
+          if (!cfg) return null;
+          const isCurrent = currentTier === tierKey;
+          const cardTone =
+            tierKey === 'premium' ? 'rose' : tierKey === 'gold' ? 'cream' : 'default';
+
+          return (
+            <Card key={tierKey} tone={cardTone} style={{ gap: space.sm }}>
+              <Row style={{ justifyContent: 'space-between' }}>
+                <AppText variant="subheading">{cfg.display_name}</AppText>
+                {isCurrent ? <Badge label={t('me.wallet.activeBadge')} tone="sage" /> : null}
+              </Row>
+
+              <AppText variant="small">
+                {t('me.wallet.quotaSummary', {
+                  swipes: cfg.swipe_batch_size,
+                  bubbles: cfg.daily_bubble_limit,
+                  golden: cfg.daily_golden_bubbles,
+                })}
+              </AppText>
+
+              <AppText variant="small" style={{ fontWeight: '700', color: colors.accent }}>
+                {cfg.allow_ai_assistant
+                  ? t('me.wallet.aiIncluded')
+                  : t('me.wallet.aiPerUse', { coins: cfg.ai_coin_cost_per_use })}
+              </AppText>
+
+              {tierKey !== 'free' ? (
+                <Row style={{ marginTop: 4 }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={exchangeMut.isPending}
+                    label={t('me.wallet.durationWeekly', { coins: cfg.price_coins_weekly })}
+                    onPress={() => exchangeMut.mutate({ tier: tierKey, duration: 'weekly' })}
+                  />
+                  <Button
+                    size="sm"
+                    variant={tierKey === 'premium' ? 'rose' : 'primary'}
+                    loading={exchangeMut.isPending}
+                    label={t('me.wallet.durationMonthly', { coins: cfg.price_coins_monthly })}
+                    onPress={() => exchangeMut.mutate({ tier: tierKey, duration: 'monthly' })}
+                  />
+                </Row>
+              ) : null}
+            </Card>
+          );
+        })}
+
+        <Button variant="lilac" label={t('me.wallet.webTopupBtn')} onPress={() => openSite('')} />
+      </ModalSheet>
     </Screen>
   );
 }
@@ -215,6 +363,14 @@ const styles = StyleSheet.create({
   profileText: { flex: 1, gap: 2 },
   name: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
   verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  walletCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
   aliasCard: {
     flexDirection: 'row',
     alignItems: 'center',
