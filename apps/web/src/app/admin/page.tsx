@@ -593,528 +593,661 @@ export default function AdminPage() {
     );
   }
 
-  // หน้า Admin Console หลัก
+  // หน้า Admin Console หลัก (Modern Responsive Sidebar Layout)
+  const navItems = [
+    { key: 'overview', label: 'ภาพรวม & ย่าน', icon: '📊', badge: null },
+    { key: 'users', label: 'จัดการผู้ใช้', icon: '👥', badge: users.length },
+    { key: 'waitlist', label: 'รายชื่อ Waitlist', icon: '📋', badge: counts?.waitlist_total },
+    { key: 'plans', label: '3 Passes & Coin', icon: '💎', badge: '3 Tiers' },
+    { key: 'reports', label: 'ตรวจรายงาน', icon: '🛡️', badge: counts?.reports_pending },
+    { key: 'appeals', label: 'คำอุทธรณ์', icon: '⚖️', badge: counts?.appeals_pending },
+  ];
+
   return (
-    <div className="min-h-screen pb-16">
-      {/* Top Navbar */}
-      <header className="border-b border-[#2a2724] bg-[#1b1917]/80 backdrop-blur sticky top-0 z-30">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2a2419] text-lg font-bold text-[#d6b36a]">
+    <div className="flex min-h-screen bg-[#0f0e0d] text-[#f2eadb]">
+      {/* 1. Left Sidebar (Fixed / Desktop) */}
+      <aside className="w-64 shrink-0 border-r border-[#2a2724] bg-[#141210] flex flex-col justify-between p-4 sticky top-0 h-screen select-none">
+        <div className="space-y-6">
+          {/* Logo & App Brand */}
+          <div className="flex items-center gap-3 px-2 py-1">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#2a2419] border border-[#d6b36a]/30 text-xl font-bold text-[#d6b36a] shadow-inner">
               🫧
-            </span>
+            </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-display font-bold text-base text-[#f2eadb]">
+              <div className="flex items-center gap-1.5">
+                <span className="font-display font-extrabold text-base tracking-tight text-[#f2eadb]">
                   รู้กัน Admin
                 </span>
-                <span className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[11px] font-semibold text-[#d6b36a]">
-                  admin.rukan.app
-                </span>
               </div>
-              <p className="text-[12px] text-[#a69d90]">
-                Logged in as <span className="text-[#f2eadb]">{currentUserEmail}</span>
-              </p>
+              <span className="rounded-md bg-[#25221f] px-1.5 py-0.5 text-[10px] font-bold text-[#d6b36a] tracking-wider uppercase">
+                admin.rukan.app
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Nav Links */}
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const active = activeTab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(item.key as TabKey);
+                    if (item.key === 'users') void loadUsers();
+                    if (item.key === 'reports') void loadReports(reportFilter);
+                    if (item.key === 'appeals') void loadAppeals();
+                  }}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition ${
+                    active
+                      ? 'bg-[#d6b36a] text-[#0f0e0d] shadow-lg shadow-[#d6b36a]/10'
+                      : 'text-[#a69d90] hover:bg-[#25221f] hover:text-[#f2eadb]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge !== null && item.badge !== undefined && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                        active ? 'bg-[#0f0e0d]/20 text-[#0f0e0d]' : 'bg-[#25221f] text-[#d6b36a]'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* User Card & Sign Out */}
+        <div className="space-y-3 border-t border-[#2a2724] pt-4">
+          <div className="rounded-2xl bg-[#1b1917] p-3 border border-[#2a2724]/60">
+            <p className="text-[10px] font-semibold text-[#a69d90] uppercase tracking-wider">
+              ผู้ดูแลระบบ
+            </p>
+            <p className="truncate text-xs font-bold text-[#f2eadb] mt-0.5">{currentUserEmail}</p>
+          </div>
+
+          <div className="flex items-center gap-2">
             <a
               href="https://rukan.app"
               target="_blank"
               rel="noreferrer"
-              className="hidden sm:inline-flex rounded-full border border-[#2a2724] px-3.5 py-1.5 text-xs font-semibold text-[#a69d90] hover:border-[#f2eadb] hover:text-[#f2eadb] transition"
+              className="flex-1 rounded-xl border border-[#2a2724] bg-[#1b1917] py-2 text-center text-[11px] font-bold text-[#a69d90] hover:border-[#f2eadb] hover:text-[#f2eadb] transition"
             >
-              เปิด rukan.app ↗
+              เว็บหลัก ↗
             </a>
             <button
+              type="button"
               onClick={handleSignOut}
-              className="rounded-full bg-[#25221f] px-3.5 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition"
+              className="flex-1 rounded-xl bg-red-500/10 border border-red-500/20 py-2 text-center text-[11px] font-bold text-red-400 hover:bg-red-500/20 transition"
             >
-              ออกจากระบบ
+              ออกระบบ
             </button>
           </div>
         </div>
+      </aside>
 
-        {/* Navigation Tabs */}
-        <div className="mx-auto flex max-w-7xl overflow-x-auto px-5 gap-1 pt-1">
-          {[
-            { key: 'overview', label: '📊 ภาพรวม & ย่าน', badge: null },
-            { key: 'users', label: '👥 จัดการผู้ใช้ (Users)', badge: users.length },
-            { key: 'waitlist', label: '📋 รายชื่อ Waitlist', badge: counts?.waitlist_total },
-            { key: 'plans', label: '💎 จัดการ 3 Passes & Rukan Coin', badge: '3 Tiers' },
-            { key: 'reports', label: '🛡️ ตรวจรายงาน', badge: counts?.reports_pending },
-            { key: 'appeals', label: '⚖️ คำอุทธรณ์', badge: counts?.appeals_pending },
-          ].map((item) => (
-            <button
-              key={item.key}
-              onClick={() => {
-                setActiveTab(item.key as TabKey);
-                if (item.key === 'users') void loadUsers();
-                if (item.key === 'reports') void loadReports(reportFilter);
-                if (item.key === 'appeals') void loadAppeals();
-              }}
-              className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition ${
-                activeTab === item.key
-                  ? 'border-[#d6b36a] text-[#d6b36a]'
-                  : 'border-transparent text-[#a69d90] hover:text-[#f2eadb]'
-              }`}
-            >
-              <span>{item.label}</span>
-              {item.badge !== null && item.badge !== undefined && (
-                <span className="rounded-full bg-[#25221f] px-2 py-0.5 text-xs font-bold text-[#f2eadb]">
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </header>
+      {/* 2. Main Content Area */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Top Header Bar */}
+        <header className="h-16 shrink-0 border-b border-[#2a2724] bg-[#141210]/60 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-bold text-[#f2eadb] flex items-center gap-2">
+              <span>{navItems.find((n) => n.key === activeTab)?.icon}</span>
+              <span>{navItems.find((n) => n.key === activeTab)?.label}</span>
+            </h1>
+          </div>
 
-      {/* Main Container */}
-      <main className="mx-auto max-w-7xl px-5 pt-8">
-        {actionMessage && (
-          <div className="mb-6 flex items-center justify-between rounded-2xl border border-[#d6b36a]/30 bg-[#2a2419] p-4 text-sm text-[#d6b36a]">
-            <span>{actionMessage}</span>
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => setActionMessage(null)}
-              className="text-xs font-bold text-[#a69d90] hover:text-[#f2eadb]"
+              type="button"
+              onClick={() => void refreshAdminData()}
+              className="flex items-center gap-1.5 rounded-full border border-[#2a2724] bg-[#1b1917] px-3.5 py-1.5 text-xs font-bold text-[#f2eadb] hover:border-[#d6b36a] hover:text-[#d6b36a] transition"
             >
-              ✕ ปิด
+              <span>🔄</span>
+              <span>รีเฟรชข้อมูล</span>
             </button>
           </div>
-        )}
+        </header>
 
-        {/* TAB 1: ภาพรวม */}
-        {activeTab === 'overview' && (
-          <div className="space-y-8">
-            {/* 4 Stat Cards */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
-                <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
-                  คนลงชื่อรอใช้ทั้งหมด
-                </span>
-                <p className="mt-2 text-3xl font-extrabold text-[#f2eadb]">
-                  {counts?.waitlist_total ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[#d6b36a]">+วันนี้ {stats?.today_count ?? 0} คน</p>
+        {/* Content Body */}
+        <main className="p-8 flex-1 space-y-6 max-w-7xl">
+          {actionMessage && (
+            <div className="flex items-center justify-between rounded-2xl border border-[#d6b36a]/30 bg-[#2a2419] p-4 text-xs font-bold text-[#d6b36a] shadow-lg">
+              <span>{actionMessage}</span>
+              <button
+                type="button"
+                onClick={() => setActionMessage(null)}
+                className="text-xs text-[#a69d90] hover:text-[#f2eadb]"
+              >
+                ✕ ปิด
+              </button>
+            </div>
+          )}
+
+          {/* TAB 1: ภาพรวม */}
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              {/* 4 Stat Cards */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
+                  <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
+                    คนลงชื่อรอใช้ทั้งหมด
+                  </span>
+                  <p className="mt-2 text-3xl font-extrabold text-[#f2eadb]">
+                    {counts?.waitlist_total ?? 0}
+                  </p>
+                  <p className="mt-1 text-xs text-[#d6b36a]">
+                    +วันนี้ {stats?.today_count ?? 0} คน
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
+                  <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
+                    รายงานรอการตรวจสอบ
+                  </span>
+                  <p className="mt-2 text-3xl font-extrabold text-[#e9a9bf]">
+                    {counts?.reports_pending ?? 0}
+                  </p>
+                  <p className="mt-1 text-xs text-[#a69d90]">โพสต์ / บัญชีที่ถูกรายงาน</p>
+                </div>
+
+                <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
+                  <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
+                    คำอุทธรณ์รอพิจารณา
+                  </span>
+                  <p className="mt-2 text-3xl font-extrabold text-[#bbdacb]">
+                    {counts?.appeals_pending ?? 0}
+                  </p>
+                  <p className="mt-1 text-xs text-[#a69d90]">จากผู้ใช้ที่ถูกสั่งระงับ</p>
+                </div>
+
+                <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
+                  <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
+                    บัญชีที่ถูกระงับอยู่
+                  </span>
+                  <p className="mt-2 text-3xl font-extrabold text-red-400">
+                    {counts?.active_suspensions ?? 0}
+                  </p>
+                  <p className="mt-1 text-xs text-[#a69d90]">มีผลบังคับใช้อยู่ในขณะนี้</p>
+                </div>
               </div>
 
-              <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
-                <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
-                  รายงานรอการตรวจสอบ
-                </span>
-                <p className="mt-2 text-3xl font-extrabold text-[#e9a9bf]">
-                  {counts?.reports_pending ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[#a69d90]">โพสต์ / บัญชีที่ถูกรายงาน</p>
-              </div>
+              {/* University / Area Leaderboard */}
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <div className="lg:col-span-2 rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-lg font-bold text-[#f2eadb]">
+                        🏆 อันดับย่าน & มหาวิทยาลัยที่มีคนรอมากที่สุด
+                      </h2>
+                      <p className="text-xs text-[#a69d90]">
+                        ใช้พิจารณาเปิดตัวระบบแรกตามแผน &quot;ย่านเดียว + มอเดียว&quot;
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('waitlist')}
+                      className="text-xs font-semibold text-[#d6b36a] hover:underline"
+                    >
+                      ดูรายชื่อทั้งหมด →
+                    </button>
+                  </div>
 
-              <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
-                <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
-                  คำอุทธรณ์รอพิจารณา
-                </span>
-                <p className="mt-2 text-3xl font-extrabold text-[#bbdacb]">
-                  {counts?.appeals_pending ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[#a69d90]">จากผู้ใช้ที่ถูกสั่งระงับ</p>
-              </div>
+                  {stats?.by_area && stats.by_area.length > 0 ? (
+                    <div className="space-y-4">
+                      {stats.by_area.map((item, idx) => {
+                        const total = counts?.waitlist_total || 1;
+                        const percentage = Math.round((item.count / total) * 100);
+                        return (
+                          <div key={item.area} className="space-y-1.5">
+                            <div className="flex justify-between text-xs font-medium">
+                              <span className="text-[#f2eadb]">
+                                <span className="font-bold text-[#d6b36a] mr-2">#{idx + 1}</span>
+                                {item.area}
+                              </span>
+                              <span className="text-[#a69d90]">
+                                {item.count} คน ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#25221f]">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-[#e9a9bf] to-[#d6b36a]"
+                                style={{ width: `${Math.max(percentage, 5)}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="py-8 text-center text-sm text-[#a69d90]">
+                      ยังไม่มีข้อมูลการลงชื่อรอใช้
+                    </p>
+                  )}
+                </div>
 
-              <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
-                <span className="text-xs font-semibold text-[#a69d90] uppercase tracking-wider">
-                  บัญชีที่ถูกระงับอยู่
-                </span>
-                <p className="mt-2 text-3xl font-extrabold text-red-400">
-                  {counts?.active_suspensions ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[#a69d90]">มีผลบังคับใช้อยู่ในขณะนี้</p>
+                {/* Age Band & Demographics */}
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
+                    <h3 className="text-sm font-bold text-[#f2eadb] mb-4">🎂 สัดส่วนช่วงอายุ</h3>
+                    <div className="space-y-3">
+                      {(stats?.by_age_band ?? []).map((age) => (
+                        <div
+                          key={age.age_band}
+                          className="flex items-center justify-between rounded-xl bg-[#25221f] px-3.5 py-2 text-xs"
+                        >
+                          <span className="text-[#f2eadb]">{age.age_band}</span>
+                          <span className="font-bold text-[#d6b36a]">{age.count} คน</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
+                    <h3 className="text-sm font-bold text-[#f2eadb] mb-4">🌐 ภาษาที่ใช้สมัคร</h3>
+                    <div className="flex gap-4">
+                      {(stats?.by_locale ?? []).map((loc) => (
+                        <div
+                          key={loc.locale}
+                          className="flex-1 rounded-2xl bg-[#25221f] p-4 text-center"
+                        >
+                          <span className="text-xs text-[#a69d90] uppercase">
+                            {loc.locale === 'th' ? '🇹🇭 ภาษาไทย' : '🇬🇧 English'}
+                          </span>
+                          <p className="mt-1 text-xl font-extrabold text-[#f2eadb]">{loc.count}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* University / Area Leaderboard */}
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="lg:col-span-2 rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
-                <div className="flex items-center justify-between mb-6">
+          {/* TAB: จัดการผู้ใช้ (Users) */}
+          {activeTab === 'users' && (
+            <div className="space-y-6">
+              {/* Header + Filters */}
+              <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <h2 className="text-lg font-bold text-[#f2eadb]">
-                      🏆 อันดับย่าน & มหาวิทยาลัยที่มีคนรอมากที่สุด
+                      👥 จัดการบัญชีผู้ใช้ทั้งหมด ({users.length} รายการ)
                     </h2>
                     <p className="text-xs text-[#a69d90]">
-                      ใช้พิจารณาเปิดตัวระบบแรกตามแผน &quot;ย่านเดียว + มอเดียว&quot;
+                      ค้นหาด้วยชื่อเล่น, นามแฝง Space, อีเมล, หรือ UUID · พร้อมปุ่มลัดเติมเหรียญ
+                      Rukan Coin, ตั้งระดับ Pass, ปลดล็อกยืนยันตัวตน, และระงับ/ปลดแบนในคลิกเดียว
                     </p>
                   </div>
-                  <button
-                    onClick={() => setActiveTab('waitlist')}
-                    className="text-xs font-semibold text-[#d6b36a] hover:underline"
-                  >
-                    ดูรายชื่อทั้งหมด →
-                  </button>
-                </div>
 
-                {stats?.by_area && stats.by_area.length > 0 ? (
-                  <div className="space-y-4">
-                    {stats.by_area.map((item, idx) => {
-                      const total = counts?.waitlist_total || 1;
-                      const percentage = Math.round((item.count / total) * 100);
-                      return (
-                        <div key={item.area} className="space-y-1.5">
-                          <div className="flex justify-between text-xs font-medium">
-                            <span className="text-[#f2eadb]">
-                              <span className="font-bold text-[#d6b36a] mr-2">#{idx + 1}</span>
-                              {item.area}
-                            </span>
-                            <span className="text-[#a69d90]">
-                              {item.count} คน ({percentage}%)
-                            </span>
-                          </div>
-                          <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#25221f]">
-                            <div
-                              className="h-full rounded-full bg-gradient-to-r from-[#e9a9bf] to-[#d6b36a]"
-                              style={{ width: `${Math.max(percentage, 5)}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="py-8 text-center text-sm text-[#a69d90]">
-                    ยังไม่มีข้อมูลการลงชื่อรอใช้
-                  </p>
-                )}
-              </div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <input
+                      type="text"
+                      placeholder="🔍 ค้นหาชื่อ, นามแฝง, อีเมล, UUID..."
+                      value={searchUsers}
+                      onChange={(e) => {
+                        setSearchUsers(e.target.value);
+                        void loadUsers(e.target.value, filterUserTier, filterUserState);
+                      }}
+                      className="w-64 rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                    />
 
-              {/* Age Band & Demographics */}
-              <div className="space-y-6">
-                <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
-                  <h3 className="text-sm font-bold text-[#f2eadb] mb-4">🎂 สัดส่วนช่วงอายุ</h3>
-                  <div className="space-y-3">
-                    {(stats?.by_age_band ?? []).map((age) => (
-                      <div
-                        key={age.age_band}
-                        className="flex items-center justify-between rounded-xl bg-[#25221f] px-3.5 py-2 text-xs"
-                      >
-                        <span className="text-[#f2eadb]">{age.age_band}</span>
-                        <span className="font-bold text-[#d6b36a]">{age.count} คน</span>
-                      </div>
-                    ))}
+                    <select
+                      value={filterUserTier}
+                      onChange={(e) => {
+                        const v = e.target.value as 'all' | 'free' | 'gold' | 'premium';
+                        setFilterUserTier(v);
+                        void loadUsers(searchUsers, v, filterUserState);
+                      }}
+                      className="rounded-full border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs font-semibold text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                    >
+                      <option value="all">ทุก Pass (All Tiers)</option>
+                      <option value="free">🌱 Free</option>
+                      <option value="gold">🥇 Gold Pass</option>
+                      <option value="premium">💎 Premium Pass</option>
+                    </select>
+
+                    <select
+                      value={filterUserState}
+                      onChange={(e) => {
+                        const v = e.target.value as 'all' | 'active' | 'suspended' | 'banned';
+                        setFilterUserState(v);
+                        void loadUsers(searchUsers, filterUserTier, v);
+                      }}
+                      className="rounded-full border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs font-semibold text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                    >
+                      <option value="all">ทุกสถานะ (All States)</option>
+                      <option value="active">🟢 ปกติ (Active)</option>
+                      <option value="suspended">🟡 ระงับชั่วคราว (Suspended)</option>
+                      <option value="banned">🔴 แบนถาวร (Banned)</option>
+                    </select>
+
+                    <button
+                      onClick={() => void loadUsers()}
+                      disabled={loadingUsers}
+                      className="rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs font-semibold text-[#f2eadb] hover:border-[#d6b36a] transition disabled:opacity-50"
+                    >
+                      {loadingUsers ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
+                    </button>
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6">
-                  <h3 className="text-sm font-bold text-[#f2eadb] mb-4">🌐 ภาษาที่ใช้สมัคร</h3>
-                  <div className="flex gap-4">
-                    {(stats?.by_locale ?? []).map((loc) => (
-                      <div
-                        key={loc.locale}
-                        className="flex-1 rounded-2xl bg-[#25221f] p-4 text-center"
-                      >
-                        <span className="text-xs text-[#a69d90] uppercase">
-                          {loc.locale === 'th' ? '🇹🇭 ภาษาไทย' : '🇬🇧 English'}
-                        </span>
-                        <p className="mt-1 text-xl font-extrabold text-[#f2eadb]">{loc.count}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: จัดการผู้ใช้ (Users) */}
-        {activeTab === 'users' && (
-          <div className="space-y-6">
-            {/* Header + Filters */}
-            <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-[#f2eadb]">
-                    👥 จัดการบัญชีผู้ใช้ทั้งหมด ({users.length} รายการ)
-                  </h2>
-                  <p className="text-xs text-[#a69d90]">
-                    ค้นหาด้วยชื่อเล่น, นามแฝง Space, อีเมล, หรือ UUID · พร้อมปุ่มลัดเติมเหรียญ Rukan
-                    Coin, ตั้งระดับ Pass, ปลดล็อกยืนยันตัวตน, และระงับ/ปลดแบนในคลิกเดียว
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <input
-                    type="text"
-                    placeholder="🔍 ค้นหาชื่อ, นามแฝง, อีเมล, UUID..."
-                    value={searchUsers}
-                    onChange={(e) => {
-                      setSearchUsers(e.target.value);
-                      void loadUsers(e.target.value, filterUserTier, filterUserState);
-                    }}
-                    className="w-64 rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                  />
-
-                  <select
-                    value={filterUserTier}
-                    onChange={(e) => {
-                      const v = e.target.value as 'all' | 'free' | 'gold' | 'premium';
-                      setFilterUserTier(v);
-                      void loadUsers(searchUsers, v, filterUserState);
-                    }}
-                    className="rounded-full border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs font-semibold text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                  >
-                    <option value="all">ทุก Pass (All Tiers)</option>
-                    <option value="free">🌱 Free</option>
-                    <option value="gold">🥇 Gold Pass</option>
-                    <option value="premium">💎 Premium Pass</option>
-                  </select>
-
-                  <select
-                    value={filterUserState}
-                    onChange={(e) => {
-                      const v = e.target.value as 'all' | 'active' | 'suspended' | 'banned';
-                      setFilterUserState(v);
-                      void loadUsers(searchUsers, filterUserTier, v);
-                    }}
-                    className="rounded-full border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs font-semibold text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                  >
-                    <option value="all">ทุกสถานะ (All States)</option>
-                    <option value="active">🟢 ปกติ (Active)</option>
-                    <option value="suspended">🟡 ระงับชั่วคราว (Suspended)</option>
-                    <option value="banned">🔴 แบนถาวร (Banned)</option>
-                  </select>
-
-                  <button
-                    onClick={() => void loadUsers()}
-                    disabled={loadingUsers}
-                    className="rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs font-semibold text-[#f2eadb] hover:border-[#d6b36a] transition disabled:opacity-50"
-                  >
-                    {loadingUsers ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Users Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase">
-                      <th className="py-3 px-3">ผู้ใช้ / นามแฝง Space</th>
-                      <th className="py-3 px-3">อีเมล & UUID</th>
-                      <th className="py-3 px-3">ยืนยันตัวตน</th>
-                      <th className="py-3 px-3">ระดับ Pass</th>
-                      <th className="py-3 px-3">เหรียญ Rukan Coin</th>
-                      <th className="py-3 px-3">สถานะบัญชี</th>
-                      <th className="py-3 px-3 text-right">จัดการด่วน (Quick Actions)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#2a2724]">
-                    {users.map((u) => {
-                      const isBusy = busyUserId === u.user_id;
-                      return (
-                        <tr
-                          key={u.user_id}
-                          className="hover:bg-[#25221f]/50 transition align-middle"
-                        >
-                          {/* 1. ชื่อ + นามแฝง */}
-                          <td className="py-3.5 px-3">
-                            <div className="flex items-center gap-2.5">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2a2419] font-bold text-[#d6b36a]">
-                                {u.display_name.slice(0, 1).toUpperCase()}
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-bold text-sm text-[#f2eadb]">
-                                    {u.display_name}
-                                  </span>
-                                  {u.is_moderator && (
-                                    <span className="rounded-full bg-[#d6b36a]/20 px-2 py-0.5 text-[10px] font-bold text-[#d6b36a]">
-                                      ADMIN
+                {/* Users Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase">
+                        <th className="py-3 px-3">ผู้ใช้ / นามแฝง Space</th>
+                        <th className="py-3 px-3">อีเมล & UUID</th>
+                        <th className="py-3 px-3">ยืนยันตัวตน</th>
+                        <th className="py-3 px-3">ระดับ Pass</th>
+                        <th className="py-3 px-3">เหรียญ Rukan Coin</th>
+                        <th className="py-3 px-3">สถานะบัญชี</th>
+                        <th className="py-3 px-3 text-right">จัดการด่วน (Quick Actions)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#2a2724]">
+                      {users.map((u) => {
+                        const isBusy = busyUserId === u.user_id;
+                        return (
+                          <tr
+                            key={u.user_id}
+                            className="hover:bg-[#25221f]/50 transition align-middle"
+                          >
+                            {/* 1. ชื่อ + นามแฝง */}
+                            <td className="py-3.5 px-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2a2419] font-bold text-[#d6b36a]">
+                                  {u.display_name.slice(0, 1).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-sm text-[#f2eadb]">
+                                      {u.display_name}
                                     </span>
-                                  )}
-                                </div>
-                                <div className="text-[11px] text-[#a69d90]">
-                                  🫧 {u.alias}{' '}
-                                  {u.area_id ? (
-                                    <span className="text-[#d6b36a]">· 📍 {u.area_id}</span>
-                                  ) : null}
+                                    {u.is_moderator && (
+                                      <span className="rounded-full bg-[#d6b36a]/20 px-2 py-0.5 text-[10px] font-bold text-[#d6b36a]">
+                                        ADMIN
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-[#a69d90]">
+                                    🫧 {u.alias}{' '}
+                                    {u.area_id ? (
+                                      <span className="text-[#d6b36a]">· 📍 {u.area_id}</span>
+                                    ) : null}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* 2. อีเมล & UUID */}
-                          <td className="py-3.5 px-3">
-                            <div className="font-medium text-[#f2eadb]">{u.email ?? '—'}</div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                void navigator.clipboard.writeText(u.user_id);
-                                setTargetUserId(u.user_id);
-                                setActionMessage(
-                                  `📋 คัดลอก UUID ของ ${u.display_name} (${u.user_id}) แล้ว`,
-                                );
-                              }}
-                              className="mt-0.5 font-mono text-[11px] text-[#a69d90] hover:text-[#d6b36a] transition"
-                              title="คลิกเพื่อคัดลอก UUID"
-                            >
-                              {u.user_id.slice(0, 8)}…{u.user_id.slice(-4)} 📋
-                            </button>
-                          </td>
-
-                          {/* 3. ระดับยืนยันตัวตน (ปรับเปลี่ยนได้ทันที) */}
-                          <td className="py-3.5 px-3">
-                            <select
-                              disabled={isBusy}
-                              value={u.verification_level}
-                              onChange={(e) =>
-                                void handleQuickSetVerification(
-                                  u.user_id,
-                                  e.target.value as VerificationLevel,
-                                )
-                              }
-                              className={`rounded-full border px-2.5 py-1 text-xs font-bold outline-none transition ${
-                                u.verification_level === 'selfie'
-                                  ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
-                                  : u.verification_level === 'phone'
-                                    ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
-                                    : 'border-[#2a2724] bg-[#25221f] text-[#a69d90]'
-                              }`}
-                            >
-                              <option value="none">⚪ none (ยังไม่ยืนยัน)</option>
-                              <option value="phone">📱 phone (เบอร์โทร)</option>
-                              <option value="selfie">🛡️ selfie (ครบทุกขั้น)</option>
-                            </select>
-                          </td>
-
-                          {/* 4. ระดับ Pass (สลับ Free / Gold / Premium ได้ทันที) */}
-                          <td className="py-3.5 px-3">
-                            <select
-                              disabled={isBusy}
-                              value={u.tier}
-                              onChange={(e) =>
-                                void handleQuickSetUserTier(
-                                  u.user_id,
-                                  e.target.value as SubscriptionTier,
-                                  30,
-                                )
-                              }
-                              className={`rounded-full border px-2.5 py-1 text-xs font-bold outline-none transition ${
-                                u.tier === 'premium'
-                                  ? 'border-[#e9a9bf]/50 bg-[#e9a9bf]/20 text-[#e9a9bf]'
-                                  : u.tier === 'gold'
-                                    ? 'border-[#d6b36a]/50 bg-[#d6b36a]/20 text-[#d6b36a]'
-                                    : 'border-[#2a2724] bg-[#25221f] text-[#a69d90]'
-                              }`}
-                            >
-                              <option value="free">🌱 Free</option>
-                              <option value="gold">🥇 Gold (30d)</option>
-                              <option value="premium">💎 Premium (30d)</option>
-                            </select>
-                          </td>
-
-                          {/* 5. ยอดเหรียญ Rukan Coin + ปุ่มเติมด่วน */}
-                          <td className="py-3.5 px-3">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-sm text-[#d6b36a]">
-                                {u.coin_balance.toLocaleString()} 🪙
-                              </span>
+                            {/* 2. อีเมล & UUID */}
+                            <td className="py-3.5 px-3">
+                              <div className="font-medium text-[#f2eadb]">{u.email ?? '—'}</div>
                               <button
                                 type="button"
+                                onClick={() => {
+                                  void navigator.clipboard.writeText(u.user_id);
+                                  setTargetUserId(u.user_id);
+                                  setActionMessage(
+                                    `📋 คัดลอก UUID ของ ${u.display_name} (${u.user_id}) แล้ว`,
+                                  );
+                                }}
+                                className="mt-0.5 font-mono text-[11px] text-[#a69d90] hover:text-[#d6b36a] transition"
+                                title="คลิกเพื่อคัดลอก UUID"
+                              >
+                                {u.user_id.slice(0, 8)}…{u.user_id.slice(-4)} 📋
+                              </button>
+                            </td>
+
+                            {/* 3. ระดับยืนยันตัวตน (ปรับเปลี่ยนได้ทันที) */}
+                            <td className="py-3.5 px-3">
+                              <select
                                 disabled={isBusy}
-                                onClick={() =>
-                                  void handleQuickGrantUserCoins(
+                                value={u.verification_level}
+                                onChange={(e) =>
+                                  void handleQuickSetVerification(
                                     u.user_id,
-                                    500,
-                                    'Quick grant +500 coins from Users tab',
+                                    e.target.value as VerificationLevel,
                                   )
                                 }
-                                className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[11px] font-bold text-[#d6b36a] hover:bg-[#d6b36a] hover:text-[#0f0e0d] transition disabled:opacity-50"
+                                className={`rounded-full border px-2.5 py-1 text-xs font-bold outline-none transition ${
+                                  u.verification_level === 'selfie'
+                                    ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                                    : u.verification_level === 'phone'
+                                      ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
+                                      : 'border-[#2a2724] bg-[#25221f] text-[#a69d90]'
+                                }`}
                               >
-                                +500
-                              </button>
-                              <button
-                                type="button"
+                                <option value="none">⚪ none (ยังไม่ยืนยัน)</option>
+                                <option value="phone">📱 phone (เบอร์โทร)</option>
+                                <option value="selfie">🛡️ selfie (ครบทุกขั้น)</option>
+                              </select>
+                            </td>
+
+                            {/* 4. ระดับ Pass (สลับ Free / Gold / Premium ได้ทันที) */}
+                            <td className="py-3.5 px-3">
+                              <select
                                 disabled={isBusy}
-                                onClick={() =>
-                                  void handleQuickGrantUserCoins(
+                                value={u.tier}
+                                onChange={(e) =>
+                                  void handleQuickSetUserTier(
                                     u.user_id,
-                                    2500,
-                                    'Quick grant +2500 coins from Users tab',
+                                    e.target.value as SubscriptionTier,
+                                    30,
                                   )
                                 }
-                                className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[11px] font-bold text-[#d6b36a] hover:bg-[#d6b36a] hover:text-[#0f0e0d] transition disabled:opacity-50"
+                                className={`rounded-full border px-2.5 py-1 text-xs font-bold outline-none transition ${
+                                  u.tier === 'premium'
+                                    ? 'border-[#e9a9bf]/50 bg-[#e9a9bf]/20 text-[#e9a9bf]'
+                                    : u.tier === 'gold'
+                                      ? 'border-[#d6b36a]/50 bg-[#d6b36a]/20 text-[#d6b36a]'
+                                      : 'border-[#2a2724] bg-[#25221f] text-[#a69d90]'
+                                }`}
                               >
-                                +2.5k
-                              </button>
-                            </div>
-                          </td>
+                                <option value="free">🌱 Free</option>
+                                <option value="gold">🥇 Gold (30d)</option>
+                                <option value="premium">💎 Premium (30d)</option>
+                              </select>
+                            </td>
 
-                          {/* 6. สถานะบัญชี */}
-                          <td className="py-3.5 px-3">
-                            <span
-                              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                                u.state === 'active'
-                                  ? 'bg-emerald-500/15 text-emerald-300'
-                                  : u.state === 'suspended'
-                                    ? 'bg-amber-500/20 text-amber-300'
-                                    : 'bg-red-500/20 text-red-300'
-                              }`}
-                            >
-                              {u.state === 'active'
-                                ? '🟢 Active'
-                                : u.state === 'suspended'
-                                  ? '🟡 Suspended'
-                                  : '🔴 Banned'}
-                            </span>
-                          </td>
-
-                          {/* 7. ปุ่มจัดการด่วน */}
-                          <td className="py-3.5 px-3 text-right">
-                            <div className="inline-flex items-center gap-1.5">
-                              {u.state === 'active' ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    disabled={isBusy}
-                                    onClick={() =>
-                                      void handleQuickUserStateAction(u.user_id, 'suspend', 7)
-                                    }
-                                    className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/30 transition disabled:opacity-50"
-                                  >
-                                    พัก 7 วัน
-                                  </button>
-                                  <button
-                                    type="button"
-                                    disabled={isBusy}
-                                    onClick={() =>
-                                      void handleQuickUserStateAction(u.user_id, 'ban')
-                                    }
-                                    className="rounded-full bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-300 hover:bg-red-500/30 transition disabled:opacity-50"
-                                  >
-                                    แบน
-                                  </button>
-                                </>
-                              ) : (
+                            {/* 5. ยอดเหรียญ Rukan Coin + ปุ่มเติมด่วน */}
+                            <td className="py-3.5 px-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-[#d6b36a]">
+                                  {u.coin_balance.toLocaleString()} 🪙
+                                </span>
                                 <button
                                   type="button"
                                   disabled={isBusy}
                                   onClick={() =>
-                                    void handleQuickUserStateAction(u.user_id, 'unban')
+                                    void handleQuickGrantUserCoins(
+                                      u.user_id,
+                                      500,
+                                      'Quick grant +500 coins from Users tab',
+                                    )
                                   }
-                                  className="rounded-full bg-emerald-500/20 px-3 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/30 transition disabled:opacity-50"
+                                  className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[11px] font-bold text-[#d6b36a] hover:bg-[#d6b36a] hover:text-[#0f0e0d] transition disabled:opacity-50"
                                 >
-                                  ✓ ปลดระงับ
+                                  +500
                                 </button>
-                              )}
-                            </div>
+                                <button
+                                  type="button"
+                                  disabled={isBusy}
+                                  onClick={() =>
+                                    void handleQuickGrantUserCoins(
+                                      u.user_id,
+                                      2500,
+                                      'Quick grant +2500 coins from Users tab',
+                                    )
+                                  }
+                                  className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[11px] font-bold text-[#d6b36a] hover:bg-[#d6b36a] hover:text-[#0f0e0d] transition disabled:opacity-50"
+                                >
+                                  +2.5k
+                                </button>
+                              </div>
+                            </td>
+
+                            {/* 6. สถานะบัญชี */}
+                            <td className="py-3.5 px-3">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                                  u.state === 'active'
+                                    ? 'bg-emerald-500/15 text-emerald-300'
+                                    : u.state === 'suspended'
+                                      ? 'bg-amber-500/20 text-amber-300'
+                                      : 'bg-red-500/20 text-red-300'
+                                }`}
+                              >
+                                {u.state === 'active'
+                                  ? '🟢 Active'
+                                  : u.state === 'suspended'
+                                    ? '🟡 Suspended'
+                                    : '🔴 Banned'}
+                              </span>
+                            </td>
+
+                            {/* 7. ปุ่มจัดการด่วน */}
+                            <td className="py-3.5 px-3 text-right">
+                              <div className="inline-flex items-center gap-1.5">
+                                {u.state === 'active' ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={isBusy}
+                                      onClick={() =>
+                                        void handleQuickUserStateAction(u.user_id, 'suspend', 7)
+                                      }
+                                      className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/30 transition disabled:opacity-50"
+                                    >
+                                      พัก 7 วัน
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={isBusy}
+                                      onClick={() =>
+                                        void handleQuickUserStateAction(u.user_id, 'ban')
+                                      }
+                                      className="rounded-full bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-300 hover:bg-red-500/30 transition disabled:opacity-50"
+                                    >
+                                      แบน
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={isBusy}
+                                    onClick={() =>
+                                      void handleQuickUserStateAction(u.user_id, 'unban')
+                                    }
+                                    className="rounded-full bg-emerald-500/20 px-3 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/30 transition disabled:opacity-50"
+                                  >
+                                    ✓ ปลดระงับ
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {users.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-sm text-[#a69d90]">
+                            {loadingUsers
+                              ? 'กำลังโหลดรายชื่อผู้ใช้...'
+                              : 'ไม่พบผู้ใช้ที่ตรงกับเงื่อนไขการค้นหา'}
                           </td>
                         </tr>
-                      );
-                    })}
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
-                    {users.length === 0 && (
+          {/* TAB 2: รายชื่อ Waitlist */}
+          {activeTab === 'waitlist' && (
+            <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-[#f2eadb]">
+                    📋 รายชื่อผู้ลงชื่อรอใช้งาน ({waitlistRows.length} รายการล่าสุด)
+                  </h2>
+                  <p className="text-xs text-[#a69d90]">
+                    เก็บใน schema private ตามมาตรฐานความปลอดภัย PDPA
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    placeholder="ค้นหาอีเมล หรือย่าน..."
+                    value={searchWaitlist}
+                    onChange={(e) => {
+                      setSearchWaitlist(e.target.value);
+                      loadWaitlist(e.target.value);
+                    }}
+                    className="rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                  />
+                  <button
+                    onClick={exportWaitlistCSV}
+                    className="rounded-full bg-[#d6b36a] px-4 py-2 text-xs font-bold text-[#0f0e0d] transition hover:bg-[#e4c278]"
+                  >
+                    📥 Export CSV
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase tracking-wider">
+                      <th className="py-3 px-3">อีเมล</th>
+                      <th className="py-3 px-3">ย่าน / มหาลัย</th>
+                      <th className="py-3 px-3">อายุ</th>
+                      <th className="py-3 px-3">สิ่งที่มองหา</th>
+                      <th className="py-3 px-3">ภาษา</th>
+                      <th className="py-3 px-3">เวลาที่ลงชื่อ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#2a2724]">
+                    {waitlistRows.map((row) => (
+                      <tr key={row.id} className="hover:bg-[#25221f]/50 transition">
+                        <td className="py-3 px-3 font-mono font-medium text-[#f2eadb]">
+                          {row.email}
+                        </td>
+                        <td className="py-3 px-3 text-[#f2eadb]">{row.area}</td>
+                        <td className="py-3 px-3 text-[#a69d90]">{row.age_band ?? '—'}</td>
+                        <td className="py-3 px-3">
+                          <div className="flex flex-wrap gap-1">
+                            {row.intents.map((it) => (
+                              <span
+                                key={it}
+                                className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[10px] text-[#d6b36a]"
+                              >
+                                {it}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 uppercase text-[#a69d90]">{row.locale}</td>
+                        <td className="py-3 px-3 text-[#a69d90]">
+                          {new Date(row.created_at).toLocaleString('th-TH')}
+                        </td>
+                      </tr>
+                    ))}
+                    {waitlistRows.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="py-12 text-center text-sm text-[#a69d90]">
-                          {loadingUsers
-                            ? 'กำลังโหลดรายชื่อผู้ใช้...'
-                            : 'ไม่พบผู้ใช้ที่ตรงกับเงื่อนไขการค้นหา'}
+                        <td colSpan={6} className="py-8 text-center text-[#a69d90]">
+                          ไม่พบข้อมูล
                         </td>
                       </tr>
                     )}
@@ -1122,854 +1255,780 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* TAB 2: รายชื่อ Waitlist */}
-        {activeTab === 'waitlist' && (
-          <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-[#f2eadb]">
-                  📋 รายชื่อผู้ลงชื่อรอใช้งาน ({waitlistRows.length} รายการล่าสุด)
-                </h2>
-                <p className="text-xs text-[#a69d90]">
-                  เก็บใน schema private ตามมาตรฐานความปลอดภัย PDPA
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="ค้นหาอีเมล หรือย่าน..."
-                  value={searchWaitlist}
-                  onChange={(e) => {
-                    setSearchWaitlist(e.target.value);
-                    loadWaitlist(e.target.value);
-                  }}
-                  className="rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                />
-                <button
-                  onClick={exportWaitlistCSV}
-                  className="rounded-full bg-[#d6b36a] px-4 py-2 text-xs font-bold text-[#0f0e0d] transition hover:bg-[#e4c278]"
-                >
-                  📥 Export CSV
-                </button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase tracking-wider">
-                    <th className="py-3 px-3">อีเมล</th>
-                    <th className="py-3 px-3">ย่าน / มหาลัย</th>
-                    <th className="py-3 px-3">อายุ</th>
-                    <th className="py-3 px-3">สิ่งที่มองหา</th>
-                    <th className="py-3 px-3">ภาษา</th>
-                    <th className="py-3 px-3">เวลาที่ลงชื่อ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#2a2724]">
-                  {waitlistRows.map((row) => (
-                    <tr key={row.id} className="hover:bg-[#25221f]/50 transition">
-                      <td className="py-3 px-3 font-mono font-medium text-[#f2eadb]">
-                        {row.email}
-                      </td>
-                      <td className="py-3 px-3 text-[#f2eadb]">{row.area}</td>
-                      <td className="py-3 px-3 text-[#a69d90]">{row.age_band ?? '—'}</td>
-                      <td className="py-3 px-3">
-                        <div className="flex flex-wrap gap-1">
-                          {row.intents.map((it) => (
-                            <span
-                              key={it}
-                              className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[10px] text-[#d6b36a]"
-                            >
-                              {it}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 uppercase text-[#a69d90]">{row.locale}</td>
-                      <td className="py-3 px-3 text-[#a69d90]">
-                        {new Date(row.created_at).toLocaleString('th-TH')}
-                      </td>
-                    </tr>
-                  ))}
-                  {waitlistRows.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-[#a69d90]">
-                        ไม่พบข้อมูล
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB: จัดการ 3 Passes & Rukan Coin (Free | Gold | Premium + AI) */}
-        {activeTab === 'plans' && (
-          <div className="space-y-8">
-            {/* Header info banner */}
-            <div className="rounded-3xl border border-[#d6b36a]/30 bg-gradient-to-r from-[#2a2419] to-[#1b1917] p-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">💎</span>
-                    <h2 className="text-lg font-bold text-[#f2eadb]">
-                      จัดการ 3 Passes & เหรียญ Rukan Coin (Free · Gold · Premium + AI)
-                    </h2>
+          {/* TAB: จัดการ 3 Passes & Rukan Coin (Free | Gold | Premium + AI) */}
+          {activeTab === 'plans' && (
+            <div className="space-y-8">
+              {/* Header info banner */}
+              <div className="rounded-3xl border border-[#d6b36a]/30 bg-gradient-to-r from-[#2a2419] to-[#1b1917] p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">💎</span>
+                      <h2 className="text-lg font-bold text-[#f2eadb]">
+                        จัดการ 3 Passes & เหรียญ Rukan Coin (Free · Gold · Premium + AI)
+                      </h2>
+                    </div>
+                    <p className="mt-1 text-xs text-[#a69d90] max-w-3xl">
+                      ปรับแต่งโควตา ราคาแลกเหรียญ Rukan Coin (7 วัน / 30 วัน) และสิทธิ์ผู้ช่วย AI
+                      ของทั้ง 3 ระดับ: <b className="text-[#f2eadb]">🌱 ผู้ใช้ทั่วไป (Free)</b> ·{' '}
+                      <b className="text-[#d6b36a]">🥇 Gold Pass</b> ·{' '}
+                      <b className="text-[#e9a9bf]">💎 Premium Pass (VIP + AI ส่วนตัว)</b> แบบ
+                      Real-time
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-[#a69d90] max-w-3xl">
-                    ปรับแต่งโควตา ราคาแลกเหรียญ Rukan Coin (7 วัน / 30 วัน) และสิทธิ์ผู้ช่วย AI
-                    ของทั้ง 3 ระดับ: <b className="text-[#f2eadb]">🌱 ผู้ใช้ทั่วไป (Free)</b> ·{' '}
-                    <b className="text-[#d6b36a]">🥇 Gold Pass</b> ·{' '}
-                    <b className="text-[#e9a9bf]">💎 Premium Pass (VIP + AI ส่วนตัว)</b> แบบ
-                    Real-time
-                  </p>
-                </div>
-                <button
-                  onClick={loadTierConfigs}
-                  className="self-start md:self-auto rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs font-semibold text-[#f2eadb] hover:border-[#d6b36a] transition"
-                >
-                  🔄 รีเฟรชข้อมูล
-                </button>
-              </div>
-            </div>
-
-            {/* 3-Column Configuration Cards: Free | Gold | Premium */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {(['free', 'gold', 'premium'] as const).map((tierKey) => {
-                const cfg = tierConfigs.find((t) => t.tier === tierKey);
-                if (!cfg) return null;
-
-                const meta =
-                  tierKey === 'free'
-                    ? {
-                        icon: '🌱',
-                        subtitle: 'เริ่มต้นฟรีสำหรับสมาชิกทุกคน',
-                        borderClass: 'border-[#2a2724]',
-                        titleClass: 'text-[#f2eadb]',
-                        badgeClass: 'bg-[#25221f] text-[#a69d90]',
-                        btnClass:
-                          'bg-[#25221f] text-[#f2eadb] hover:bg-[#2a2724] border border-[#2a2724]',
-                      }
-                    : tierKey === 'gold'
-                      ? {
-                          icon: '🥇',
-                          subtitle: 'สายป๊อป โอกาสแมตช์สูง',
-                          borderClass:
-                            'border-[#d6b36a]/50 shadow-[0_0_26px_rgba(214,179,106,0.08)]',
-                          titleClass: 'text-[#d6b36a]',
-                          badgeClass: 'bg-[#2a2419] text-[#d6b36a]',
-                          btnClass: 'bg-[#d6b36a] text-[#0f0e0d] hover:bg-[#e4c278]',
-                        }
-                      : {
-                          icon: '💎',
-                          subtitle: 'VIP + ผู้ช่วย AI ส่วนตัวไม่อั้น',
-                          borderClass:
-                            'border-[#e9a9bf]/60 shadow-[0_0_32px_rgba(233,169,191,0.12)]',
-                          titleClass: 'text-[#e9a9bf]',
-                          badgeClass: 'bg-[#e9a9bf]/15 text-[#e9a9bf]',
-                          btnClass: 'bg-[#e9a9bf] text-[#0f0e0d] hover:bg-[#f2bdd0]',
-                        };
-
-                return (
-                  <div
-                    key={tierKey}
-                    className={`rounded-3xl border ${meta.borderClass} bg-[#1b1917] p-6 space-y-6 flex flex-col justify-between`}
+                  <button
+                    onClick={loadTierConfigs}
+                    className="self-start md:self-auto rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs font-semibold text-[#f2eadb] hover:border-[#d6b36a] transition"
                   >
-                    <div>
-                      {/* Card Header */}
-                      <div className="flex items-start justify-between border-b border-[#2a2724] pb-4 gap-2">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#25221f] text-lg">
-                            {meta.icon}
-                          </span>
-                          <div>
-                            <h3 className={`font-display font-bold text-sm ${meta.titleClass}`}>
-                              {cfg.display_name}
-                            </h3>
-                            <span className="text-[11px] text-[#a69d90]">{meta.subtitle}</span>
+                    🔄 รีเฟรชข้อมูล
+                  </button>
+                </div>
+              </div>
+
+              {/* 3-Column Configuration Cards: Free | Gold | Premium */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {(['free', 'gold', 'premium'] as const).map((tierKey) => {
+                  const cfg = tierConfigs.find((t) => t.tier === tierKey);
+                  if (!cfg) return null;
+
+                  const meta =
+                    tierKey === 'free'
+                      ? {
+                          icon: '🌱',
+                          subtitle: 'เริ่มต้นฟรีสำหรับสมาชิกทุกคน',
+                          borderClass: 'border-[#2a2724]',
+                          titleClass: 'text-[#f2eadb]',
+                          badgeClass: 'bg-[#25221f] text-[#a69d90]',
+                          btnClass:
+                            'bg-[#25221f] text-[#f2eadb] hover:bg-[#2a2724] border border-[#2a2724]',
+                        }
+                      : tierKey === 'gold'
+                        ? {
+                            icon: '🥇',
+                            subtitle: 'สายป๊อป โอกาสแมตช์สูง',
+                            borderClass:
+                              'border-[#d6b36a]/50 shadow-[0_0_26px_rgba(214,179,106,0.08)]',
+                            titleClass: 'text-[#d6b36a]',
+                            badgeClass: 'bg-[#2a2419] text-[#d6b36a]',
+                            btnClass: 'bg-[#d6b36a] text-[#0f0e0d] hover:bg-[#e4c278]',
+                          }
+                        : {
+                            icon: '💎',
+                            subtitle: 'VIP + ผู้ช่วย AI ส่วนตัวไม่อั้น',
+                            borderClass:
+                              'border-[#e9a9bf]/60 shadow-[0_0_32px_rgba(233,169,191,0.12)]',
+                            titleClass: 'text-[#e9a9bf]',
+                            badgeClass: 'bg-[#e9a9bf]/15 text-[#e9a9bf]',
+                            btnClass: 'bg-[#e9a9bf] text-[#0f0e0d] hover:bg-[#f2bdd0]',
+                          };
+
+                  return (
+                    <div
+                      key={tierKey}
+                      className={`rounded-3xl border ${meta.borderClass} bg-[#1b1917] p-6 space-y-6 flex flex-col justify-between`}
+                    >
+                      <div>
+                        {/* Card Header */}
+                        <div className="flex items-start justify-between border-b border-[#2a2724] pb-4 gap-2">
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#25221f] text-lg">
+                              {meta.icon}
+                            </span>
+                            <div>
+                              <h3 className={`font-display font-bold text-sm ${meta.titleClass}`}>
+                                {cfg.display_name}
+                              </h3>
+                              <span className="text-[11px] text-[#a69d90]">{meta.subtitle}</span>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span
+                              className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-bold ${meta.badgeClass}`}
+                            >
+                              {cfg.price_coins_monthly > 0
+                                ? `${cfg.price_coins_monthly.toLocaleString()} 🪙 / เดือน`
+                                : 'ฟรี (0 🪙)'}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <span
-                            className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-bold ${meta.badgeClass}`}
-                          >
-                            {cfg.price_coins_monthly > 0
-                              ? `${cfg.price_coins_monthly.toLocaleString()} 🪙 / เดือน`
-                              : 'ฟรี (0 🪙)'}
-                          </span>
-                        </div>
-                      </div>
 
-                      {/* Config Form Fields */}
-                      <div className="mt-5 space-y-3.5">
-                        <div>
-                          <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                            🏷️ ชื่อแพ็กเกจที่แสดง (Display Name)
-                          </label>
-                          <input
-                            type="text"
-                            value={cfg.display_name}
-                            onChange={(e) =>
-                              updateTierField(tierKey, 'display_name', e.target.value)
-                            }
-                            className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                          />
-                        </div>
+                        {/* Config Form Fields */}
+                        <div className="mt-5 space-y-3.5">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                              🏷️ ชื่อแพ็กเกจที่แสดง (Display Name)
+                            </label>
+                            <input
+                              type="text"
+                              value={cfg.display_name}
+                              onChange={(e) =>
+                                updateTierField(tierKey, 'display_name', e.target.value)
+                              }
+                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                            />
+                          </div>
 
-                        {tierKey !== 'free' && (
+                          {tierKey !== 'free' && (
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                                  🪙 ราคา 7 วัน (เหรียญ)
+                                </label>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={1000000}
+                                  value={cfg.price_coins_weekly}
+                                  onChange={(e) =>
+                                    updateTierField(
+                                      tierKey,
+                                      'price_coins_weekly',
+                                      Number(e.target.value),
+                                    )
+                                  }
+                                  className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#d6b36a] font-bold outline-none focus:border-[#d6b36a]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                                  🪙 ราคา 30 วัน (เหรียญ)
+                                </label>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={1000000}
+                                  value={cfg.price_coins_monthly}
+                                  onChange={(e) =>
+                                    updateTierField(
+                                      tierKey,
+                                      'price_coins_monthly',
+                                      Number(e.target.value),
+                                    )
+                                  }
+                                  className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#d6b36a] font-bold outline-none focus:border-[#d6b36a]"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {tierKey !== 'free' && (
+                            <div>
+                              <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                                💳 ราคาอ้างอิงรายเดือน (บาท / เดือน)
+                              </label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={99999}
+                                value={cfg.price_thb_monthly}
+                                onChange={(e) =>
+                                  updateTierField(
+                                    tierKey,
+                                    'price_thb_monthly',
+                                    Number(e.target.value),
+                                  )
+                                }
+                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                              />
+                            </div>
+                          )}
+
                           <div className="grid grid-cols-2 gap-2.5">
                             <div>
                               <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                                🪙 ราคา 7 วัน (เหรียญ)
+                                🎴 ปัดได้/รอบ (ใบ)
                               </label>
                               <input
                                 type="number"
-                                min={0}
-                                max={1000000}
-                                value={cfg.price_coins_weekly}
+                                min={1}
+                                max={200}
+                                value={cfg.swipe_batch_size}
                                 onChange={(e) =>
                                   updateTierField(
                                     tierKey,
-                                    'price_coins_weekly',
+                                    'swipe_batch_size',
                                     Number(e.target.value),
                                   )
                                 }
-                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#d6b36a] font-bold outline-none focus:border-[#d6b36a]"
+                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
                               />
                             </div>
                             <div>
                               <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                                🪙 ราคา 30 วัน (เหรียญ)
+                                ⏱️ รีรอบปัด (ชม.)
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={48}
+                                value={cfg.swipe_window_hours}
+                                onChange={(e) =>
+                                  updateTierField(
+                                    tierKey,
+                                    'swipe_window_hours',
+                                    Number(e.target.value),
+                                  )
+                                }
+                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                                🫧 Bubble (ฟอง/วัน)
                               </label>
                               <input
                                 type="number"
                                 min={0}
-                                max={1000000}
-                                value={cfg.price_coins_monthly}
+                                max={9999}
+                                value={cfg.daily_bubble_limit}
                                 onChange={(e) =>
                                   updateTierField(
                                     tierKey,
-                                    'price_coins_monthly',
+                                    'daily_bubble_limit',
                                     Number(e.target.value),
                                   )
                                 }
-                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#d6b36a] font-bold outline-none focus:border-[#d6b36a]"
+                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                                ✨ Golden Bubble/วัน
+                              </label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={cfg.daily_golden_bubbles}
+                                onChange={(e) =>
+                                  updateTierField(
+                                    tierKey,
+                                    'daily_golden_bubbles',
+                                    Number(e.target.value),
+                                  )
+                                }
+                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
                               />
                             </div>
                           </div>
-                        )}
 
-                        {tierKey !== 'free' && (
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                              💳 ราคาอ้างอิงรายเดือน (บาท / เดือน)
-                            </label>
-                            <input
-                              type="number"
-                              min={0}
-                              max={99999}
-                              value={cfg.price_thb_monthly}
-                              onChange={(e) =>
-                                updateTierField(
-                                  tierKey,
-                                  'price_thb_monthly',
-                                  Number(e.target.value),
-                                )
-                              }
-                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                            />
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                                ⏳ Match หมดอายุ (ชม.)
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={720}
+                                value={cfg.match_expiry_hours}
+                                onChange={(e) =>
+                                  updateTierField(
+                                    tierKey,
+                                    'match_expiry_hours',
+                                    Number(e.target.value),
+                                  )
+                                }
+                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
+                                🤖 ค่า AI ต่อครั้ง (🪙)
+                              </label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={10000}
+                                value={cfg.ai_coin_cost_per_use}
+                                onChange={(e) =>
+                                  updateTierField(
+                                    tierKey,
+                                    'ai_coin_cost_per_use',
+                                    Number(e.target.value),
+                                  )
+                                }
+                                className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#e9a9bf] font-bold outline-none focus:border-[#e9a9bf]"
+                              />
+                            </div>
                           </div>
-                        )}
 
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                              🎴 ปัดได้/รอบ (ใบ)
-                            </label>
-                            <input
-                              type="number"
-                              min={1}
-                              max={200}
-                              value={cfg.swipe_batch_size}
-                              onChange={(e) =>
-                                updateTierField(tierKey, 'swipe_batch_size', Number(e.target.value))
-                              }
-                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                              ⏱️ รีรอบปัด (ชม.)
-                            </label>
-                            <input
-                              type="number"
-                              min={1}
-                              max={48}
-                              value={cfg.swipe_window_hours}
-                              onChange={(e) =>
-                                updateTierField(
-                                  tierKey,
-                                  'swipe_window_hours',
-                                  Number(e.target.value),
-                                )
-                              }
-                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                            />
-                          </div>
-                        </div>
+                          {/* Feature Flags Toggles */}
+                          <div className="pt-2 space-y-2.5">
+                            <span className="block text-[11px] font-bold text-[#a69d90] uppercase tracking-wider">
+                              สิทธิ์การเข้าถึงฟีเจอร์ (Feature Flags)
+                            </span>
 
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                              🫧 Bubble (ฟอง/วัน)
-                            </label>
-                            <input
-                              type="number"
-                              min={0}
-                              max={9999}
-                              value={cfg.daily_bubble_limit}
-                              onChange={(e) =>
-                                updateTierField(
-                                  tierKey,
-                                  'daily_bubble_limit',
-                                  Number(e.target.value),
-                                )
-                              }
-                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                              ✨ Golden Bubble/วัน
-                            </label>
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={cfg.daily_golden_bubbles}
-                              onChange={(e) =>
-                                updateTierField(
-                                  tierKey,
-                                  'daily_golden_bubbles',
-                                  Number(e.target.value),
-                                )
-                              }
-                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                              ⏳ Match หมดอายุ (ชม.)
-                            </label>
-                            <input
-                              type="number"
-                              min={1}
-                              max={720}
-                              value={cfg.match_expiry_hours}
-                              onChange={(e) =>
-                                updateTierField(
-                                  tierKey,
-                                  'match_expiry_hours',
-                                  Number(e.target.value),
-                                )
-                              }
-                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] font-semibold text-[#a69d90] mb-1">
-                              🤖 ค่า AI ต่อครั้ง (🪙)
-                            </label>
-                            <input
-                              type="number"
-                              min={0}
-                              max={10000}
-                              value={cfg.ai_coin_cost_per_use}
-                              onChange={(e) =>
-                                updateTierField(
-                                  tierKey,
-                                  'ai_coin_cost_per_use',
-                                  Number(e.target.value),
-                                )
-                              }
-                              className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3 py-2 text-xs text-[#e9a9bf] font-bold outline-none focus:border-[#e9a9bf]"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Feature Flags Toggles */}
-                        <div className="pt-2 space-y-2.5">
-                          <span className="block text-[11px] font-bold text-[#a69d90] uppercase tracking-wider">
-                            สิทธิ์การเข้าถึงฟีเจอร์ (Feature Flags)
-                          </span>
-
-                          {[
-                            {
-                              key: 'allow_ai_assistant',
-                              label: '🤖 ผู้ช่วย AI ส่วนตัวฟรีไม่อั้น (AI Wingman)',
-                              desc: 'ช่วยคิดประโยคทัก Space & แนะนำคำตอบแชทฟรี',
-                            },
-                            {
-                              key: 'allow_rewind',
-                              label: '⏪ ย้อนการ์ดที่ปัดผ่าน (Rewind)',
-                              desc: 'กดย้อนกลับมาดูการ์ดที่เผลอปัดซ้าย',
-                            },
-                            {
-                              key: 'allow_see_likes',
-                              label: '👀 ดูคนที่กดถูกใจเราก่อน (See Who Liked)',
-                              desc: 'เปิดดูคนที่กดสนใจเราได้ทั้งหมด',
-                            },
-                            {
-                              key: 'allow_spotlight_post',
-                              label: '📌 ปักหมุดโพสต์ Spotlight ใน Space',
-                              desc: 'ดันโพสต์ขึ้นโดดเด่นในฟีด',
-                            },
-                            {
-                              key: 'allow_advanced_filters',
-                              label: '🎯 ตัวกรองค้นหาขั้นสูง',
-                              desc: 'กรองย่าน / ความสนใจตรงกันได้ละเอียดขึ้น',
-                            },
-                          ].map((f) => {
-                            const val = Boolean(cfg[f.key as keyof TierConfig]);
-                            return (
-                              <div
-                                key={f.key}
-                                className="flex items-center justify-between rounded-xl bg-[#25221f] p-2.5 gap-2"
-                              >
-                                <div>
-                                  <p className="text-xs font-semibold text-[#f2eadb]">{f.label}</p>
-                                  <p className="text-[10px] text-[#a69d90]">{f.desc}</p>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    updateTierField(
-                                      tierKey,
-                                      f.key as keyof TierConfig,
-                                      !val as unknown as TierConfig[keyof TierConfig],
-                                    )
-                                  }
-                                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
-                                    val
-                                      ? tierKey === 'premium'
-                                        ? 'bg-[#e9a9bf]'
-                                        : 'bg-[#d6b36a]'
-                                      : 'bg-[#1b1917]'
-                                  }`}
+                            {[
+                              {
+                                key: 'allow_ai_assistant',
+                                label: '🤖 ผู้ช่วย AI ส่วนตัวฟรีไม่อั้น (AI Wingman)',
+                                desc: 'ช่วยคิดประโยคทัก Space & แนะนำคำตอบแชทฟรี',
+                              },
+                              {
+                                key: 'allow_rewind',
+                                label: '⏪ ย้อนการ์ดที่ปัดผ่าน (Rewind)',
+                                desc: 'กดย้อนกลับมาดูการ์ดที่เผลอปัดซ้าย',
+                              },
+                              {
+                                key: 'allow_see_likes',
+                                label: '👀 ดูคนที่กดถูกใจเราก่อน (See Who Liked)',
+                                desc: 'เปิดดูคนที่กดสนใจเราได้ทั้งหมด',
+                              },
+                              {
+                                key: 'allow_spotlight_post',
+                                label: '📌 ปักหมุดโพสต์ Spotlight ใน Space',
+                                desc: 'ดันโพสต์ขึ้นโดดเด่นในฟีด',
+                              },
+                              {
+                                key: 'allow_advanced_filters',
+                                label: '🎯 ตัวกรองค้นหาขั้นสูง',
+                                desc: 'กรองย่าน / ความสนใจตรงกันได้ละเอียดขึ้น',
+                              },
+                            ].map((f) => {
+                              const val = Boolean(cfg[f.key as keyof TierConfig]);
+                              return (
+                                <div
+                                  key={f.key}
+                                  className="flex items-center justify-between rounded-xl bg-[#25221f] p-2.5 gap-2"
                                 >
-                                  <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                                      val ? 'translate-x-6' : 'translate-x-1'
+                                  <div>
+                                    <p className="text-xs font-semibold text-[#f2eadb]">
+                                      {f.label}
+                                    </p>
+                                    <p className="text-[10px] text-[#a69d90]">{f.desc}</p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateTierField(
+                                        tierKey,
+                                        f.key as keyof TierConfig,
+                                        !val as unknown as TierConfig[keyof TierConfig],
+                                      )
+                                    }
+                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+                                      val
+                                        ? tierKey === 'premium'
+                                          ? 'bg-[#e9a9bf]'
+                                          : 'bg-[#d6b36a]'
+                                        : 'bg-[#1b1917]'
                                     }`}
-                                  />
-                                </button>
-                              </div>
-                            );
-                          })}
+                                  >
+                                    <span
+                                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                        val ? 'translate-x-6' : 'translate-x-1'
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="pt-4 border-t border-[#2a2724]">
-                      <button
-                        onClick={() => handleSaveTierConfig(tierKey)}
-                        disabled={savingTier === tierKey}
-                        className={`w-full rounded-full py-2.5 text-xs font-bold transition disabled:opacity-50 ${meta.btnClass}`}
-                      >
-                        {savingTier === tierKey
-                          ? 'กำลังบันทึก...'
-                          : `💾 บันทึก ${cfg.display_name}`}
-                      </button>
+                      <div className="pt-4 border-t border-[#2a2724]">
+                        <button
+                          onClick={() => handleSaveTierConfig(tierKey)}
+                          disabled={savingTier === tierKey}
+                          className={`w-full rounded-full py-2.5 text-xs font-bold transition disabled:opacity-50 ${meta.btnClass}`}
+                        >
+                          {savingTier === tierKey
+                            ? 'กำลังบันทึก...'
+                            : `💾 บันทึก ${cfg.display_name}`}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Admin Quick Tool: เติมเหรียญ Rukan Coin & ตั้งระดับ Pass รายบุคคล */}
-            <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-5">
-              <div>
-                <h3 className="font-display font-bold text-base text-[#f2eadb]">
-                  🪙 จัดการเหรียญ Rukan Coin & ตั้งระดับ Pass รายบุคคล (Admin Quick Tool)
-                </h3>
-                <p className="text-xs text-[#a69d90]">
-                  ใช้สำหรับเติมเหรียญเมื่อลูกค้าโอนผ่านเว็บ / แจกโบนัสกิจกรรม / หรือตั้งระดับ Pass
-                  ให้บัญชีทดสอบ (เช่น demo:{' '}
-                  <code className="text-[#d6b36a]">11111111-1111-1111-1111-111111111111</code>)
-                </p>
+                  );
+                })}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Admin Quick Tool: เติมเหรียญ Rukan Coin & ตั้งระดับ Pass รายบุคคล */}
+              <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-[#a69d90] mb-1">
-                    👤 User ID (UUID ของผู้ใช้)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="เช่น 11111111-1111-1111-1111-111111111111"
-                    value={targetUserId}
-                    onChange={(e) => setTargetUserId(e.target.value)}
-                    className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2.5 font-mono text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                  />
+                  <h3 className="font-display font-bold text-base text-[#f2eadb]">
+                    🪙 จัดการเหรียญ Rukan Coin & ตั้งระดับ Pass รายบุคคล (Admin Quick Tool)
+                  </h3>
+                  <p className="text-xs text-[#a69d90]">
+                    ใช้สำหรับเติมเหรียญเมื่อลูกค้าโอนผ่านเว็บ / แจกโบนัสกิจกรรม / หรือตั้งระดับ Pass
+                    ให้บัญชีทดสอบ (เช่น demo:{' '}
+                    <code className="text-[#d6b36a]">11111111-1111-1111-1111-111111111111</code>)
+                  </p>
                 </div>
 
-                {/* ฟอร์มเติม/หักเหรียญ */}
-                <form
-                  onSubmit={handleGrantCoins}
-                  className="rounded-2xl border border-[#2a2724] bg-[#25221f]/60 p-4 space-y-3"
-                >
-                  <span className="block text-xs font-bold text-[#d6b36a]">
-                    🪙 เติม / ปรับยอดเหรียญ Rukan Coin
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      value={coinDelta}
-                      onChange={(e) => setCoinDelta(Number(e.target.value))}
-                      placeholder="จำนวนเหรียญ (+ / -)"
-                      className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
-                    />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#a69d90] mb-1">
+                      👤 User ID (UUID ของผู้ใช้)
+                    </label>
                     <input
                       type="text"
-                      value={coinNote}
-                      onChange={(e) => setCoinNote(e.target.value)}
-                      placeholder="หมายเหตุ (เช่น เติมเว็บ 249฿)"
-                      className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                      placeholder="เช่น 11111111-1111-1111-1111-111111111111"
+                      value={targetUserId}
+                      onChange={(e) => setTargetUserId(e.target.value)}
+                      className="w-full rounded-xl border border-[#2a2724] bg-[#25221f] px-3.5 py-2.5 font-mono text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
                     />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={grantingCoins || !targetUserId.trim()}
-                    className="w-full rounded-full bg-[#d6b36a] py-2 text-xs font-bold text-[#0f0e0d] hover:bg-[#e4c278] transition disabled:opacity-50"
+
+                  {/* ฟอร์มเติม/หักเหรียญ */}
+                  <form
+                    onSubmit={handleGrantCoins}
+                    className="rounded-2xl border border-[#2a2724] bg-[#25221f]/60 p-4 space-y-3"
                   >
-                    {grantingCoins ? 'กำลังดำเนินการ...' : '🪙 ยืนยันปรับยอดเหรียญ'}
-                  </button>
-                </form>
-
-                {/* ฟอร์มตั้งระดับ Pass โดยตรง */}
-                <form
-                  onSubmit={handleSetManualPass}
-                  className="rounded-2xl border border-[#2a2724] bg-[#25221f]/60 p-4 space-y-3"
-                >
-                  <span className="block text-xs font-bold text-[#e9a9bf]">
-                    🎫 ตั้งระดับ Pass ให้ผู้ใช้โดยตรง
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <select
-                      value={manualPassTier}
-                      onChange={(e) => setManualPassTier(e.target.value as SubscriptionTier)}
-                      className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#e9a9bf]"
-                    >
-                      <option value="free">🌱 Free Tier</option>
-                      <option value="gold">🥇 Gold Pass</option>
-                      <option value="premium">💎 Premium Pass</option>
-                    </select>
-                    <input
-                      type="number"
-                      min={1}
-                      max={365}
-                      value={manualPassDays}
-                      onChange={(e) => setManualPassDays(Number(e.target.value))}
-                      disabled={manualPassTier === 'free'}
-                      placeholder="จำนวนวัน"
-                      className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#e9a9bf] disabled:opacity-40"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={settingPass || !targetUserId.trim()}
-                    className="w-full rounded-full bg-[#e9a9bf] py-2 text-xs font-bold text-[#0f0e0d] hover:bg-[#f2bdd0] transition disabled:opacity-50"
-                  >
-                    {settingPass ? 'กำลังบันทึก...' : '🎫 ตั้งระดับ Pass ทันที'}
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Comparison Table (Feature Matrix: Free | Gold | Premium) */}
-            <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4">
-              <div>
-                <h3 className="font-display font-bold text-base text-[#f2eadb]">
-                  ⚖️ ตารางเปรียบเทียบสิทธิ์ทั้ง 3 ระดับ (Free · Gold Pass · Premium Pass)
-                </h3>
-                <p className="text-xs text-[#a69d90]">
-                  มุมมองสรุปที่ซิงค์ตรงกับฐานข้อมูลสำหรับแสดงในหน้าแลกเหรียญ Rukan Coin บนแอป
-                </p>
-              </div>
-
-              {(() => {
-                const free = tierConfigs.find((t) => t.tier === 'free');
-                const gold = tierConfigs.find((t) => t.tier === 'gold');
-                const premium = tierConfigs.find((t) => t.tier === 'premium');
-                if (!free || !gold || !premium) return null;
-
-                const comparisonRows = [
-                  {
-                    feature: 'แลกด้วยเหรียญ Rukan Coin (7 วัน / 30 วัน)',
-                    freeVal: 'ฟรี (0 🪙)',
-                    goldVal: `${gold.price_coins_weekly.toLocaleString()} 🪙 / ${gold.price_coins_monthly.toLocaleString()} 🪙 (~${gold.price_thb_monthly}฿)`,
-                    premVal: `${premium.price_coins_weekly.toLocaleString()} 🪙 / ${premium.price_coins_monthly.toLocaleString()} 🪙 (~${premium.price_thb_monthly}฿)`,
-                  },
-                  {
-                    feature: 'โควตาปัดการ์ด Drop ต่อรอบ',
-                    freeVal: `${free.swipe_batch_size} ใบ / ${free.swipe_window_hours} ชม.`,
-                    goldVal: `${gold.swipe_batch_size} ใบ / ${gold.swipe_window_hours} ชม.`,
-                    premVal: `${premium.swipe_batch_size} ใบ / ${premium.swipe_window_hours} ชม.`,
-                  },
-                  {
-                    feature: 'โควตาส่ง Bubble ทักจากโพสต์ Space',
-                    freeVal: `${free.daily_bubble_limit} ฟอง / วัน`,
-                    goldVal: `${gold.daily_bubble_limit} ฟอง / วัน`,
-                    premVal: `${premium.daily_bubble_limit} ฟอง / วัน`,
-                  },
-                  {
-                    feature: 'Golden Bubble (ฟองสีทอง แจ้งเตือนพิเศษ)',
-                    freeVal:
-                      free.daily_golden_bubbles > 0 ? `${free.daily_golden_bubbles} ฟอง/วัน` : '—',
-                    goldVal: `${gold.daily_golden_bubbles} ฟอง / วัน`,
-                    premVal: `${premium.daily_golden_bubbles} ฟอง / วัน`,
-                  },
-                  {
-                    feature: '🤖 ผู้ช่วย AI ส่วนตัว (Rukan AI Wingman)',
-                    freeVal: free.allow_ai_assistant
-                      ? '✓ ฟรีไม่อั้น'
-                      : `ลองใช้ ${free.ai_coin_cost_per_use} 🪙 / ครั้ง`,
-                    goldVal: gold.allow_ai_assistant
-                      ? '✓ ฟรีไม่อั้น'
-                      : `ลองใช้ ${gold.ai_coin_cost_per_use} 🪙 / ครั้ง`,
-                    premVal: premium.allow_ai_assistant
-                      ? '✓ ใช้ผู้ช่วย AI ฟรีไม่อั้น!'
-                      : `${premium.ai_coin_cost_per_use} 🪙 / ครั้ง`,
-                  },
-                  {
-                    feature: 'ปัดย้อนกลับ (Rewind) คนที่เผลอปัดข้าม',
-                    freeVal: free.allow_rewind ? '✓ ย้อนได้' : '—',
-                    goldVal: gold.allow_rewind ? '✓ ย้อนได้' : '—',
-                    premVal: premium.allow_rewind ? '✓ ย้อนได้ไม่จำกัด' : '—',
-                  },
-                  {
-                    feature: 'เวลาหมดอายุห้องแชท Match (ถ้ายังไม่ทัก)',
-                    freeVal: `${free.match_expiry_hours} ชม.`,
-                    goldVal: `${gold.match_expiry_hours} ชม.`,
-                    premVal: `${premium.match_expiry_hours} ชม.`,
-                  },
-                  {
-                    feature: 'ดูคนที่กดสนใจเรา (See Who Likes You)',
-                    freeVal: free.allow_see_likes ? '✓ เปิดดูได้' : 'เบลอ',
-                    goldVal: gold.allow_see_likes ? '✓ เปิดดูได้ทั้งหมด' : 'เบลอ',
-                    premVal: premium.allow_see_likes ? '✓ เปิดดูได้ + แมตช์ทันที' : 'เบลอ',
-                  },
-                  {
-                    feature: 'ดันโพสต์ใน Space (Spotlight Boost)',
-                    freeVal: free.allow_spotlight_post ? '✓ เปิดใช้ได้' : '—',
-                    goldVal: gold.allow_spotlight_post ? '✓ เปิดใช้ได้' : '—',
-                    premVal: premium.allow_spotlight_post ? '✓ เปิดใช้ได้' : '—',
-                  },
-                  {
-                    feature: 'ตัวกรองขั้นสูง (ย่าน / ความสนใจตรงกัน)',
-                    freeVal: free.allow_advanced_filters ? '✓ เปิดใช้ได้' : '—',
-                    goldVal: gold.allow_advanced_filters ? '✓ เปิดใช้ได้' : '—',
-                    premVal: premium.allow_advanced_filters ? '✓ เปิดใช้ได้ครบทุกมิติ' : '—',
-                  },
-                ];
-
-                return (
-                  <div className="overflow-x-auto pt-2">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase tracking-wider">
-                          <th className="py-3 px-4">ฟีเจอร์ / สิทธิพิเศษ</th>
-                          <th className="py-3 px-4">🌱 ผู้ใช้ทั่วไป (Free)</th>
-                          <th className="py-3 px-4 text-[#d6b36a]">🥇 Gold Pass</th>
-                          <th className="py-3 px-4 text-[#e9a9bf]">💎 Premium Pass (VIP + AI)</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#2a2724]">
-                        {comparisonRows.map((r) => (
-                          <tr key={r.feature} className="hover:bg-[#25221f]/50 transition">
-                            <td className="py-3.5 px-4 font-medium text-[#f2eadb]">{r.feature}</td>
-                            <td className="py-3.5 px-4 text-[#a69d90]">{r.freeVal}</td>
-                            <td className="py-3.5 px-4 font-semibold text-[#d6b36a]">
-                              {r.goldVal}
-                            </td>
-                            <td className="py-3.5 px-4 font-semibold text-[#e9a9bf]">
-                              {r.premVal}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: ตรวจรายงาน (Reports) */}
-        {activeTab === 'reports' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-[#f2eadb]">🛡️ คิวตรวจสอบเรื่องร้องเรียน</h2>
-                <p className="text-xs text-[#a69d90]">
-                  รายงานการทำผิดกฎชุมชนจาก Space, แชท, และโปรไฟล์
-                </p>
-              </div>
-
-              <div className="flex rounded-full border border-[#2a2724] bg-[#1b1917] p-1">
-                {(['open', 'actioned', 'dismissed'] as const).map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => {
-                      setReportFilter(st);
-                      void loadReports(st);
-                    }}
-                    className={`rounded-full px-3.5 py-1 text-xs font-bold transition capitalize ${
-                      reportFilter === st
-                        ? 'bg-[#d6b36a] text-[#0f0e0d]'
-                        : 'text-[#a69d90] hover:text-[#f2eadb]'
-                    }`}
-                  >
-                    {st}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {reports.map((rep) => (
-                <div
-                  key={rep.id}
-                  className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-xs font-bold text-red-300 uppercase">
-                          {rep.reason}
-                        </span>
-                        <span className="rounded-full bg-[#25221f] px-2.5 py-0.5 text-xs text-[#a69d90]">
-                          เป้าหมาย: {rep.target_type}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm text-[#f2eadb]">
-                        {rep.details ?? 'ไม่มีรายละเอียดเพิ่มเติม'}
-                      </p>
-                    </div>
-                    <span className="text-xs text-[#a69d90]">
-                      {new Date(rep.created_at).toLocaleString('th-TH')}
+                    <span className="block text-xs font-bold text-[#d6b36a]">
+                      🪙 เติม / ปรับยอดเหรียญ Rukan Coin
                     </span>
-                  </div>
-
-                  {rep.status === 'open' && (
-                    <div className="flex flex-wrap items-center gap-2 border-t border-[#2a2724] pt-4">
-                      <button
-                        onClick={() => handleTakeAction(rep, 'warn')}
-                        className="rounded-full bg-yellow-500/20 px-3.5 py-1.5 text-xs font-semibold text-yellow-300 hover:bg-yellow-500/30 transition"
-                      >
-                        ตักเตือน (Warn)
-                      </button>
-                      <button
-                        onClick={() => handleTakeAction(rep, 'hide_content')}
-                        className="rounded-full bg-orange-500/20 px-3.5 py-1.5 text-xs font-semibold text-orange-300 hover:bg-orange-500/30 transition"
-                      >
-                        ซ่อนเนื้อหา (Hide)
-                      </button>
-                      <button
-                        onClick={() => handleTakeAction(rep, 'suspend', 7)}
-                        className="rounded-full bg-red-500/20 px-3.5 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30 transition"
-                      >
-                        ระงับ 7 วัน
-                      </button>
-                      <button
-                        onClick={() => handleTakeAction(rep, 'ban')}
-                        className="rounded-full bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition"
-                      >
-                        แบนถาวร (Ban)
-                      </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        value={coinDelta}
+                        onChange={(e) => setCoinDelta(Number(e.target.value))}
+                        placeholder="จำนวนเหรียญ (+ / -)"
+                        className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                      />
+                      <input
+                        type="text"
+                        value={coinNote}
+                        onChange={(e) => setCoinNote(e.target.value)}
+                        placeholder="หมายเหตุ (เช่น เติมเว็บ 249฿)"
+                        className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                      />
                     </div>
-                  )}
-                </div>
-              ))}
+                    <button
+                      type="submit"
+                      disabled={grantingCoins || !targetUserId.trim()}
+                      className="w-full rounded-full bg-[#d6b36a] py-2 text-xs font-bold text-[#0f0e0d] hover:bg-[#e4c278] transition disabled:opacity-50"
+                    >
+                      {grantingCoins ? 'กำลังดำเนินการ...' : '🪙 ยืนยันปรับยอดเหรียญ'}
+                    </button>
+                  </form>
 
-              {reports.length === 0 && (
-                <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-12 text-center text-sm text-[#a69d90]">
-                  ไม่มีรายงานที่ค้างอยู่ในสถานะนี้ ✨
+                  {/* ฟอร์มตั้งระดับ Pass โดยตรง */}
+                  <form
+                    onSubmit={handleSetManualPass}
+                    className="rounded-2xl border border-[#2a2724] bg-[#25221f]/60 p-4 space-y-3"
+                  >
+                    <span className="block text-xs font-bold text-[#e9a9bf]">
+                      🎫 ตั้งระดับ Pass ให้ผู้ใช้โดยตรง
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        value={manualPassTier}
+                        onChange={(e) => setManualPassTier(e.target.value as SubscriptionTier)}
+                        className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#e9a9bf]"
+                      >
+                        <option value="free">🌱 Free Tier</option>
+                        <option value="gold">🥇 Gold Pass</option>
+                        <option value="premium">💎 Premium Pass</option>
+                      </select>
+                      <input
+                        type="number"
+                        min={1}
+                        max={365}
+                        value={manualPassDays}
+                        onChange={(e) => setManualPassDays(Number(e.target.value))}
+                        disabled={manualPassTier === 'free'}
+                        placeholder="จำนวนวัน"
+                        className="rounded-xl border border-[#2a2724] bg-[#1b1917] px-3 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#e9a9bf] disabled:opacity-40"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={settingPass || !targetUserId.trim()}
+                      className="w-full rounded-full bg-[#e9a9bf] py-2 text-xs font-bold text-[#0f0e0d] hover:bg-[#f2bdd0] transition disabled:opacity-50"
+                    >
+                      {settingPass ? 'กำลังบันทึก...' : '🎫 ตั้งระดับ Pass ทันที'}
+                    </button>
+                  </form>
                 </div>
-              )}
+              </div>
+
+              {/* Comparison Table (Feature Matrix: Free | Gold | Premium) */}
+              <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4">
+                <div>
+                  <h3 className="font-display font-bold text-base text-[#f2eadb]">
+                    ⚖️ ตารางเปรียบเทียบสิทธิ์ทั้ง 3 ระดับ (Free · Gold Pass · Premium Pass)
+                  </h3>
+                  <p className="text-xs text-[#a69d90]">
+                    มุมมองสรุปที่ซิงค์ตรงกับฐานข้อมูลสำหรับแสดงในหน้าแลกเหรียญ Rukan Coin บนแอป
+                  </p>
+                </div>
+
+                {(() => {
+                  const free = tierConfigs.find((t) => t.tier === 'free');
+                  const gold = tierConfigs.find((t) => t.tier === 'gold');
+                  const premium = tierConfigs.find((t) => t.tier === 'premium');
+                  if (!free || !gold || !premium) return null;
+
+                  const comparisonRows = [
+                    {
+                      feature: 'แลกด้วยเหรียญ Rukan Coin (7 วัน / 30 วัน)',
+                      freeVal: 'ฟรี (0 🪙)',
+                      goldVal: `${gold.price_coins_weekly.toLocaleString()} 🪙 / ${gold.price_coins_monthly.toLocaleString()} 🪙 (~${gold.price_thb_monthly}฿)`,
+                      premVal: `${premium.price_coins_weekly.toLocaleString()} 🪙 / ${premium.price_coins_monthly.toLocaleString()} 🪙 (~${premium.price_thb_monthly}฿)`,
+                    },
+                    {
+                      feature: 'โควตาปัดการ์ด Drop ต่อรอบ',
+                      freeVal: `${free.swipe_batch_size} ใบ / ${free.swipe_window_hours} ชม.`,
+                      goldVal: `${gold.swipe_batch_size} ใบ / ${gold.swipe_window_hours} ชม.`,
+                      premVal: `${premium.swipe_batch_size} ใบ / ${premium.swipe_window_hours} ชม.`,
+                    },
+                    {
+                      feature: 'โควตาส่ง Bubble ทักจากโพสต์ Space',
+                      freeVal: `${free.daily_bubble_limit} ฟอง / วัน`,
+                      goldVal: `${gold.daily_bubble_limit} ฟอง / วัน`,
+                      premVal: `${premium.daily_bubble_limit} ฟอง / วัน`,
+                    },
+                    {
+                      feature: 'Golden Bubble (ฟองสีทอง แจ้งเตือนพิเศษ)',
+                      freeVal:
+                        free.daily_golden_bubbles > 0
+                          ? `${free.daily_golden_bubbles} ฟอง/วัน`
+                          : '—',
+                      goldVal: `${gold.daily_golden_bubbles} ฟอง / วัน`,
+                      premVal: `${premium.daily_golden_bubbles} ฟอง / วัน`,
+                    },
+                    {
+                      feature: '🤖 ผู้ช่วย AI ส่วนตัว (Rukan AI Wingman)',
+                      freeVal: free.allow_ai_assistant
+                        ? '✓ ฟรีไม่อั้น'
+                        : `ลองใช้ ${free.ai_coin_cost_per_use} 🪙 / ครั้ง`,
+                      goldVal: gold.allow_ai_assistant
+                        ? '✓ ฟรีไม่อั้น'
+                        : `ลองใช้ ${gold.ai_coin_cost_per_use} 🪙 / ครั้ง`,
+                      premVal: premium.allow_ai_assistant
+                        ? '✓ ใช้ผู้ช่วย AI ฟรีไม่อั้น!'
+                        : `${premium.ai_coin_cost_per_use} 🪙 / ครั้ง`,
+                    },
+                    {
+                      feature: 'ปัดย้อนกลับ (Rewind) คนที่เผลอปัดข้าม',
+                      freeVal: free.allow_rewind ? '✓ ย้อนได้' : '—',
+                      goldVal: gold.allow_rewind ? '✓ ย้อนได้' : '—',
+                      premVal: premium.allow_rewind ? '✓ ย้อนได้ไม่จำกัด' : '—',
+                    },
+                    {
+                      feature: 'เวลาหมดอายุห้องแชท Match (ถ้ายังไม่ทัก)',
+                      freeVal: `${free.match_expiry_hours} ชม.`,
+                      goldVal: `${gold.match_expiry_hours} ชม.`,
+                      premVal: `${premium.match_expiry_hours} ชม.`,
+                    },
+                    {
+                      feature: 'ดูคนที่กดสนใจเรา (See Who Likes You)',
+                      freeVal: free.allow_see_likes ? '✓ เปิดดูได้' : 'เบลอ',
+                      goldVal: gold.allow_see_likes ? '✓ เปิดดูได้ทั้งหมด' : 'เบลอ',
+                      premVal: premium.allow_see_likes ? '✓ เปิดดูได้ + แมตช์ทันที' : 'เบลอ',
+                    },
+                    {
+                      feature: 'ดันโพสต์ใน Space (Spotlight Boost)',
+                      freeVal: free.allow_spotlight_post ? '✓ เปิดใช้ได้' : '—',
+                      goldVal: gold.allow_spotlight_post ? '✓ เปิดใช้ได้' : '—',
+                      premVal: premium.allow_spotlight_post ? '✓ เปิดใช้ได้' : '—',
+                    },
+                    {
+                      feature: 'ตัวกรองขั้นสูง (ย่าน / ความสนใจตรงกัน)',
+                      freeVal: free.allow_advanced_filters ? '✓ เปิดใช้ได้' : '—',
+                      goldVal: gold.allow_advanced_filters ? '✓ เปิดใช้ได้' : '—',
+                      premVal: premium.allow_advanced_filters ? '✓ เปิดใช้ได้ครบทุกมิติ' : '—',
+                    },
+                  ];
+
+                  return (
+                    <div className="overflow-x-auto pt-2">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase tracking-wider">
+                            <th className="py-3 px-4">ฟีเจอร์ / สิทธิพิเศษ</th>
+                            <th className="py-3 px-4">🌱 ผู้ใช้ทั่วไป (Free)</th>
+                            <th className="py-3 px-4 text-[#d6b36a]">🥇 Gold Pass</th>
+                            <th className="py-3 px-4 text-[#e9a9bf]">💎 Premium Pass (VIP + AI)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#2a2724]">
+                          {comparisonRows.map((r) => (
+                            <tr key={r.feature} className="hover:bg-[#25221f]/50 transition">
+                              <td className="py-3.5 px-4 font-medium text-[#f2eadb]">
+                                {r.feature}
+                              </td>
+                              <td className="py-3.5 px-4 text-[#a69d90]">{r.freeVal}</td>
+                              <td className="py-3.5 px-4 font-semibold text-[#d6b36a]">
+                                {r.goldVal}
+                              </td>
+                              <td className="py-3.5 px-4 font-semibold text-[#e9a9bf]">
+                                {r.premVal}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* TAB 4: คำอุทธรณ์ (Appeals) */}
-        {activeTab === 'appeals' && (
-          <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4">
-            <h2 className="text-lg font-bold text-[#f2eadb]">⚖️ คำอุทธรณ์จากผู้ใช้ที่ถูกระงับ</h2>
-            <p className="text-xs text-[#a69d90]">
-              ผู้ใช้สามารถยื่นอุทธรณ์ได้ภายใน 14 วันหลังถูกลงโทษ (ผู้ตรวจต้องไม่ใช่ Moderator
-              คนเดียวกับผู้สั่งลงโทษ)
-            </p>
-            {appeals.length > 0 ? (
+          {/* TAB 3: ตรวจรายงาน (Reports) */}
+          {activeTab === 'reports' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-[#f2eadb]">🛡️ คิวตรวจสอบเรื่องร้องเรียน</h2>
+                  <p className="text-xs text-[#a69d90]">
+                    รายงานการทำผิดกฎชุมชนจาก Space, แชท, และโปรไฟล์
+                  </p>
+                </div>
+
+                <div className="flex rounded-full border border-[#2a2724] bg-[#1b1917] p-1">
+                  {(['open', 'actioned', 'dismissed'] as const).map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => {
+                        setReportFilter(st);
+                        void loadReports(st);
+                      }}
+                      className={`rounded-full px-3.5 py-1 text-xs font-bold transition capitalize ${
+                        reportFilter === st
+                          ? 'bg-[#d6b36a] text-[#0f0e0d]'
+                          : 'text-[#a69d90] hover:text-[#f2eadb]'
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-4">
-                {appeals.map((ap) => (
+                {reports.map((rep) => (
                   <div
-                    key={ap.id}
-                    className="rounded-2xl border border-[#2a2724] bg-[#25221f] p-5 space-y-3"
+                    key={rep.id}
+                    className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4"
                   >
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-[#f2eadb]">
-                            {ap.display_name}
-                          </span>
                           <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-xs font-bold text-red-300 uppercase">
-                            {ap.action} (Level {ap.level})
+                            {rep.reason}
+                          </span>
+                          <span className="rounded-full bg-[#25221f] px-2.5 py-0.5 text-xs text-[#a69d90]">
+                            เป้าหมาย: {rep.target_type}
                           </span>
                         </div>
-                        <p className="mt-1 text-xs text-[#a69d90]">เหตุผลเดิม: {ap.reason}</p>
+                        <p className="mt-2 text-sm text-[#f2eadb]">
+                          {rep.details ?? 'ไม่มีรายละเอียดเพิ่มเติม'}
+                        </p>
                       </div>
                       <span className="text-xs text-[#a69d90]">
-                        {ap.appealed_at ? new Date(ap.appealed_at).toLocaleString('th-TH') : ''}
+                        {new Date(rep.created_at).toLocaleString('th-TH')}
                       </span>
                     </div>
-                    <p className="rounded-xl bg-[#1b1917] p-3 text-sm text-[#f2eadb]">
-                      {ap.appeal_text ?? '—'}
-                    </p>
-                    <div className="flex items-center gap-2 pt-1">
-                      <button
-                        onClick={() => handleReviewAppeal(ap.id, 'accepted')}
-                        className="rounded-full bg-emerald-500/20 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/30 transition"
-                      >
-                        ✓ อนุมัติคำอุทธรณ์ & ปลดระงับ
-                      </button>
-                      <button
-                        onClick={() => handleReviewAppeal(ap.id, 'rejected')}
-                        className="rounded-full bg-red-500/20 px-3.5 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30 transition"
-                      >
-                        ✕ ปฏิเสธคำอุทธรณ์
-                      </button>
-                    </div>
+
+                    {rep.status === 'open' && (
+                      <div className="flex flex-wrap items-center gap-2 border-t border-[#2a2724] pt-4">
+                        <button
+                          onClick={() => handleTakeAction(rep, 'warn')}
+                          className="rounded-full bg-yellow-500/20 px-3.5 py-1.5 text-xs font-semibold text-yellow-300 hover:bg-yellow-500/30 transition"
+                        >
+                          ตักเตือน (Warn)
+                        </button>
+                        <button
+                          onClick={() => handleTakeAction(rep, 'hide_content')}
+                          className="rounded-full bg-orange-500/20 px-3.5 py-1.5 text-xs font-semibold text-orange-300 hover:bg-orange-500/30 transition"
+                        >
+                          ซ่อนเนื้อหา (Hide)
+                        </button>
+                        <button
+                          onClick={() => handleTakeAction(rep, 'suspend', 7)}
+                          className="rounded-full bg-red-500/20 px-3.5 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30 transition"
+                        >
+                          ระงับ 7 วัน
+                        </button>
+                        <button
+                          onClick={() => handleTakeAction(rep, 'ban')}
+                          className="rounded-full bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition"
+                        >
+                          แบนถาวร (Ban)
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
+
+                {reports.length === 0 && (
+                  <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-12 text-center text-sm text-[#a69d90]">
+                    ไม่มีรายงานที่ค้างอยู่ในสถานะนี้ ✨
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="rounded-2xl border border-[#2a2724] bg-[#25221f] p-8 text-center text-sm text-[#a69d90]">
-                ยังไม่มีคำร้องอุทธรณ์ที่ค้างอยู่
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+            </div>
+          )}
+
+          {/* TAB 4: คำอุทธรณ์ (Appeals) */}
+          {activeTab === 'appeals' && (
+            <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-4">
+              <h2 className="text-lg font-bold text-[#f2eadb]">⚖️ คำอุทธรณ์จากผู้ใช้ที่ถูกระงับ</h2>
+              <p className="text-xs text-[#a69d90]">
+                ผู้ใช้สามารถยื่นอุทธรณ์ได้ภายใน 14 วันหลังถูกลงโทษ (ผู้ตรวจต้องไม่ใช่ Moderator
+                คนเดียวกับผู้สั่งลงโทษ)
+              </p>
+              {appeals.length > 0 ? (
+                <div className="space-y-4">
+                  {appeals.map((ap) => (
+                    <div
+                      key={ap.id}
+                      className="rounded-2xl border border-[#2a2724] bg-[#25221f] p-5 space-y-3"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-[#f2eadb]">
+                              {ap.display_name}
+                            </span>
+                            <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-xs font-bold text-red-300 uppercase">
+                              {ap.action} (Level {ap.level})
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-[#a69d90]">เหตุผลเดิม: {ap.reason}</p>
+                        </div>
+                        <span className="text-xs text-[#a69d90]">
+                          {ap.appealed_at ? new Date(ap.appealed_at).toLocaleString('th-TH') : ''}
+                        </span>
+                      </div>
+                      <p className="rounded-xl bg-[#1b1917] p-3 text-sm text-[#f2eadb]">
+                        {ap.appeal_text ?? '—'}
+                      </p>
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => handleReviewAppeal(ap.id, 'accepted')}
+                          className="rounded-full bg-emerald-500/20 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/30 transition"
+                        >
+                          ✓ อนุมัติคำอุทธรณ์ & ปลดระงับ
+                        </button>
+                        <button
+                          onClick={() => handleReviewAppeal(ap.id, 'rejected')}
+                          className="rounded-full bg-red-500/20 px-3.5 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30 transition"
+                        >
+                          ✕ ปฏิเสธคำอุทธรณ์
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-[#2a2724] bg-[#25221f] p-8 text-center text-sm text-[#a69d90]">
+                  ยังไม่มีคำร้องอุทธรณ์ที่ค้างอยู่
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
