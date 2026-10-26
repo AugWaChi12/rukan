@@ -210,6 +210,7 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
     expect(rpc).toHaveBeenCalledWith('create_post', {
       p_body: 'หาเพื่อนกินชาบู #เหงาๆ',
       p_mood: 'happy',
+      p_media_url: null,
     });
 
     const feedItem = {

@@ -11,6 +11,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui';
 import { errorMessage } from '@/i18n';
 import { api, queries } from '@/lib/api';
+import { compressAndPrepareImage } from '@/lib/image';
 import { useAppTheme } from '@/theme/theme-provider';
 import { radius, space } from '@/theme/tokens';
 import { SubScreen, WithProfile } from './shared';
@@ -53,20 +54,18 @@ function PhotoGrid({ userId }: { userId: string }) {
       if (picked.canceled || !picked.assets[0]) return null;
 
       const asset = picked.assets[0];
-      const blob = await (await fetch(asset.uri)).blob();
-      const mime = asset.mimeType ?? blob.type;
-      const contentType: 'image/webp' | 'image/jpeg' =
-        mime === 'image/webp' || asset.uri.toLowerCase().endsWith('.webp')
-          ? 'image/webp'
-          : 'image/jpeg';
+      const prepared = await compressAndPrepareImage(asset.uri, {
+        maxWidth: 1080,
+        quality: 0.85,
+      });
 
       const prev = byPosition.get(position);
       const id = await api.uploadMyPhoto({
         userId,
         photoId: Crypto.randomUUID(),
         position,
-        body: blob,
-        contentType,
+        body: prepared.arrayBuffer,
+        contentType: prepared.contentType,
       });
       // ลบไฟล์เดิมถ้าสล็อตนั้นเคยมีรูปอยู่แล้ว
       if (prev && prev.id !== id) await api.removePhoto(prev.id).catch(() => undefined);
