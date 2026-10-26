@@ -5,15 +5,17 @@ import type {
   ModAppealItem,
   ModDashboardCounts,
   ModReportItem,
+  ModUserRow,
   ModWaitlistRow,
   ModWaitlistStats,
   SubscriptionTier,
   TierConfig,
+  VerificationLevel,
 } from '@rukan/shared';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-type TabKey = 'overview' | 'waitlist' | 'plans' | 'reports' | 'appeals' | 'audit';
+type TabKey = 'overview' | 'users' | 'waitlist' | 'plans' | 'reports' | 'appeals' | 'audit';
 
 export default function AdminPage() {
   const supabase = useMemo(() => createClient(), []);
@@ -40,6 +42,16 @@ export default function AdminPage() {
   const [appeals, setAppeals] = useState<ModAppealItem[]>([]);
   const [tierConfigs, setTierConfigs] = useState<TierConfig[]>([]);
   const [savingTier, setSavingTier] = useState<string | null>(null);
+
+  // User Directory & Management
+  const [users, setUsers] = useState<ModUserRow[]>([]);
+  const [searchUsers, setSearchUsers] = useState('');
+  const [filterUserTier, setFilterUserTier] = useState<'all' | 'free' | 'gold' | 'premium'>('all');
+  const [filterUserState, setFilterUserState] = useState<'all' | 'active' | 'suspended' | 'banned'>(
+    'all',
+  );
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [busyUserId, setBusyUserId] = useState<string | null>(null);
 
   // Admin Quick Tool: เติมเหรียญ Rukan Coin & ตั้งระดับ Pass รายบุคคล
   const [targetUserId, setTargetUserId] = useState('');
@@ -74,17 +86,19 @@ export default function AdminPage() {
       return;
     }
 
-    const [statsRes, wlRes, repRes, appRes] = await Promise.allSettled([
+    const [statsRes, wlRes, repRes, appRes, usrRes] = await Promise.allSettled([
       api.moderation.getWaitlistStats(),
       api.moderation.listWaitlist({ limit: 100, offset: 0 }),
       api.moderation.listReports({ status: 'open', limit: 50 }),
       api.moderation.listAppeals({ status: 'pending', limit: 50 }),
+      api.moderation.listUsers({ limit: 100, offset: 0 }),
     ]);
 
     if (statsRes.status === 'fulfilled') setStats(statsRes.value);
     if (wlRes.status === 'fulfilled') setWaitlistRows(wlRes.value);
     if (repRes.status === 'fulfilled') setReports(repRes.value);
     if (appRes.status === 'fulfilled') setAppeals(appRes.value);
+    if (usrRes.status === 'fulfilled') setUsers(usrRes.value);
 
     await loadTierConfigs();
   }, [api, loadTierConfigs]);
@@ -118,11 +132,12 @@ export default function AdminPage() {
           return;
         }
 
-        const [statsRes, wlRes, repRes, appRes] = await Promise.allSettled([
+        const [statsRes, wlRes, repRes, appRes, usrRes] = await Promise.allSettled([
           api.moderation.getWaitlistStats(),
           api.moderation.listWaitlist({ limit: 100, offset: 0 }),
           api.moderation.listReports({ status: 'open', limit: 50 }),
           api.moderation.listAppeals({ status: 'pending', limit: 50 }),
+          api.moderation.listUsers({ limit: 100, offset: 0 }),
         ]);
 
         if (!ignore) {
@@ -130,6 +145,7 @@ export default function AdminPage() {
           if (wlRes.status === 'fulfilled') setWaitlistRows(wlRes.value);
           if (repRes.status === 'fulfilled') setReports(repRes.value);
           if (appRes.status === 'fulfilled') setAppeals(appRes.value);
+          if (usrRes.status === 'fulfilled') setUsers(usrRes.value);
           await loadTierConfigs();
         }
       } catch (err) {
@@ -203,6 +219,108 @@ export default function AdminPage() {
       setAppeals(data);
     } catch (err) {
       console.error('Failed to load appeals:', err);
+    }
+  }
+
+  async function loadUsers(search = searchUsers, tier = filterUserTier, state = filterUserState) {
+    setLoadingUsers(true);
+    try {
+      const data = await api.moderation.listUsers({
+        search: search.trim() || undefined,
+        filterTier: tier,
+        filterState: state,
+        limit: 100,
+        offset: 0,
+      });
+      setUsers(data);
+    } catch (err) {
+      console.error('Failed to load users:', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  }
+
+  async function handleQuickGrantUserCoins(userId: string, amount: number, note: string) {
+    setBusyUserId(userId);
+    try {
+      const res = await api.moderation.grantUserCoins({ userId, amount, note });
+      setActionMessage(
+        `🪙 เติมเหรียญสำเร็จ (${amount > 0 ? `+${amount}` : amount} 🪙) → ยอดคงเหลือใหม่: ${res.coin_balance.toLocaleString()} 🪙`,
+      );
+      await loadUsers();
+    } catch (err: unknown) {
+      setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function handleQuickSetUserTier(userId: string, tier: SubscriptionTier, days = 30) {
+    setBusyUserId(userId);
+    try {
+      const expiresAt =
+        tier === 'free' ? null : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+      await api.moderation.setUserSubscription({
+        userId,
+        tier,
+        source: 'manual',
+        expiresAt,
+      });
+      setActionMessage(`🎫 ตั้งระดับ Pass เป็น "${tier.toUpperCase()}" เรียบร้อยแล้ว!`);
+      await loadUsers();
+    } catch (err: unknown) {
+      setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function handleQuickSetVerification(userId: string, level: VerificationLevel) {
+    setBusyUserId(userId);
+    try {
+      await api.moderation.setUserVerification({ userId, level });
+      setActionMessage(`✅ ปรับระดับยืนยันตัวตนเป็น "${level.toUpperCase()}" เรียบร้อยแล้ว!`);
+      await loadUsers();
+    } catch (err: unknown) {
+      setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function handleQuickUserStateAction(
+    userId: string,
+    action: 'suspend' | 'ban' | 'unban',
+    days = 7,
+  ) {
+    setBusyUserId(userId);
+    try {
+      const until =
+        action === 'suspend'
+          ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+          : undefined;
+      const level = action === 'unban' ? 1 : action === 'suspend' ? 3 : 4;
+      await api.moderation.takeAction({
+        userId,
+        action,
+        level,
+        reason: `Admin user management (${action})`,
+        until,
+      });
+      setActionMessage(
+        action === 'unban'
+          ? '✅ ปลดระงับบัญชีเรียบร้อยแล้ว'
+          : action === 'suspend'
+            ? `⏸️ ระงับบัญชีชั่วคราว ${days} วันเรียบร้อยแล้ว`
+            : '🚫 แบนบัญชีถาวรเรียบร้อยแล้ว',
+      );
+      await loadUsers();
+      const countsData = await api.moderation.getDashboardCounts();
+      setCounts(countsData);
+    } catch (err: unknown) {
+      setActionMessage(`เกิดข้อผิดพลาด: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusyUserId(null);
     }
   }
 
@@ -522,6 +640,7 @@ export default function AdminPage() {
         <div className="mx-auto flex max-w-7xl overflow-x-auto px-5 gap-1 pt-1">
           {[
             { key: 'overview', label: '📊 ภาพรวม & ย่าน', badge: null },
+            { key: 'users', label: '👥 จัดการผู้ใช้ (Users)', badge: users.length },
             { key: 'waitlist', label: '📋 รายชื่อ Waitlist', badge: counts?.waitlist_total },
             { key: 'plans', label: '💎 จัดการ 3 Passes & Rukan Coin', badge: '3 Tiers' },
             { key: 'reports', label: '🛡️ ตรวจรายงาน', badge: counts?.reports_pending },
@@ -531,6 +650,7 @@ export default function AdminPage() {
               key={item.key}
               onClick={() => {
                 setActiveTab(item.key as TabKey);
+                if (item.key === 'users') void loadUsers();
                 if (item.key === 'reports') void loadReports(reportFilter);
                 if (item.key === 'appeals') void loadAppeals();
               }}
@@ -697,6 +817,309 @@ export default function AdminPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: จัดการผู้ใช้ (Users) */}
+        {activeTab === 'users' && (
+          <div className="space-y-6">
+            {/* Header + Filters */}
+            <div className="rounded-3xl border border-[#2a2724] bg-[#1b1917] p-6 space-y-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-[#f2eadb]">
+                    👥 จัดการบัญชีผู้ใช้ทั้งหมด ({users.length} รายการ)
+                  </h2>
+                  <p className="text-xs text-[#a69d90]">
+                    ค้นหาด้วยชื่อเล่น, นามแฝง Space, อีเมล, หรือ UUID · พร้อมปุ่มลัดเติมเหรียญ Rukan
+                    Coin, ตั้งระดับ Pass, ปลดล็อกยืนยันตัวตน, และระงับ/ปลดแบนในคลิกเดียว
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <input
+                    type="text"
+                    placeholder="🔍 ค้นหาชื่อ, นามแฝง, อีเมล, UUID..."
+                    value={searchUsers}
+                    onChange={(e) => {
+                      setSearchUsers(e.target.value);
+                      void loadUsers(e.target.value, filterUserTier, filterUserState);
+                    }}
+                    className="w-64 rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                  />
+
+                  <select
+                    value={filterUserTier}
+                    onChange={(e) => {
+                      const v = e.target.value as 'all' | 'free' | 'gold' | 'premium';
+                      setFilterUserTier(v);
+                      void loadUsers(searchUsers, v, filterUserState);
+                    }}
+                    className="rounded-full border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs font-semibold text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                  >
+                    <option value="all">ทุก Pass (All Tiers)</option>
+                    <option value="free">🌱 Free</option>
+                    <option value="gold">🥇 Gold Pass</option>
+                    <option value="premium">💎 Premium Pass</option>
+                  </select>
+
+                  <select
+                    value={filterUserState}
+                    onChange={(e) => {
+                      const v = e.target.value as 'all' | 'active' | 'suspended' | 'banned';
+                      setFilterUserState(v);
+                      void loadUsers(searchUsers, filterUserTier, v);
+                    }}
+                    className="rounded-full border border-[#2a2724] bg-[#25221f] px-3.5 py-2 text-xs font-semibold text-[#f2eadb] outline-none focus:border-[#d6b36a]"
+                  >
+                    <option value="all">ทุกสถานะ (All States)</option>
+                    <option value="active">🟢 ปกติ (Active)</option>
+                    <option value="suspended">🟡 ระงับชั่วคราว (Suspended)</option>
+                    <option value="banned">🔴 แบนถาวร (Banned)</option>
+                  </select>
+
+                  <button
+                    onClick={() => void loadUsers()}
+                    disabled={loadingUsers}
+                    className="rounded-full border border-[#2a2724] bg-[#25221f] px-4 py-2 text-xs font-semibold text-[#f2eadb] hover:border-[#d6b36a] transition disabled:opacity-50"
+                  >
+                    {loadingUsers ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Users Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#2a2724] text-[#a69d90] uppercase">
+                      <th className="py-3 px-3">ผู้ใช้ / นามแฝง Space</th>
+                      <th className="py-3 px-3">อีเมล & UUID</th>
+                      <th className="py-3 px-3">ยืนยันตัวตน</th>
+                      <th className="py-3 px-3">ระดับ Pass</th>
+                      <th className="py-3 px-3">เหรียญ Rukan Coin</th>
+                      <th className="py-3 px-3">สถานะบัญชี</th>
+                      <th className="py-3 px-3 text-right">จัดการด่วน (Quick Actions)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#2a2724]">
+                    {users.map((u) => {
+                      const isBusy = busyUserId === u.user_id;
+                      return (
+                        <tr
+                          key={u.user_id}
+                          className="hover:bg-[#25221f]/50 transition align-middle"
+                        >
+                          {/* 1. ชื่อ + นามแฝง */}
+                          <td className="py-3.5 px-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2a2419] font-bold text-[#d6b36a]">
+                                {u.display_name.slice(0, 1).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-sm text-[#f2eadb]">
+                                    {u.display_name}
+                                  </span>
+                                  {u.is_moderator && (
+                                    <span className="rounded-full bg-[#d6b36a]/20 px-2 py-0.5 text-[10px] font-bold text-[#d6b36a]">
+                                      ADMIN
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-[#a69d90]">
+                                  🫧 {u.alias}{' '}
+                                  {u.area_id ? (
+                                    <span className="text-[#d6b36a]">· 📍 {u.area_id}</span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 2. อีเมล & UUID */}
+                          <td className="py-3.5 px-3">
+                            <div className="font-medium text-[#f2eadb]">{u.email ?? '—'}</div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void navigator.clipboard.writeText(u.user_id);
+                                setTargetUserId(u.user_id);
+                                setActionMessage(
+                                  `📋 คัดลอก UUID ของ ${u.display_name} (${u.user_id}) แล้ว`,
+                                );
+                              }}
+                              className="mt-0.5 font-mono text-[11px] text-[#a69d90] hover:text-[#d6b36a] transition"
+                              title="คลิกเพื่อคัดลอก UUID"
+                            >
+                              {u.user_id.slice(0, 8)}…{u.user_id.slice(-4)} 📋
+                            </button>
+                          </td>
+
+                          {/* 3. ระดับยืนยันตัวตน (ปรับเปลี่ยนได้ทันที) */}
+                          <td className="py-3.5 px-3">
+                            <select
+                              disabled={isBusy}
+                              value={u.verification_level}
+                              onChange={(e) =>
+                                void handleQuickSetVerification(
+                                  u.user_id,
+                                  e.target.value as VerificationLevel,
+                                )
+                              }
+                              className={`rounded-full border px-2.5 py-1 text-xs font-bold outline-none transition ${
+                                u.verification_level === 'selfie'
+                                  ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                                  : u.verification_level === 'phone'
+                                    ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
+                                    : 'border-[#2a2724] bg-[#25221f] text-[#a69d90]'
+                              }`}
+                            >
+                              <option value="none">⚪ none (ยังไม่ยืนยัน)</option>
+                              <option value="phone">📱 phone (เบอร์โทร)</option>
+                              <option value="selfie">🛡️ selfie (ครบทุกขั้น)</option>
+                            </select>
+                          </td>
+
+                          {/* 4. ระดับ Pass (สลับ Free / Gold / Premium ได้ทันที) */}
+                          <td className="py-3.5 px-3">
+                            <select
+                              disabled={isBusy}
+                              value={u.tier}
+                              onChange={(e) =>
+                                void handleQuickSetUserTier(
+                                  u.user_id,
+                                  e.target.value as SubscriptionTier,
+                                  30,
+                                )
+                              }
+                              className={`rounded-full border px-2.5 py-1 text-xs font-bold outline-none transition ${
+                                u.tier === 'premium'
+                                  ? 'border-[#e9a9bf]/50 bg-[#e9a9bf]/20 text-[#e9a9bf]'
+                                  : u.tier === 'gold'
+                                    ? 'border-[#d6b36a]/50 bg-[#d6b36a]/20 text-[#d6b36a]'
+                                    : 'border-[#2a2724] bg-[#25221f] text-[#a69d90]'
+                              }`}
+                            >
+                              <option value="free">🌱 Free</option>
+                              <option value="gold">🥇 Gold (30d)</option>
+                              <option value="premium">💎 Premium (30d)</option>
+                            </select>
+                          </td>
+
+                          {/* 5. ยอดเหรียญ Rukan Coin + ปุ่มเติมด่วน */}
+                          <td className="py-3.5 px-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-[#d6b36a]">
+                                {u.coin_balance.toLocaleString()} 🪙
+                              </span>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() =>
+                                  void handleQuickGrantUserCoins(
+                                    u.user_id,
+                                    500,
+                                    'Quick grant +500 coins from Users tab',
+                                  )
+                                }
+                                className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[11px] font-bold text-[#d6b36a] hover:bg-[#d6b36a] hover:text-[#0f0e0d] transition disabled:opacity-50"
+                              >
+                                +500
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() =>
+                                  void handleQuickGrantUserCoins(
+                                    u.user_id,
+                                    2500,
+                                    'Quick grant +2500 coins from Users tab',
+                                  )
+                                }
+                                className="rounded-full bg-[#2a2419] px-2 py-0.5 text-[11px] font-bold text-[#d6b36a] hover:bg-[#d6b36a] hover:text-[#0f0e0d] transition disabled:opacity-50"
+                              >
+                                +2.5k
+                              </button>
+                            </div>
+                          </td>
+
+                          {/* 6. สถานะบัญชี */}
+                          <td className="py-3.5 px-3">
+                            <span
+                              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                                u.state === 'active'
+                                  ? 'bg-emerald-500/15 text-emerald-300'
+                                  : u.state === 'suspended'
+                                    ? 'bg-amber-500/20 text-amber-300'
+                                    : 'bg-red-500/20 text-red-300'
+                              }`}
+                            >
+                              {u.state === 'active'
+                                ? '🟢 Active'
+                                : u.state === 'suspended'
+                                  ? '🟡 Suspended'
+                                  : '🔴 Banned'}
+                            </span>
+                          </td>
+
+                          {/* 7. ปุ่มจัดการด่วน */}
+                          <td className="py-3.5 px-3 text-right">
+                            <div className="inline-flex items-center gap-1.5">
+                              {u.state === 'active' ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    disabled={isBusy}
+                                    onClick={() =>
+                                      void handleQuickUserStateAction(u.user_id, 'suspend', 7)
+                                    }
+                                    className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/30 transition disabled:opacity-50"
+                                  >
+                                    พัก 7 วัน
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={isBusy}
+                                    onClick={() =>
+                                      void handleQuickUserStateAction(u.user_id, 'ban')
+                                    }
+                                    className="rounded-full bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-300 hover:bg-red-500/30 transition disabled:opacity-50"
+                                  >
+                                    แบน
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled={isBusy}
+                                  onClick={() =>
+                                    void handleQuickUserStateAction(u.user_id, 'unban')
+                                  }
+                                  className="rounded-full bg-emerald-500/20 px-3 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-500/30 transition disabled:opacity-50"
+                                >
+                                  ✓ ปลดระงับ
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-sm text-[#a69d90]">
+                          {loadingUsers
+                            ? 'กำลังโหลดรายชื่อผู้ใช้...'
+                            : 'ไม่พบผู้ใช้ที่ตรงกับเงื่อนไขการค้นหา'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

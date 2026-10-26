@@ -22,6 +22,7 @@ import {
   modGrantUserCoinsSchema,
   modListAppealsSchema,
   modListReportsSchema,
+  modListUsersSchema,
   modListWaitlistSchema,
   modReportDetailSchema,
   modReportListSchema,
@@ -30,9 +31,12 @@ import {
   modReviewAppealSchema,
   modSetUserSubscriptionResultSchema,
   modSetUserSubscriptionSchema,
+  modSetUserVerificationResultSchema,
+  modSetUserVerificationSchema,
   modTakeActionResultSchema,
   modTakeActionSchema,
   modUpdateTierConfigSchema,
+  modUserListSchema,
   modWaitlistListSchema,
   modWaitlistStatsSchema,
   moodCheckinResultSchema,
@@ -93,6 +97,7 @@ import {
   type ModGrantUserCoinsResult,
   type ModListAppealsInput,
   type ModListReportsInput,
+  type ModListUsersInput,
   type ModListWaitlistInput,
   type ModReportDetail,
   type ModReportItem,
@@ -101,9 +106,12 @@ import {
   type ModReviewAppealInput,
   type ModSetUserSubscriptionInput,
   type ModSetUserSubscriptionResult,
+  type ModSetUserVerificationInput,
+  type ModSetUserVerificationResult,
   type ModTakeActionInput,
   type ModTakeActionResult,
   type ModUpdateTierConfigInput,
+  type ModUserRow,
   type ModWaitlistRow,
   type ModWaitlistStats,
   type MoodCheckinResult,
@@ -613,6 +621,37 @@ export function createApi(supabase: RukanSupabaseClient) {
               p_user_id: v.userId,
               p_amount: v.amount,
               p_note: v.note ?? undefined,
+            }),
+          ),
+        );
+      },
+
+      async listUsers(input: ModListUsersInput = {}): Promise<ModUserRow[]> {
+        const v = modListUsersSchema.parse(input);
+        return parse(
+          modUserListSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modListUsers, {
+              p_search: v.search || undefined,
+              p_filter_tier: v.filterTier,
+              p_filter_state: v.filterState,
+              p_limit: v.limit,
+              p_offset: v.offset,
+            }),
+          ),
+        );
+      },
+
+      async setUserVerification(
+        input: ModSetUserVerificationInput,
+      ): Promise<ModSetUserVerificationResult> {
+        const v = modSetUserVerificationSchema.parse(input);
+        return parse(
+          modSetUserVerificationResultSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modSetUserVerification, {
+              p_user_id: v.userId,
+              p_level: v.level,
             }),
           ),
         );

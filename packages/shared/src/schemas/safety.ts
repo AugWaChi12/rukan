@@ -414,3 +414,46 @@ export const aiWingmanResultSchema = z.object({
   is_free_vip: z.boolean(),
 });
 export type AiWingmanResult = z.infer<typeof aiWingmanResultSchema>;
+
+export const modListUsersSchema = z.object({
+  search: z.string().trim().max(100).optional(),
+  filterTier: z.enum(['all', 'free', 'gold', 'premium'] as const).default('all'),
+  filterState: z.enum(['all', 'active', 'suspended', 'banned'] as const).default('all'),
+  limit: z.number().int().min(1).max(200).default(50),
+  offset: z.number().int().min(0).default(0),
+});
+export type ModListUsersInput = z.input<typeof modListUsersSchema>;
+
+export const modUserRowSchema = z.object({
+  user_id: z.guid(),
+  email: z.string().nullable().optional(),
+  display_name: z.string(),
+  alias: z.string(),
+  alias_color: z.string(),
+  area_id: z.string().nullable(),
+  modes: z.array(z.string()).default([]),
+  verification_level: z.enum(VERIFICATION_LEVELS),
+  state: z.enum(['active', 'suspended', 'banned'] as const),
+  tier: z.enum(SUBSCRIPTION_TIERS),
+  coin_balance: z.number().int().default(0),
+  tier_expires_at: z.string().nullable(),
+  is_moderator: z.boolean().default(false),
+  onboarded_at: z.string().nullable(),
+  last_active_at: z.string().nullable(),
+  created_at: z.string(),
+});
+export type ModUserRow = z.infer<typeof modUserRowSchema>;
+export const modUserListSchema = z.array(modUserRowSchema);
+
+export const modSetUserVerificationSchema = z.object({
+  userId: z.guid(),
+  level: z.enum(VERIFICATION_LEVELS),
+});
+export type ModSetUserVerificationInput = z.input<typeof modSetUserVerificationSchema>;
+
+export const modSetUserVerificationResultSchema = z.object({
+  user_id: z.guid(),
+  verification_level: z.enum(VERIFICATION_LEVELS),
+  onboarded_at: z.string().nullable(),
+});
+export type ModSetUserVerificationResult = z.infer<typeof modSetUserVerificationResultSchema>;

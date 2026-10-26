@@ -1,7 +1,7 @@
 -- ทดสอบ swipe deck แบบ rolling window, Tier ต่อผู้ใช้ (private.subscriptions + user_limits) และ Realtime private broadcast (D36)
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(39);
+select plan(42);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'private.subscriptions'::regclass),
@@ -353,6 +353,26 @@ select throws_ok(
   $$ select public.use_ai_wingman('chat', 'สวัสดีครับ') $$,
   'P0001', 'insufficient_coins',
   'ผู้ใช้ Free ที่เหรียญไม่พอเรียก AI Wingman จะได้ insufficient_coins'
+);
+
+-- ผู้ใช้ทั่วไปเรียก mod_list_users ไม่ได้
+select throws_ok(
+  $$ select public.mod_list_users() $$,
+  '42501', 'forbidden',
+  'ผู้ใช้ทั่วไปเรียก mod_list_users ไม่ได้'
+);
+
+-- Moderator เรียก mod_list_users และ mod_set_user_verification ได้
+set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated", "app_metadata": {"role": "moderator"}}';
+select ok(
+  jsonb_array_length(public.mod_list_users('demo', 'all', 'all', 10, 0)) >= 2,
+  'Moderator ค้นหารายชื่อผู้ใช้ผ่าน mod_list_users ได้'
+);
+
+select is(
+  public.mod_set_user_verification('33333333-3333-3333-3333-333333333333'::uuid, 'selfie') ->> 'verification_level',
+  'selfie',
+  'Moderator ปรับระดับยืนยันตัวตนผ่าน mod_set_user_verification ได้'
 );
 
 select * from finish();
