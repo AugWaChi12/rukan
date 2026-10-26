@@ -222,6 +222,7 @@ export const REALTIME_INBOX_EVENT_TYPES = [
   'bubble_received',
   'bubble_accepted',
   'bubble_declined',
+  'notification_created',
   'inbox_updated',
 ] as const;
 export type RealtimeInboxEventType = (typeof REALTIME_INBOX_EVENT_TYPES)[number];
