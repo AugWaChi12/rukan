@@ -1,0 +1,81 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="BgSquircle" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2E2238" />
+      <stop offset="55%" stop-color="#1E1626" />
+      <stop offset="100%" stop-color="#140E1A" />
+    </linearGradient>
+    <linearGradient id="RoseBubbleGrad" x1="96" y1="128" x2="296" y2="348" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFD0E0" />
+      <stop offset="50%" stop-color="#E9A9BF" />
+      <stop offset="100%" stop-color="#C96A8B" />
+    </linearGradient>
+    <linearGradient id="LilacBubbleGrad" x1="216" y1="128" x2="416" y2="348" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E5DFFF" />
+      <stop offset="50%" stop-color="#C7BEE3" />
+      <stop offset="100%" stop-color="#8E7EC0" />
+    </linearGradient>
+    <linearGradient id="OverlapCoreGrad" x1="256" y1="162" x2="256" y2="322" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B2B4A" />
+      <stop offset="100%" stop-color="#1F1629" />
+    </linearGradient>
+    <linearGradient id="GoldSparkGrad" x1="232" y1="218" x2="280" y2="266" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF3C4" />
+      <stop offset="50%" stop-color="#F2C66D" />
+      <stop offset="100%" stop-color="#D99B26" />
+    </linearGradient>
+  </defs>
+
+  <g id="Rukan-Logo-Concept-A-Twin-Soul">
+    <rect id="App-Icon-Squircle" x="24" y="24" width="464" height="464" rx="112" fill="url(#BgSquircle)" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="4" />
+
+    <g id="Ambient-Glow" opacity="0.28">
+      <circle cx="196" cy="242" r="116" fill="#E9A9BF" />
+      <circle cx="316" cy="242" r="116" fill="#C7BEE3" />
+    </g>
+
+    <g id="Bubble-Left-Rose">
+      <path
+        d="M198 132C136.144 132 86 182.144 86 244C86 272.42 96.578 298.366 114.012 318.106L94.5 366.5L146.842 344.205C162.502 351.773 180.06 356 198 356C259.856 356 310 305.856 310 244C310 182.144 259.856 132 198 132Z"
+        fill="url(#RoseBubbleGrad)"
+      />
+      <path
+        d="M132 178C149 158 173 148 198 148"
+        stroke="#FFFFFF"
+        stroke-opacity="0.65"
+        stroke-width="8"
+        stroke-linecap="round"
+      />
+    </g>
+
+    <g id="Bubble-Right-Lilac">
+      <path
+        d="M314 132C375.856 132 426 182.144 426 244C426 272.42 415.422 298.366 397.988 318.106L417.5 366.5L365.158 344.205C349.498 351.773 331.94 356 314 356C252.144 356 202 305.856 202 244C202 182.144 252.144 132 314 132Z"
+        fill="url(#LilacBubbleGrad)"
+      />
+      <path
+        d="M380 178C363 158 339 148 314 148"
+        stroke="#FFFFFF"
+        stroke-opacity="0.65"
+        stroke-width="8"
+        stroke-linecap="round"
+      />
+    </g>
+
+    <g id="Intersection-Rukan-Zone">
+      <path
+        d="M256 148.3C288.2 167.8 310 203.3 310 244C310 284.7 288.2 320.2 256 339.7C223.8 320.2 202 284.7 202 244C202 203.3 223.8 167.8 256 148.3Z"
+        fill="url(#OverlapCoreGrad)"
+        stroke="#FFFFFF"
+        stroke-opacity="0.28"
+        stroke-width="3"
+      />
+      <path
+        id="Center-Spark-Star"
+        d="M256 202C259.8 223.5 268.5 232.2 290 236C268.5 239.8 259.8 248.5 256 270C252.2 248.5 243.5 239.8 222 236C243.5 232.2 252.2 223.5 256 202Z"
+        fill="url(#GoldSparkGrad)"
+      />
+      <circle id="Spark-Dot" cx="256" cy="292" r="5" fill="#F2C66D" opacity="0.85" />
+    </g>
+  </g>
+</svg>
