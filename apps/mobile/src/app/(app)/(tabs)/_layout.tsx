@@ -3,7 +3,13 @@ import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
-import { TabChatsIcon, TabDropIcon, TabMeIcon, TabSpaceIcon } from '@/components/brand-icons';
+import {
+  TabChatsIcon,
+  TabDropIcon,
+  TabMeIcon,
+  TabNotificationsIcon,
+  TabSpaceIcon,
+} from '@/components/brand-icons';
 import { queries } from '@/lib/api';
 import { haptic } from '@/lib/haptics';
 import { useAppTheme } from '@/theme/theme-provider';
@@ -17,6 +23,8 @@ function renderTabBrandIcon(routeName: string, focused: boolean) {
       return <TabDropIcon size={26} focused={focused} />;
     case 'chats':
       return <TabChatsIcon size={26} focused={focused} />;
+    case 'notifications':
+      return <TabNotificationsIcon size={26} focused={focused} />;
     case 'me':
       return <TabMeIcon size={26} focused={focused} />;
     default:
@@ -39,6 +47,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="space" options={{ title: t('tabs.space') }} />
       <Tabs.Screen name="drop" options={{ title: t('tabs.drop') }} />
       <Tabs.Screen name="chats" options={{ title: t('tabs.chats') }} />
+      <Tabs.Screen name="notifications" options={{ title: t('tabs.notifications') }} />
       <Tabs.Screen name="me" options={{ title: t('tabs.me') }} />
     </Tabs>
   );
@@ -57,11 +66,13 @@ function LiquidGlassTabBar({
   // ดึงจำนวนข้อความยังไม่อ่าน + Bubble ที่รอตอบ เพื่อแสดงจุดแจ้งเตือนสีชมพู/แดงแบบ Instagram
   const conversationsQuery = useQuery(queries.myConversations());
   const bubblesQuery = useQuery(queries.myBubbles());
+  const unreadNotificationsQuery = useQuery(queries.unreadNotificationCount());
   const unreadChats = (conversationsQuery.data ?? []).reduce((sum, c) => sum + c.unread_count, 0);
   const pendingBubbles = (bubblesQuery.data?.incoming ?? []).filter(
     (b) => b.status === 'pending',
   ).length;
   const hasChatActivity = unreadChats + pendingBubbles > 0;
+  const hasNotificationActivity = (unreadNotificationsQuery.data ?? 0) > 0;
 
   const bottomOffset = Math.max(insets.bottom, 12);
 
@@ -124,7 +135,9 @@ function LiquidGlassTabBar({
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key]!;
             const focused = state.index === index;
-            const showDot = route.name === 'chats' && hasChatActivity;
+            const showDot =
+              (route.name === 'chats' && hasChatActivity) ||
+              (route.name === 'notifications' && hasNotificationActivity);
 
             const onPress = () => {
               haptic.selection();
@@ -205,7 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     height: '100%',
   },
   tabButton: {
@@ -215,9 +228,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pillIndicator: {
-    minWidth: 64,
+    minWidth: 50,
     height: 44,
-    paddingHorizontal: 18,
+    paddingHorizontal: 10,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
   activityDot: {
     position: 'absolute',
     bottom: 6,
-    right: 16,
+    right: 10,
     width: 6,
     height: 6,
     borderRadius: 3,

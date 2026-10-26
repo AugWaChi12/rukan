@@ -34,7 +34,7 @@ export function NotificationBellButton({ size = 36 }: { size?: number }) {
       activeScale={0.9}
       onPress={() => {
         haptic.selection();
-        router.push('/me/notifications' as Href);
+        router.push('/(app)/(tabs)/notifications' as Href);
       }}
       style={[
         styles.bellButton,

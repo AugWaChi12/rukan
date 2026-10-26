@@ -92,7 +92,7 @@ export const th = {
     },
   },
   modes: { friend: 'เพื่อน', date: 'เดท' },
-  tabs: { space: 'Space', drop: 'Drop', chats: 'แชท', me: 'ฉัน' },
+  tabs: { space: 'Space', drop: 'Drop', chats: 'แชท', notifications: 'แจ้งเตือน', me: 'ฉัน' },
   notifications: {
     title: 'การแจ้งเตือน',
     markAllRead: 'อ่านทั้งหมด',
