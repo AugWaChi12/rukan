@@ -372,6 +372,7 @@ export type Database = {
         Returns: Json;
       };
       mod_review_appeal: { Args: { p_action_id: string; p_decision: string }; Returns: undefined };
+      mod_set_user_modes: { Args: { p_modes: string[]; p_user_id: string }; Returns: Json };
       mod_set_user_subscription: {
         Args: { p_expires_at?: string; p_source?: string; p_tier: string; p_user_id: string };
         Returns: Json;
