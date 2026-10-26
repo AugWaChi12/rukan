@@ -187,12 +187,13 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
     });
   });
 
-  it('createPost และ getFeed ตรวจ schema ทั้งขาเข้าและขาออก', async () => {
+  it('createPost, getFeed (พร้อม #hashtag และ sort) และ getTrendingHashtags ตรวจ schema ทั้งขาเข้าและขาออก', async () => {
     const postRes = {
       id: UUID_1,
       alias: 'แมวส้มสายชิล',
       alias_color: '#E5B84B',
-      body: 'หาเพื่อนกินชาบู',
+      body: 'หาเพื่อนกินชาบู #เหงาๆ',
+      hashtags: ['เหงาๆ'],
       mood: 'happy',
       area_id: 'ari',
       age_band: '22-25',
@@ -200,14 +201,45 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
       care_notice: false,
     };
     const { client, rpc } = fakeClient({ data: postRes, error: null });
-    const created = await createApi(client).createPost({
-      body: ' หาเพื่อนกินชาบู ',
+    const api = createApi(client);
+    const created = await api.createPost({
+      body: ' หาเพื่อนกินชาบู #เหงาๆ ',
       mood: 'happy',
     });
     expect(created).toEqual(postRes);
     expect(rpc).toHaveBeenCalledWith('create_post', {
-      p_body: 'หาเพื่อนกินชาบู',
+      p_body: 'หาเพื่อนกินชาบู #เหงาๆ',
       p_mood: 'happy',
+    });
+
+    const feedItem = {
+      ...postRes,
+      like_count: 3,
+      reply_count: 1,
+      liked_by_me: false,
+      is_mine: true,
+    };
+    rpc.mockResolvedValueOnce({ data: [feedItem], error: null });
+    const feed = await api.getFeed({ tab: 'all', hashtag: '#เหงาๆ', sort: 'hot', limit: 20 });
+    expect(feed).toHaveLength(1);
+    expect(rpc).toHaveBeenCalledWith('get_feed', {
+      p_tab: 'all',
+      p_before_created_at: undefined,
+      p_before_id: undefined,
+      p_limit: 20,
+      p_hashtag: 'เหงาๆ',
+      p_sort: 'hot',
+    });
+
+    rpc.mockResolvedValueOnce({
+      data: [{ tag: 'เหงาๆ', post_count: 15 }],
+      error: null,
+    });
+    const trending = await api.getTrendingHashtags({ hours: 24, limit: 10 });
+    expect(trending).toEqual([{ tag: 'เหงาๆ', post_count: 15 }]);
+    expect(rpc).toHaveBeenCalledWith('get_trending_hashtags', {
+      p_hours: 24,
+      p_limit: 10,
     });
   });
 
@@ -336,28 +368,53 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
     expect('setSession' in api.auth).toBe(false);
   });
 
-  it('Admin & Subscriptions: getMySubscription, getTierConfigs, updateTierConfig, setUserSubscription', async () => {
+  it('Admin & Subscriptions: getMySubscription, exchangeCoinsForPass, grantUserCoins, setUserSubscription', async () => {
     const subData = {
       tier: 'premium',
-      source: 'promo',
+      source: 'coins',
       status: 'active',
       expires_at: null,
+      coin_balance: 100,
       limits: {
-        swipe_batch_size: 40,
+        swipe_batch_size: 80,
         swipe_window_hours: 6,
-        daily_bubble_limit: 30,
-        daily_golden_bubbles: 1,
+        daily_bubble_limit: 50,
+        daily_golden_bubbles: 3,
         allow_rewind: true,
-        match_expiry_hours: 96,
+        match_expiry_hours: 168,
         allow_see_likes: true,
         allow_spotlight_post: true,
         allow_advanced_filters: true,
+        allow_ai_assistant: true,
+        ai_coin_cost_per_use: 0,
+        price_coins_weekly: 1790,
+        price_coins_monthly: 5900,
       },
     };
     const { client, rpc } = fakeClient({ data: subData, error: null });
     const api = createApi(client);
     await expect(api.getMySubscription()).resolves.toEqual(subData);
     expect(rpc).toHaveBeenCalledWith('get_my_subscription');
+
+    rpc.mockResolvedValueOnce({ data: subData, error: null });
+    await expect(
+      api.exchangeCoinsForPass({ tier: 'premium', duration: 'monthly' }),
+    ).resolves.toEqual(subData);
+    expect(rpc).toHaveBeenCalledWith('exchange_coins_for_pass', {
+      p_tier: 'premium',
+      p_duration: 'monthly',
+    });
+
+    const grantRes = { user_id: UUID_1, coin_balance: 6000, delta: 6000 };
+    rpc.mockResolvedValueOnce({ data: grantRes, error: null });
+    await expect(
+      api.moderation.grantUserCoins({ userId: UUID_1, amount: 6000, note: 'topup' }),
+    ).resolves.toEqual(grantRes);
+    expect(rpc).toHaveBeenCalledWith('mod_grant_user_coins', {
+      p_user_id: UUID_1,
+      p_amount: 6000,
+      p_note: 'topup',
+    });
 
     const countsData = {
       waitlist_total: 42,
@@ -371,7 +428,7 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
 
     const updatedSub = {
       user_id: UUID_1,
-      tier: 'premium',
+      tier: 'gold',
       source: 'promo',
       status: 'active',
       expires_at: null,
@@ -380,13 +437,13 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
     await expect(
       api.moderation.setUserSubscription({
         userId: UUID_1,
-        tier: 'premium',
+        tier: 'gold',
         source: 'promo',
       }),
     ).resolves.toEqual(updatedSub);
     expect(rpc).toHaveBeenCalledWith('mod_set_user_subscription', {
       p_user_id: UUID_1,
-      p_tier: 'premium',
+      p_tier: 'gold',
       p_source: 'promo',
       p_expires_at: undefined,
     });

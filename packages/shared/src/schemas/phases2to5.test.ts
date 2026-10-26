@@ -21,7 +21,16 @@ import {
   submitAppealSchema,
   tierConfigSchema,
 } from './safety';
-import { createPostSchema, getFeedSchema, replyPostSchema, spacePostSchema } from './space';
+import {
+  createPostSchema,
+  extractHashtags,
+  getFeedSchema,
+  getTrendingHashtagsSchema,
+  normalizeHashtag,
+  replyPostSchema,
+  spacePostSchema,
+  trendingHashtagSchema,
+} from './space';
 
 const UUID_1 = '11111111-1111-4111-8111-111111111111';
 const UUID_2 = '22222222-2222-4222-8222-222222222222';
@@ -102,8 +111,28 @@ describe('Phase 3 schemas (Space)', () => {
     });
   });
 
-  it('getFeedSchema ตั้งค่าเริ่มต้นเป็น tab = all, limit = 20', () => {
-    expect(getFeedSchema.parse({})).toEqual({ tab: 'all', limit: 20 });
+  it('getFeedSchema ตั้งค่าเริ่มต้นเป็น tab = all, limit = 20, sort = latest และรับ hashtag แบบมีหรือไม่มี # ได้', () => {
+    expect(getFeedSchema.parse({})).toEqual({ tab: 'all', limit: 20, sort: 'latest' });
+    expect(getFeedSchema.parse({ hashtag: '#เหงาๆ', sort: 'hot' })).toEqual({
+      tab: 'all',
+      limit: 20,
+      hashtag: 'เหงาๆ',
+      sort: 'hot',
+    });
+    expect(getFeedSchema.safeParse({ hashtag: 'มี เว้นวรรค' }).success).toBe(false);
+  });
+
+  it('extractHashtags และ normalizeHashtag สกัด #แท็ก ไทย/อังกฤษ ลบซ้ำ และจำกัดสูงสุด 5 แท็ก', () => {
+    expect(normalizeHashtag('  #เหงาๆ  ')).toBe('เหงาๆ');
+    expect(normalizeHashtag('invalid tag!')).toBeNull();
+    expect(
+      extractHashtags('คืนนี้ #เหงาๆ อยากหาเพื่อนคุย #Dek69 #เหงาๆ #a #b #c #dเกินลิมิต'),
+    ).toEqual(['เหงาๆ', 'dek69', 'a', 'b', 'c']);
+  });
+
+  it('getTrendingHashtagsSchema และ trendingHashtagSchema ตรวจสอบข้อมูลเทรนด์มาแรง', () => {
+    expect(getTrendingHashtagsSchema.parse({})).toEqual({ hours: 24, limit: 10 });
+    expect(trendingHashtagSchema.safeParse({ tag: 'เหงาๆ', post_count: 42 }).success).toBe(true);
   });
 
   it('replyPostSchema บังคับไม่เกิน 300 ตัวอักษร', () => {
@@ -115,12 +144,13 @@ describe('Phase 3 schemas (Space)', () => {
     );
   });
 
-  it('spacePostSchema ตรวจรูปร่างโพสต์จาก get_feed', () => {
+  it('spacePostSchema ตรวจรูปร่างโพสต์จาก get_feed พร้อม hashtags', () => {
     const post = {
       id: UUID_1,
       alias: 'แมวส้มสายชิล',
       alias_color: '#E5B84B',
-      body: 'ใครอยู่แถวอารีย์บ้าง',
+      body: 'ใครอยู่แถวอารีย์บ้าง #เหงาๆ',
+      hashtags: ['เหงาๆ'],
       mood: 'lonely',
       area_id: 'ari',
       age_band: '22-25',

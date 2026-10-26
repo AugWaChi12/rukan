@@ -1,11 +1,19 @@
 -- ทดสอบ swipe deck แบบ rolling window, Tier ต่อผู้ใช้ (private.subscriptions + user_limits) และ Realtime private broadcast (D36)
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(27);
+select plan(37);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'private.subscriptions'::regclass),
   'private.subscriptions เปิด RLS'
+);
+select ok(
+  (select relrowsecurity from pg_class where oid = 'private.coin_wallets'::regclass),
+  'private.coin_wallets เปิด RLS'
+);
+select ok(
+  (select relrowsecurity from pg_class where oid = 'private.coin_ledger'::regclass),
+  'private.coin_ledger เปิด RLS'
 );
 select ok(
   (select relrowsecurity from pg_class where oid = 'realtime.messages'::regclass),
@@ -118,30 +126,76 @@ select lives_ok(
   'หลังรีโควตา ปัดได้อีกครั้ง'
 );
 
--- Moderator เปิดสิทธิ์ Premium (promo) ให้ demo → โควตา 40 ใบต่อรอบ
+-- Moderator เปิดสิทธิ์ Gold Pass (promo) ให้ demo → โควตา 40 ใบต่อรอบ
 set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated", "app_metadata": {"role": "moderator"}}';
 select is(
   public.mod_set_user_subscription(
     '11111111-1111-1111-1111-111111111111',
-    'premium',
+    'gold',
     'promo',
     now() + interval '30 days'
   ) ->> 'tier',
-  'premium',
-  'moderator ตั้งสิทธิ์ Rukan Gold (premium) ให้ผู้ใช้สำเร็จ'
+  'gold',
+  'moderator ตั้งสิทธิ์ Gold Pass (gold) ให้ผู้ใช้สำเร็จ'
 );
 
 set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}';
 select is(
   (public.get_my_subscription() -> 'limits' ->> 'swipe_batch_size')::int,
   40,
-  'Premium ปัดได้ 40 ใบต่อรอบ'
+  'Gold Pass ปัดได้ 40 ใบต่อรอบ'
 );
 
 select is(
   (public.get_my_deck() -> 'quota' ->> 'remaining')::int,
   39,
-  'Premium ปัดไปแล้ว 1 ใบในรอบ → เหลือ 39'
+  'Gold Pass ปัดไปแล้ว 1 ใบในรอบ → เหลือ 39'
+);
+
+-- ทดสอบ Rukan Coin: เหรียญเริ่มต้น = 0 → แลก Premium Pass ไม่ได้ (insufficient_coins)
+select is(
+  (public.get_my_subscription() ->> 'coin_balance')::int,
+  0,
+  'ผู้ใช้เริ่มต้นมี Rukan Coin = 0 เหรียญ'
+);
+
+select throws_ok(
+  $$ select public.exchange_coins_for_pass('premium', 'monthly') $$,
+  'P0001', 'insufficient_coins',
+  'เหรียญไม่พอแลก Premium Pass → insufficient_coins'
+);
+
+-- Moderator เติมเหรียญ 6,000 🪙 ให้ demo → แลก Premium Pass รายเดือน (5,900 🪙) ได้สำเร็จ
+set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated", "app_metadata": {"role": "moderator"}}';
+select is(
+  (public.mod_grant_user_coins('11111111-1111-1111-1111-111111111111', 6000, 'เติมเหรียญทดสอบ') ->> 'coin_balance')::int,
+  6000,
+  'moderator เติม Rukan Coin 6,000 เหรียญให้ผู้ใช้สำเร็จ'
+);
+
+set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}';
+select is(
+  public.exchange_coins_for_pass('premium', 'monthly') ->> 'tier',
+  'premium',
+  'ผู้ใช้แลกเหรียญ 5,900 🪙 เป็น Premium Pass (30 วัน) สำเร็จ'
+);
+
+select is(
+  (public.get_my_subscription() ->> 'coin_balance')::int,
+  100,
+  'หักเหรียญ 5,900 🪙 จาก 6,000 🪙 → เหลือ 100 🪙'
+);
+
+select is(
+  (public.get_my_subscription() -> 'limits' ->> 'swipe_batch_size')::int,
+  80,
+  'Premium Pass ปัดได้ 80 ใบต่อรอบ'
+);
+
+select is(
+  (public.get_my_subscription() -> 'limits' ->> 'allow_ai_assistant')::boolean,
+  true,
+  'Premium Pass เปิดสิทธิ์ผู้ช่วย AI ส่วนตัว (allow_ai_assistant = true)'
 );
 
 -- สมาชิกหมดอายุ → กลับเป็น Free ทันที
@@ -277,6 +331,7 @@ select is(
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}';
 select throws_ok('select * from private.subscriptions', '42501', null, 'อ่าน private.subscriptions ตรงไม่ได้');
+select throws_ok('select * from private.coin_wallets', '42501', null, 'อ่าน private.coin_wallets ตรงไม่ได้');
 
 select * from finish();
 rollback;

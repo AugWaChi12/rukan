@@ -9,18 +9,60 @@ export const SPACE_MOODS = [
   'hopeful',
   'calm',
   'excited',
+  'overthinking',
 ] as const;
 export type SpaceMood = (typeof SPACE_MOODS)[number];
 
 export const SPACE_FEED_TABS = ['all', 'nearby', 'same_age'] as const;
 export type SpaceFeedTab = (typeof SPACE_FEED_TABS)[number];
 
+export const SPACE_FEED_SORTS = ['latest', 'hot'] as const;
+export type SpaceFeedSort = (typeof SPACE_FEED_SORTS)[number];
+
 export const SPACE_LIMITS = {
   postBody: 500,
   replyBody: 300,
   feedDefaultLimit: 20,
   feedMaxLimit: 50,
+  maxHashtagsPerPost: 5,
+  maxHashtagLength: 40,
+  trendingDefaultHours: 24,
+  trendingDefaultLimit: 10,
+  trendingMaxLimit: 30,
 } as const;
+
+const HASHTAG_NAME_RE = /^[a-z0-9_\u0E01-\u0E5B]{1,40}$/;
+const HASHTAG_EXTRACT_RE = /(?<![a-zA-Z0-9_\u0E01-\u0E5B@])#([a-zA-Z0-9_\u0E01-\u0E5B]{1,40})/g;
+
+/** ทำความสะอาดชื่อ #แท็ก (ตัด # นำหน้า, แปลงเป็นตัวพิมพ์เล็ก) — คืน null ถ้ารูปแบบไม่ถูกต้อง */
+export function normalizeHashtag(raw: string): string | null {
+  const clean = raw.trim().toLowerCase().replace(/^#+/, '');
+  return HASHTAG_NAME_RE.test(clean) ? clean : null;
+}
+
+/** สกัดรายการ #แท็ก จากข้อความโพสต์ (รักษาลำดับที่พิมพ์, ลบตัวซ้ำ, สูงสุด 5 แท็ก — ตรงกับ private.extract_hashtags ใน DB) */
+export function extractHashtags(body: string): string[] {
+  const seen = new Set<string>();
+  const tags: string[] = [];
+  for (const match of body.matchAll(HASHTAG_EXTRACT_RE)) {
+    const tag = match[1]?.toLowerCase();
+    if (tag && !seen.has(tag)) {
+      seen.add(tag);
+      tags.push(tag);
+      if (tags.length >= SPACE_LIMITS.maxHashtagsPerPost) break;
+    }
+  }
+  return tags;
+}
+
+export const hashtagSchema = z
+  .string()
+  .trim()
+  .transform((val) => val.toLowerCase().replace(/^#+/, ''))
+  .refine(
+    (val) => HASHTAG_NAME_RE.test(val),
+    'ชื่อแฮชแท็กไม่ถูกต้อง (1–40 ตัวอักษร ไทย/อังกฤษ/ตัวเลข)',
+  );
 
 // ---------------------------------------------------------------------------
 // Input Schemas
@@ -46,8 +88,21 @@ export const getFeedSchema = z.object({
     .min(1)
     .max(SPACE_LIMITS.feedMaxLimit)
     .default(SPACE_LIMITS.feedDefaultLimit),
+  hashtag: hashtagSchema.optional(),
+  sort: z.enum(SPACE_FEED_SORTS).default('latest'),
 });
 export type GetFeedInput = z.input<typeof getFeedSchema>;
+
+export const getTrendingHashtagsSchema = z.object({
+  hours: z.number().int().min(1).max(168).default(SPACE_LIMITS.trendingDefaultHours),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(SPACE_LIMITS.trendingMaxLimit)
+    .default(SPACE_LIMITS.trendingDefaultLimit),
+});
+export type GetTrendingHashtagsInput = z.input<typeof getTrendingHashtagsSchema>;
 
 export const replyPostSchema = z.object({
   postId: z.guid(),
@@ -70,9 +125,14 @@ export const createPostResultSchema = z.object({
   alias: z.string(),
   alias_color: z.string(),
   body: z.string(),
+  hashtags: z.array(z.string()).default([]),
   mood: z.enum(SPACE_MOODS).nullable(),
   area_id: z.string().nullable(),
   age_band: z.string().nullable(),
+  like_count: z.number().int().optional(),
+  reply_count: z.number().int().optional(),
+  liked_by_me: z.boolean().optional(),
+  is_mine: z.boolean().optional(),
   created_at: z.string(),
   care_notice: z.boolean(),
 });
@@ -83,6 +143,7 @@ export const spacePostSchema = z.object({
   alias: z.string(),
   alias_color: z.string(),
   body: z.string(),
+  hashtags: z.array(z.string()).default([]),
   mood: z.enum(SPACE_MOODS).nullable(),
   area_id: z.string().nullable(),
   age_band: z.string().nullable(),
@@ -94,6 +155,13 @@ export const spacePostSchema = z.object({
 });
 export type SpacePost = z.infer<typeof spacePostSchema>;
 export const spaceFeedSchema = z.array(spacePostSchema);
+
+export const trendingHashtagSchema = z.object({
+  tag: z.string(),
+  post_count: z.number().int().min(0),
+});
+export type TrendingHashtag = z.infer<typeof trendingHashtagSchema>;
+export const trendingHashtagsSchema = z.array(trendingHashtagSchema);
 
 export const spaceReplySchema = z.object({
   id: z.guid(),

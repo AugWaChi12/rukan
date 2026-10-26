@@ -5,6 +5,7 @@ export const SUPABASE_RPC = {
   joinWaitlist: 'join_waitlist',
   getTierConfigs: 'get_tier_configs',
   getMySubscription: 'get_my_subscription',
+  exchangeCoinsForPass: 'exchange_coins_for_pass',
   // เฟส 1: ตัวตน & โปรไฟล์
   getMyStatus: 'get_my_status',
   getMyProfile: 'get_my_profile',
@@ -33,9 +34,11 @@ export const SUPABASE_RPC = {
   modListWaitlist: 'mod_list_waitlist',
   modUpdateTierConfig: 'mod_update_tier_config',
   modSetUserSubscription: 'mod_set_user_subscription',
+  modGrantUserCoins: 'mod_grant_user_coins',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   createPost: 'create_post',
   getFeed: 'get_feed',
+  getTrendingHashtags: 'get_trending_hashtags',
   deleteMyPost: 'delete_my_post',
   likePost: 'like_post',
   unlikePost: 'unlike_post',

@@ -8,13 +8,17 @@ import {
   conversationListSchema,
   createPostResultSchema,
   createPostSchema,
+  exchangeCoinsForPassSchema,
   getFeedSchema,
   getMessagesSchema,
+  getTrendingHashtagsSchema,
   interestsSchema,
   matchListSchema,
   moderationHistoryListSchema,
   modAppealListSchema,
   modDashboardCountsSchema,
+  modGrantUserCoinsResultSchema,
+  modGrantUserCoinsSchema,
   modListAppealsSchema,
   modListReportsSchema,
   modListWaitlistSchema,
@@ -65,6 +69,7 @@ import {
   TABLES,
   tierConfigListSchema,
   tierConfigSchema,
+  trendingHashtagsSchema,
   updateProfileSchema,
   type BlockedUserItem,
   type BlockUserFromInput,
@@ -75,12 +80,16 @@ import {
   type CreatePostInput,
   type CreatePostResult,
   type Database,
+  type ExchangeCoinsForPassInput,
   type GetFeedInput,
   type GetMessagesInput,
+  type GetTrendingHashtagsInput,
   type MatchItem,
   type ModAppealItem,
   type ModDashboardCounts,
   type ModerationHistoryItem,
+  type ModGrantUserCoinsInput,
+  type ModGrantUserCoinsResult,
   type ModListAppealsInput,
   type ModListReportsInput,
   type ModListWaitlistInput,
@@ -126,6 +135,7 @@ import {
   type SwipeInput,
   type SwipeResult,
   type TierConfig,
+  type TrendingHashtag,
   type UpdateProfileInput,
 } from '@rukan/shared';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -233,6 +243,19 @@ export function createApi(supabase: RukanSupabaseClient) {
 
     async getTierConfigs(): Promise<TierConfig[]> {
       return parse(tierConfigListSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getTierConfigs)));
+    },
+
+    async exchangeCoinsForPass(input: ExchangeCoinsForPassInput): Promise<MySubscription> {
+      const v = exchangeCoinsForPassSchema.parse(input);
+      return parse(
+        mySubscriptionSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.exchangeCoinsForPass, {
+            p_tier: v.tier,
+            p_duration: v.duration,
+          }),
+        ),
+      );
     },
 
     async updateMyProfile(input: UpdateProfileInput): Promise<void> {
@@ -563,6 +586,20 @@ export function createApi(supabase: RukanSupabaseClient) {
           ),
         );
       },
+
+      async grantUserCoins(input: ModGrantUserCoinsInput): Promise<ModGrantUserCoinsResult> {
+        const v = modGrantUserCoinsSchema.parse(input);
+        return parse(
+          modGrantUserCoinsResultSchema,
+          unwrap(
+            await supabase.rpc(SUPABASE_RPC.modGrantUserCoins, {
+              p_user_id: v.userId,
+              p_amount: v.amount,
+              p_note: v.note ?? undefined,
+            }),
+          ),
+        );
+      },
     },
 
     // -------------------------------------------------------------------------
@@ -591,6 +628,21 @@ export function createApi(supabase: RukanSupabaseClient) {
             p_tab: v.tab,
             p_before_created_at: v.beforeCreatedAt,
             p_before_id: v.beforeId,
+            p_limit: v.limit,
+            p_hashtag: v.hashtag,
+            p_sort: v.sort,
+          }),
+        ),
+      );
+    },
+
+    async getTrendingHashtags(input: GetTrendingHashtagsInput = {}): Promise<TrendingHashtag[]> {
+      const v = getTrendingHashtagsSchema.parse(input);
+      return parse(
+        trendingHashtagsSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.getTrendingHashtags, {
+            p_hours: v.hours,
             p_limit: v.limit,
           }),
         ),

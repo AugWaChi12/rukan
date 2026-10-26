@@ -55,16 +55,21 @@ export type AppealDecision = (typeof APPEAL_DECISIONS)[number];
 export const APPEAL_STATUSES = ['none', 'pending', 'accepted', 'rejected'] as const;
 export type AppealStatus = (typeof APPEAL_STATUSES)[number];
 
-export const SUBSCRIPTION_TIERS = ['free', 'premium'] as const;
+export const SUBSCRIPTION_TIERS = ['free', 'gold', 'premium'] as const;
 export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[number];
 
 export const SUBSCRIPTION_SOURCES = [
   'revenuecat_ios',
   'revenuecat_android',
+  'coins',
+  'web_topup',
   'manual',
   'promo',
 ] as const;
 export type SubscriptionSource = (typeof SUBSCRIPTION_SOURCES)[number];
+
+export const PASS_DURATIONS = ['weekly', 'monthly'] as const;
+export type PassDuration = (typeof PASS_DURATIONS)[number];
 
 export const SUBSCRIPTION_STATUSES = ['active', 'canceled', 'expired', 'grace_period'] as const;
 export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
@@ -148,6 +153,10 @@ export const tierConfigUpdateFieldsSchema = z.object({
   allow_see_likes: z.boolean().optional(),
   allow_spotlight_post: z.boolean().optional(),
   allow_advanced_filters: z.boolean().optional(),
+  allow_ai_assistant: z.boolean().optional(),
+  ai_coin_cost_per_use: z.number().int().min(0).max(10000).optional(),
+  price_coins_weekly: z.number().int().min(0).max(1000000).optional(),
+  price_coins_monthly: z.number().int().min(0).max(1000000).optional(),
   price_thb_monthly: z.number().min(0).max(99999).optional(),
 });
 
@@ -164,6 +173,24 @@ export const modSetUserSubscriptionSchema = z.object({
   expiresAt: z.string().nullable().optional(),
 });
 export type ModSetUserSubscriptionInput = z.input<typeof modSetUserSubscriptionSchema>;
+
+export const exchangeCoinsForPassSchema = z.object({
+  tier: z.enum(['gold', 'premium'] as const),
+  duration: z.enum(PASS_DURATIONS).default('monthly'),
+});
+export type ExchangeCoinsForPassInput = z.input<typeof exchangeCoinsForPassSchema>;
+
+export const modGrantUserCoinsSchema = z.object({
+  userId: z.guid(),
+  amount: z
+    .number()
+    .int()
+    .min(-1000000)
+    .max(1000000)
+    .refine((v) => v !== 0, 'amount must not be 0'),
+  note: z.string().trim().max(500).optional(),
+});
+export type ModGrantUserCoinsInput = z.input<typeof modGrantUserCoinsSchema>;
 
 // ---------------------------------------------------------------------------
 // Output Schemas (RPC JSON responses)
@@ -320,6 +347,10 @@ export const tierConfigSchema = z.object({
   allow_see_likes: z.boolean(),
   allow_spotlight_post: z.boolean(),
   allow_advanced_filters: z.boolean(),
+  allow_ai_assistant: z.boolean().default(false),
+  ai_coin_cost_per_use: z.number().int().default(30),
+  price_coins_weekly: z.number().int().default(0),
+  price_coins_monthly: z.number().int().default(0),
   price_thb_monthly: z.number(),
   updated_at: z.string().optional(),
 });
@@ -336,6 +367,10 @@ export const userLimitsSchema = z.object({
   allow_see_likes: z.boolean(),
   allow_spotlight_post: z.boolean(),
   allow_advanced_filters: z.boolean(),
+  allow_ai_assistant: z.boolean().default(false),
+  ai_coin_cost_per_use: z.number().int().default(30),
+  price_coins_weekly: z.number().int().default(0),
+  price_coins_monthly: z.number().int().default(0),
 });
 export type UserLimits = z.infer<typeof userLimitsSchema>;
 
@@ -344,6 +379,7 @@ export const mySubscriptionSchema = z.object({
   source: z.enum(SUBSCRIPTION_SOURCES).nullable(),
   status: z.enum(SUBSCRIPTION_STATUSES),
   expires_at: z.string().nullable(),
+  coin_balance: z.number().int().default(0),
   limits: userLimitsSchema,
 });
 export type MySubscription = z.infer<typeof mySubscriptionSchema>;
@@ -356,3 +392,10 @@ export const modSetUserSubscriptionResultSchema = z.object({
   expires_at: z.string().nullable(),
 });
 export type ModSetUserSubscriptionResult = z.infer<typeof modSetUserSubscriptionResultSchema>;
+
+export const modGrantUserCoinsResultSchema = z.object({
+  user_id: z.guid(),
+  coin_balance: z.number().int(),
+  delta: z.number().int(),
+});
+export type ModGrantUserCoinsResult = z.infer<typeof modGrantUserCoinsResultSchema>;
