@@ -77,6 +77,8 @@ stuMatch/                     ← ชื่อ repo/โฟลเดอร์ย�
 │   └── eslint-config/        ← @rukan/eslint-config: flat config กลาง (shared ใช้)
 ├── docs/
 │   ├── ARCHITECTURE.md       ← ภาพรวมระบบ, auth, RLS, env, deploy
+│   ├── BRAND.md              ← ★ โลโก้เฉพาะแบรนด์, ชุดไอคอน SVG (Figma Kit `/brand`), Liquid Glass UI
+│   ├── brand/svg/            ← ไฟล์ Vector SVG แยกเลเยอร์ทั้งหมด (โลโก้ 3 แบบ + 10 ไอคอนเฉพาะของแอป)
 │   ├── CONVENTIONS.md        ← กฎการเขียนโค้ด, SQL, git, การตั้งชื่อ
 │   ├── DATABASE.md           ← ★ สร้าง/sync DB บนเครื่อง, schema map, checklist เพิ่มตาราง + template
 │   ├── DECISIONS.md          ← บันทึกการตัดสินใจ + เรื่องที่ยังเปิดอยู่
@@ -177,11 +179,12 @@ URL ตอน dev:
     - [x] Tier ต่อผู้ใช้ (`private.subscriptions` รองรับ RevenueCat IAP + manual/promo, `private.user_limits()` บังคับใช้ใน `get_my_deck`, `send_bubble`, `swipe`)
     - [x] Realtime แชทแบบ Private Broadcast (`realtime.messages` RLS + `can_access_realtime_topic` + ไม่ส่ง `sender_id`/`user_id` ตาม D36)
     - [x] ย้าย Admin Console (`apps/web/src/app/admin/page.tsx`) มาเรียกผ่าน `@rukan/api` ทั้งหมด — ทดสอบ pgTAP 179/179 และ Vitest 62/62 ผ่านทั้งหมด
-    - [x] **Space `#Hashtag` & High-Scale Feed + 3-Tier Pass (`free` / `gold` / `premium`) + Rukan Coin (`🪙`) + Liquid Glass Bottom Bar + Mobile-Responsive Landing Page** (D61–D62, 2026-10-26) — ทดสอบ pgTAP 202/202 และ Vitest 66/66 ผ่านทั้งหมด
+    - [x] **Space `#Hashtag` & High-Scale Feed + 3-Tier Pass (`free` / `gold` / `premium`) + Rukan Coin (`🪙`) + Liquid Glass Bottom Bar + Mobile-Responsive Landing Page + Bespoke Brand & Figma SVG Kit (`/brand`)** (D61–D63, 2026-10-26) — ทดสอบ pgTAP 202/202 และ Vitest 66/66 ผ่านทั้งหมด
   - [ ] **งานถัดไป: ดู roadmap ใน `docs/AUDIT.md` หัวข้อ 4** (เชื่อม SDK RevenueCat จริงเมื่อมี Apple/Google account, selfie / SMS vendor, นโยบายเบอร์รีไซเคิล, P2 UX redesign)
 - [ ] หน้า login / สมัคร / แก้โปรไฟล์ บน web และ mobile
 - [x] Landing page rukan.app + waitlist (2026-10-24, branch `feature/web-landing`) — ทดสอบบนเครื่องแล้ว: pgTAP 20/20, ส่งฟอร์มเข้า `private.waitlist` ได้
   - [x] หน้า `/rules` `/privacy` `/terms` (TH + EN) พร้อมป้ายร่างและ sitemap (2026-10-24, branch `feature/me-and-legal`)
+  - [x] หน้าสตูดิโอแบรนด์และไอคอนสำหรับ Figma `/brand` + ไฟล์ Vector SVG เฉพาะของแอปใน `docs/brand/svg/` (2026-10-26, branch `feature/brand-figma-kit`)
   - [ ] OG image, analytics, ซื้อโดเมน rukan.app (ดู `docs/WEBSITE.md`)
 
 > **AI ที่ทำงานเสร็จแต่ละขั้น: อัปเดต checklist นี้ และบันทึกการตัดสินใจใหม่ลง `docs/DECISIONS.md` ด้วย**
@@ -192,7 +195,7 @@ URL ตอน dev:
 
 ## 6. วิธีทำงานสำหรับ AI
 
-- อ่าน `AGENTS.md` → `docs/PRODUCT.md` → `docs/ARCHITECTURE.md` → `docs/SYSTEM_DESIGN.md` → `docs/DATABASE.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม (งานที่แตะผู้ใช้/ข้อมูลส่วนตัว อ่าน `docs/POLICY.md` ด้วย)
+- อ่าน `AGENTS.md` → `docs/PRODUCT.md` → `docs/BRAND.md` → `docs/ARCHITECTURE.md` → `docs/SYSTEM_DESIGN.md` → `docs/DATABASE.md` → `docs/CONVENTIONS.md` → `docs/DECISIONS.md` ก่อนเริ่ม (งานที่แตะผู้ใช้/ข้อมูลส่วนตัว อ่าน `docs/POLICY.md` ด้วย · งานที่แตะ UI / โลโก้ / ไอคอน / แพ็กเกจ อ่าน `docs/BRAND.md` เสมอ)
 - **ก่อนรัน/ทดสอบอะไรที่ใช้ database: ทำให้ DB บนเครื่องตรงกับ `supabase/migrations/` ก่อน** — `pnpm db:start` แล้วถ้า `supabase/` เปลี่ยนหลัง pull/สลับ branch → `pnpm db:reset && pnpm db:test` ([`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 2)
 - **ห้าม push เข้า `main` ตรง** แม้จะเป็นงานเล็ก — ทำ branch + PR เสมอ (รอบ 2026-10-24 มี ~20 commit เข้า main ตรง ดู `AUDIT.md`)
 - ฟีเจอร์ที่แตะข้อมูล ทำตามลำดับ: **migration (ตาราง + RLS) → pgTAP test → `pnpm db:types` → zod schema ใน shared → UI** ตาม checklist + template ใน [`docs/DATABASE.md`](docs/DATABASE.md) หัวข้อ 4 และอัปเดตตาราง "สิ่งที่มีอยู่ตอนนี้" (หัวข้อ 3.3) ทุกครั้ง
