@@ -1,4 +1,5 @@
 // ข้อความทั้งหมดของเว็บโปรโมท (ไทย / อังกฤษ) — แก้คำที่นี่ที่เดียว ห้ามเขียนข้อความตรงใน component
+import { provinceOptions } from './provinces';
 export type Locale = 'th' | 'en';
 
 const th = {
@@ -28,7 +29,7 @@ const th = {
     },
     ctaPrimary: 'ลงชื่อรอใช้ก่อนใคร →',
     ctaSecondary: 'ดูว่าทำงานยังไง',
-    note: 'เปิดให้ใช้ฟรีที่กรุงเทพก่อน · iOS และ Android',
+    note: 'ใช้ฟรี ทุกที่ทั่วไทย · iOS และ Android',
   },
   phones: {
     space: 'Feed',
@@ -151,13 +152,14 @@ const th = {
   waitlist: {
     titleA: 'ลงชื่อรอใช้',
     titleB: 'ก่อนใคร',
-    sub: 'ย่านไหนลงชื่อเยอะ เราเปิดที่นั่นก่อน',
+    sub: 'ลงชื่อไว้ เราจะส่งอีเมลบอกทันทีที่เปิดให้ใช้',
     email: 'อีเมล',
     emailPlaceholder: 'you@example.com',
-    area: 'ย่าน / มหาลัย',
-    areaPlaceholder: 'เลือก…',
-    areaOtherPlaceholder: 'พิมพ์ย่านหรือมหาลัยของคุณ',
+    area: 'จังหวัด',
+    areaPlaceholder: 'เลือกจังหวัด…',
+    areaOtherPlaceholder: 'พิมพ์ประเทศ / เมืองของคุณ',
     age: 'ช่วงอายุ',
+    agePlaceholder: 'เลือก…',
     optional: '(ไม่บังคับ)',
     intents: 'มาหาอะไร',
     intentLabels: { friend: 'เพื่อน', talk: 'คนคุย', date: 'เดท' },
@@ -166,27 +168,17 @@ const th = {
     submit: 'ลงชื่อรอใช้ →',
     submitting: 'กำลังส่ง…',
     successTitle: 'ลงชื่อเรียบร้อย!',
-    successBody: 'เราจะส่งอีเมลบอกทันทีที่เปิดในย่านของคุณ',
+    successBody: 'เราจะส่งอีเมลบอกทันทีที่เปิดให้ใช้',
     again: 'ลงชื่ออีเมลอื่น',
     errors: {
       email: 'อีเมลไม่ถูกต้อง',
-      area: 'เลือกย่านหรือมหาลัย',
+      area: 'เลือกจังหวัด',
       consent: 'ต้องติ๊กยินยอมก่อนลงชื่อ',
       rate: 'ลงชื่อบ่อยเกินไป ลองใหม่ในอีกสักพัก',
       generic: 'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง',
     },
   },
-  areas: [
-    { value: 'siam', label: 'สยาม / ปทุมวัน (จุฬาฯ)' },
-    { value: 'ari', label: 'อารีย์ / พหลโยธิน' },
-    { value: 'asok', label: 'อโศก / สุขุมวิท' },
-    { value: 'silom', label: 'สีลม / สาทร' },
-    { value: 'bangkhen', label: 'บางเขน (เกษตรฯ)' },
-    { value: 'rangsit', label: 'รังสิต (ธรรมศาสตร์)' },
-    { value: 'salaya', label: 'ศาลายา (มหิดล)' },
-    { value: 'bangna', label: 'บางนา' },
-    { value: 'other', label: 'อื่นๆ' },
-  ],
+  areas: provinceOptions('th'),
   faq: {
     title: 'คำถามที่พบบ่อย',
     items: [
@@ -204,7 +196,7 @@ const th = {
       },
       {
         q: 'เปิดให้ใช้เมื่อไหร่',
-        a: 'เร็วๆ นี้ เริ่มที่กรุงเทพ ย่านที่ลงชื่อเยอะที่สุดได้ใช้ก่อน',
+        a: 'เร็วๆ นี้ เปิดพร้อมกันทั่วประเทศ ไม่จำกัดพื้นที่ ใครลงชื่อไว้ได้รับแจ้งก่อน',
       },
     ],
   },
@@ -245,7 +237,7 @@ const en: Dictionary = {
     },
     ctaPrimary: 'Join the waitlist →',
     ctaSecondary: 'See how it works',
-    note: 'Free, launching in Bangkok first · iOS and Android',
+    note: 'Free, everywhere in Thailand · iOS and Android',
   },
   phones: {
     space: 'Feed',
@@ -376,13 +368,14 @@ const en: Dictionary = {
   waitlist: {
     titleA: 'Join the waitlist',
     titleB: 'first',
-    sub: 'The areas with the most sign-ups get rukan first',
+    sub: 'Sign up and we’ll email you the moment rukan opens',
     email: 'Email',
     emailPlaceholder: 'you@example.com',
-    area: 'Area / university',
-    areaPlaceholder: 'Choose…',
-    areaOtherPlaceholder: 'Type your area or university',
+    area: 'Province',
+    areaPlaceholder: 'Choose a province…',
+    areaOtherPlaceholder: 'Type your country / city',
     age: 'Age range',
+    agePlaceholder: 'Choose…',
     optional: '(optional)',
     intents: 'Looking for',
     intentLabels: { friend: 'Friends', talk: 'Someone to talk to', date: 'Dating' },
@@ -392,27 +385,17 @@ const en: Dictionary = {
     submit: 'Join the waitlist →',
     submitting: 'Sending…',
     successTitle: 'You’re on the list!',
-    successBody: 'We’ll email you as soon as rukan opens in your area.',
+    successBody: 'We’ll email you as soon as rukan opens.',
     again: 'Add another email',
     errors: {
       email: 'Please enter a valid email',
-      area: 'Please choose an area or university',
+      area: 'Please choose a province',
       consent: 'Please tick the consent box first',
       rate: 'Too many tries — please wait a moment',
       generic: 'Something went wrong, please try again',
     },
   },
-  areas: [
-    { value: 'siam', label: 'Siam / Pathum Wan (Chula)' },
-    { value: 'ari', label: 'Ari / Phahon Yothin' },
-    { value: 'asok', label: 'Asok / Sukhumvit' },
-    { value: 'silom', label: 'Silom / Sathorn' },
-    { value: 'bangkhen', label: 'Bang Khen (Kasetsart)' },
-    { value: 'rangsit', label: 'Rangsit (Thammasat)' },
-    { value: 'salaya', label: 'Salaya (Mahidol)' },
-    { value: 'bangna', label: 'Bang Na' },
-    { value: 'other', label: 'Other' },
-  ],
+  areas: provinceOptions('en'),
   faq: {
     title: 'FAQ',
     items: [
@@ -430,7 +413,7 @@ const en: Dictionary = {
       },
       {
         q: 'When does it launch?',
-        a: 'Soon, starting in Bangkok. The areas with the most sign-ups go first.',
+        a: 'Soon — opening nationwide at once, no area limits. People on the waitlist hear first.',
       },
     ],
   },
