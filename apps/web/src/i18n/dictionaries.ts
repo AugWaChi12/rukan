@@ -26,7 +26,7 @@ const th = {
     note: 'เปิดให้ใช้ฟรีที่กรุงเทพก่อน · iOS และ Android',
   },
   phones: {
-    space: 'Space',
+    space: 'Feed',
     posts: [
       { alias: 'มะปราง', meta: '12 นาที', body: 'พรีเซนต์โปรเจคผ่านแล้ว ขอโม้หน่อยนะ ทำมาสามคืน' },
       {
@@ -36,15 +36,15 @@ const th = {
       },
       { alias: 'ฟ้าหลังฝน', meta: '1 ชม.', body: 'ย้ายมากรุงเทพ 3 เดือน ยังไม่มีเพื่อนเลย' },
     ],
-    sendBubble: 'ส่ง bubble',
-    dropTitle: 'Drop คืนนี้',
-    dropMeta: '19:00 · เหลือ 3',
-    locked: 'รูปค่อยๆ เปิดเมื่อคุยกัน',
+    sendBubble: 'สะกิด',
+    dropTitle: 'ปัดๆ',
+    dropMeta: 'เหลือ 17 ใบ',
+    locked: 'รูปที่ 4 เปิดเมื่อคุยกัน',
     cardName: 'แพรว, 24',
     cardLine: 'UX Designer · แถวอารีย์',
     cardAnswer: 'หลังเลิกงานชอบหาร้านข้าวอร่อยๆ แล้วเดินเล่นสวน',
     like: 'สนใจ',
-    reveal: 'เปิดรูปแล้ว 1 / 3',
+    reveal: 'เห็นแล้ว 3 รูป',
     chat: [
       { mine: false, text: 'เห็นว่าชอบฟิล์มคาเมร่าเหมือนกัน ใช้กล้องอะไรอยู่หรอ' },
       { mine: true, text: 'ใช้ของพ่อ เก่ามาก ยังเปลี่ยนฟิล์มไม่ค่อยเป็นเลย' },
@@ -52,9 +52,9 @@ const th = {
     ],
     toastMatch: 'Match กับ แพรว!',
     toastMatchSub: 'ทักภายใน 48 ชม.',
-    toastDrop: 'Drop คืนนี้มาแล้ว',
-    toastDropSub: '3 คนที่น่าจะคุยกันถูกคอ',
-    toastVerified: 'ทุกคนยืนยันตัวตนด้วย selfie',
+    toastDrop: 'มีคนสะกิดคุณ',
+    toastDropSub: 'สะกิดกลับ = เด้งเข้าแชททันที',
+    toastVerified: 'ทุกคนสแกนหน้ายืนยันว่าเป็นคนจริง',
   },
   marquee: {
     title: 'มาหาอะไรก็ได้ ที่ทำให้ไม่เหงา',
@@ -78,36 +78,36 @@ const th = {
   },
   features: {
     eyebrow: 'จุดเด่น',
-    title: 'รู้จักนิสัยกันก่อน แล้วค่อยเห็นหน้า',
-    sub: 'ไม่ต้องปัดตามรูปหน้าตา ไม่ต้องกลัวเจอบัญชีปลอม และไม่ต้องอายที่เปิดแอป',
+    title: 'หนึ่งคน สองตัวตน',
+    sub: 'ฝั่ง Feed เป็นนามแฝง ไม่มีใครรู้ว่าเป็นเรา · ฝั่งปัดเป็นตัวจริง แต่รูปค่อยๆ เปิด · ทุกคนยืนยันว่าเป็นคนจริงก่อนเข้าเล่น',
     space: {
-      title: 'Space ระบายได้ ไม่มีใครรู้ว่าเป็นเรา',
-      body: 'โพสต์ด้วยนามแฝง อ่านเรื่องของคนวัยเดียวกันใกล้ๆ ถ้าโพสต์ไหนคลิก ส่ง bubble ไปทัก แล้วค่อยเปิดตัวเมื่อทั้งคู่พร้อม',
+      title: 'Feed นามแฝง โพสต์ + ลง story โปรโมทตัวเองได้',
+      body: 'โพสต์ ระบาย หรือลง story ด้วยนามแฝง ใครถูกใจก็กด "สะกิด" ถ้าเขาสะกิดเรา แล้วเราสะกิดกลับ เด้งเข้าแชทกันทันที',
       sampleAlias: 'ส้มโอ',
       sampleMeta: 'นักศึกษา',
       sampleBody: 'วันนี้สอบเสร็จแล้ว ใครว่างไปกินชาบูบ้าง',
     },
     drop: {
-      title: 'Daily Drop ทุกคืน 19:00',
-      body: 'คัดคนที่น่าจะคุยกันถูกคอมาให้วันละไม่กี่คน ไม่ต้องเสียเวลาปัดเป็นร้อย สายฟรีเล่นได้ครบ สายพรีเมียมได้เจอก่อน',
+      title: 'ปัดๆ เห็น 3 รูปแรกก่อน',
+      body: 'ฝั่งตัวจริงเห็นแค่ 3 รูปแรก พอคุยกันไปกันมา รูปถัดไปถึงจะค่อยๆ เปิด ปัดได้เป็นรอบ ฟรีก็เล่นได้ Gold ได้ปัดเพิ่ม',
     },
     reveal: {
       title: 'รูปค่อยๆ เปิด ตามที่คุยกัน',
       body: 'ยิ่งคุยกันมาก ยิ่งเห็นกันชัด ต่างคนต่างต้องคุย พิมพ์รัวคนเดียวไม่ได้',
-      progress: 'เปิดรูปแล้ว 2 / 3',
-      progressSub: 'คุยอีก 15 ข้อความ เปิดรูปสุดท้าย',
+      progress: 'เห็นแล้ว 4 / 6 รูป',
+      progressSub: 'คุยกันอีกนิด เปิดรูปถัดไป',
     },
     verified: {
       title: 'ทุกคนเป็นคนจริง',
-      body: 'ยืนยันเบอร์ + selfie ทุกคน ไม่มีบัญชีปลอม ไม่มีมิจฉาชีพ',
-      checks: ['เบอร์โทรยืนยันแล้ว', 'selfie ยืนยันว่าเป็นคนจริง'],
+      body: 'ก่อนเข้าเล่นต้องยืนยันเบอร์ + สแกนหน้าว่าเป็นคนจริง กรองแอคหลุม คนไม่ตรงปก และมิจฉาชีพ',
+      checks: ['เบอร์โทรยืนยันแล้ว', 'สแกนหน้ายืนยันว่าเป็นคนจริง'],
       optional: 'ป้ายมหาลัย / ที่ทำงาน',
     },
     modes: {
-      title: 'หาเพื่อน หรือหาเดท แยกกันชัดเจน',
-      body: 'อยากได้แค่เพื่อนกินข้าวก็ได้ ไม่ต้องอายว่าเปิดแอปหาคู่ คนที่หาเดทกับหาเพื่อนไม่ปนกัน',
-      friend: 'เพื่อน',
-      date: 'เดท',
+      title: 'นามแฝงกับตัวจริง แยกกันเด็ดขาด',
+      body: 'คนใน Feed ไม่รู้ว่านามแฝงของคุณคือใคร จนกว่าคุณจะเลือกเปิดตัวเอง',
+      friend: 'นามแฝง',
+      date: 'ตัวจริง',
     },
   },
   how: {
@@ -116,15 +116,15 @@ const th = {
     steps: [
       {
         title: 'สมัคร + ยืนยันตัวตน',
-        body: 'Apple / Google / LINE แล้วยืนยันเบอร์ + selfie ไม่ถึง 2 นาที',
+        body: 'Google / Apple แล้วยืนยันเบอร์ + สแกนหน้า ไม่ถึง 2 นาที',
       },
       {
-        title: 'คุยใน Space หรือรอ Drop',
-        body: 'ระบายแบบไม่ระบุตัวตน หรือปัดคนที่ระบบคัดมาให้ตอน 19:00',
+        title: 'ลง Feed หรือไปปัดๆ',
+        body: 'โพสต์ / ลง story ด้วยนามแฝง สะกิดกันจนเด้งเข้าแชท หรือปัดดูตัวจริงที่เห็น 3 รูปแรก',
       },
       {
         title: 'คุยจนสนิท แล้วนัดเจอ',
-        body: 'รูปเปิดตามที่คุย พร้อมนัดที่ปลอดภัย และแชร์นัดให้เพื่อนรู้',
+        body: 'รูปถัดไปเปิดตามที่คุยกัน แล้วค่อยนัดเจอในที่ปลอดภัย',
       },
     ],
   },
@@ -134,8 +134,8 @@ const th = {
     body: 'ไม่ระบุตัวตน ไม่ได้แปลว่าทำอะไรก็ได้ เรามีกติกาชัด ทีมดูแลจริง และเครื่องมือที่ใช้ได้ทันที',
     cta: 'อ่านกติกาชุมชน →',
     items: [
-      { title: 'selfie ทุกคน', body: 'ไม่มีบัญชีปลอม' },
-      { title: 'ห้ามระบุตัวคนจริง', body: 'ใน Space ห้ามแฉ ห้ามประจาน' },
+      { title: 'สแกนหน้าทุกคน', body: 'ไม่มีแอคหลุม' },
+      { title: 'ห้ามระบุตัวคนจริง', body: 'ใน Feed ห้ามแฉ ห้ามประจาน' },
       { title: 'บล็อก / รายงาน ทันที', body: 'อีกฝ่ายไม่รู้ว่าถูกบล็อก' },
       { title: 'ไม่บอกตำแหน่งจริง', body: 'เห็นแค่ย่าน / ระยะโดยประมาณ' },
     ],
@@ -184,11 +184,11 @@ const th = {
     items: [
       {
         q: 'ใช้ฟรีไหม',
-        a: 'ใช้งานพื้นฐานได้ฟรีทั้งหมด ทั้ง Space, Daily Drop และแชท 1:1 ส่วนใครที่ต้องการความสะดวกและสิทธิ์พิเศษมากขึ้น เช่น เพิ่มโควตาทัก หรือดูการ์ดเพิ่ม สามารถเลือกสมัคร Rukan Gold ได้',
+        a: 'ใช้งานพื้นฐานได้ฟรีทั้งหมด ทั้ง Feed, ปัดๆ และแชท ส่วนใครอยากปัดเพิ่มต่อรอบหรือได้สิทธิ์พิเศษ เลือกสมัคร Rukan Gold ได้',
       },
       {
         q: 'ไม่ระบุตัวตนจริงไหม',
-        a: 'ใน Space คนอื่นเห็นแค่นามแฝง ระบบไม่ส่งตัวตนของคนโพสต์ออกไปให้ใครเลย จะเปิดดูได้เฉพาะทีมดูแลเมื่อมีการรายงานการทำผิดกติกา',
+        a: 'ใน Feed คนอื่นเห็นแค่นามแฝง ระบบไม่ส่งตัวตนของคนโพสต์ออกไปให้ใครเลย จะเปิดดูได้เฉพาะทีมดูแลเมื่อมีการรายงานการทำผิดกติกา',
       },
       {
         q: 'ใครใช้ได้บ้าง',
@@ -235,7 +235,7 @@ const en: Dictionary = {
     note: 'Free, launching in Bangkok first · iOS and Android',
   },
   phones: {
-    space: 'Space',
+    space: 'Feed',
     posts: [
       {
         alias: 'Mango',
@@ -253,15 +253,15 @@ const en: Dictionary = {
         body: 'Moved to Bangkok 3 months ago and still no friends.',
       },
     ],
-    sendBubble: 'Send bubble',
-    dropTitle: 'Tonight’s Drop',
-    dropMeta: '19:00 · 3 left',
-    locked: 'Photos unlock as you chat',
+    sendBubble: 'Poke',
+    dropTitle: 'Swipe',
+    dropMeta: '17 cards left',
+    locked: 'Photo 4 unlocks as you chat',
     cardName: 'Praew, 24',
     cardLine: 'UX Designer · around Ari',
     cardAnswer: 'After work I like finding a good place to eat, then a walk in the park',
     like: 'Like',
-    reveal: 'Photos unlocked 1 / 3',
+    reveal: '3 photos visible',
     chat: [
       { mine: false, text: 'I saw you’re into film cameras too — what do you shoot with?' },
       { mine: true, text: 'My dad’s — it’s ancient and I still can’t load film properly' },
@@ -269,9 +269,9 @@ const en: Dictionary = {
     ],
     toastMatch: 'It’s a match with Praew!',
     toastMatchSub: 'Say hi within 48 hours',
-    toastDrop: 'Tonight’s Drop is here',
-    toastDropSub: '3 people you’d probably click with',
-    toastVerified: 'Everyone is selfie-verified',
+    toastDrop: 'Someone poked you',
+    toastDropSub: 'Poke back = straight into chat',
+    toastVerified: 'Everyone is face-scan verified',
   },
   marquee: {
     title: 'Whatever helps you feel less lonely',
@@ -295,36 +295,36 @@ const en: Dictionary = {
   },
   features: {
     eyebrow: 'Features',
-    title: 'Get to know them first, then see their face',
-    sub: 'No swiping on looks, no fake accounts, and nothing embarrassing about opening the app',
+    title: 'One person, two identities',
+    sub: 'The Feed is anonymous — nobody knows it’s you · Swipe is the real you, but photos unlock slowly · Everyone proves they’re real before playing',
     space: {
-      title: 'Space: vent without anyone knowing it’s you',
-      body: 'Post under an alias and read stories from people your age nearby. If a post clicks, send a bubble — reveal yourselves only when you’re both ready.',
+      title: 'Anonymous Feed: post and share stories to promote yourself',
+      body: 'Post, vent or share a story under an alias. Like someone? Poke them. If they poke you and you poke back, you’re in a chat instantly.',
       sampleAlias: 'Pomelo',
       sampleMeta: 'Student',
       sampleBody: 'Exams are done! Anyone free for shabu tonight?',
     },
     drop: {
-      title: 'Daily Drop, every night at 19:00',
-      body: 'A few curated matches every day. No endless swiping — free to enjoy, with Rukan Gold perks for those who want more.',
+      title: 'Swipe with the first 3 photos',
+      body: 'On the real side you only see 3 photos at first — the next ones unlock as you keep talking. Swipe in rounds: free to play, Gold gets more swipes.',
     },
     reveal: {
       title: 'Photos unlock as you chat',
       body: 'The more you talk, the more you see. Both of you have to chat — spamming alone won’t unlock anything.',
-      progress: 'Photos unlocked 2 / 3',
-      progressSub: '15 more messages to unlock the last one',
+      progress: '4 / 6 photos visible',
+      progressSub: 'Keep chatting to unlock the next one',
     },
     verified: {
       title: 'Everyone is a real person',
-      body: 'Phone + selfie verification for everyone. No fake accounts, no scammers.',
+      body: 'Before you play: verify your phone and scan your face to prove you’re real — filtering out fakes, catfish and scammers.',
       checks: ['Phone verified', 'Selfie verified'],
       optional: 'University / workplace badge',
     },
     modes: {
-      title: 'Friends or dating — kept separate',
-      body: 'Just want a dinner buddy? That’s fine. People looking for friends and people looking for dates don’t mix.',
-      friend: 'Friends',
-      date: 'Dating',
+      title: 'Alias and real you — never linked',
+      body: 'People in the Feed can’t tell who your alias is until you choose to reveal yourself.',
+      friend: 'Alias',
+      date: 'Real you',
     },
   },
   how: {
@@ -333,15 +333,15 @@ const en: Dictionary = {
     steps: [
       {
         title: 'Sign up + verify',
-        body: 'Apple / Google / LINE, then phone + selfie — under 2 minutes',
+        body: 'Google / Apple, then phone + face scan — under 2 minutes',
       },
       {
-        title: 'Chat in Space or wait for the Drop',
-        body: 'Vent anonymously, or swipe on the people picked for you at 19:00',
+        title: 'Post in the Feed or go swipe',
+        body: 'Post or share a story under an alias and poke your way into a chat, or swipe real profiles with the first 3 photos',
       },
       {
         title: 'Get close, then meet',
-        body: 'Photos unlock as you chat; meet somewhere safe and share your plans with a friend',
+        body: 'More photos unlock as you talk — then meet somewhere safe',
       },
     ],
   },
@@ -351,8 +351,8 @@ const en: Dictionary = {
     body: 'Anonymous doesn’t mean anything goes. Clear rules, a real moderation team, and tools that work instantly.',
     cta: 'Read the community rules →',
     items: [
-      { title: 'Selfie for everyone', body: 'No fake accounts' },
-      { title: 'No naming real people', body: 'No exposing or shaming in Space' },
+      { title: 'Face scan for everyone', body: 'No fake accounts' },
+      { title: 'No naming real people', body: 'No exposing or shaming in the Feed' },
       { title: 'Block / report instantly', body: 'They’re never told they were blocked' },
       { title: 'No exact location', body: 'Only area / rough distance' },
     ],
@@ -402,11 +402,11 @@ const en: Dictionary = {
     items: [
       {
         q: 'Is it free?',
-        a: 'Yes — core features like Space, Daily Drop, and chatting are free. We also offer optional Rukan Gold for members who want extra daily quotas and enhanced perks.',
+        a: 'Yes — the Feed, swiping and chat are all free. Rukan Gold is optional for more swipes per round and extra perks.',
       },
       {
         q: 'Is it really anonymous?',
-        a: 'In Space others only see your alias. The app never sends a poster’s identity to anyone; only our moderation team can look it up when a post is reported for breaking the rules.',
+        a: 'In the Feed others only see your alias. The app never sends a poster’s identity to anyone; only our moderation team can look it up when a post is reported for breaking the rules.',
       },
       {
         q: 'Who can join?',
