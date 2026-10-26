@@ -4,7 +4,7 @@ import { router, type Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { AppText, BouncyPressable, Chip, EmptyState, Loading, Row } from '@/components/ui';
+import { AppText, BouncyPressable, Chip, EmptyState, Loading, Row, Screen } from '@/components/ui';
 import { api, queries, queryClient, queryKeys } from '@/lib/api';
 import { haptic } from '@/lib/haptics';
 import { useAppTheme } from '@/theme/theme-provider';
@@ -54,7 +54,7 @@ function getNotificationVisual(type: NotificationType) {
   }
 }
 
-export function NotificationsScreen() {
+export function NotificationsScreen({ isTab = false }: { isTab?: boolean } = {}) {
   const { t, i18n } = useTranslation();
   const { colors } = useAppTheme();
 
@@ -137,19 +137,17 @@ export function NotificationsScreen() {
       </BouncyPressable>
     ) : null;
 
-  return (
-    <SubScreen
-      title={t('notifications.title')}
-      right={markAllBtn}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.accent}
-          colors={[colors.accent]}
-        />
-      }
-    >
+  const refreshEl = (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      tintColor={colors.accent}
+      colors={[colors.accent]}
+    />
+  );
+
+  const content = (
+    <>
       {/* Filter Chips */}
       <Row style={{ gap: 8, marginVertical: space.sm }}>
         <Chip
@@ -241,8 +239,35 @@ export function NotificationsScreen() {
         </View>
       )}
 
-      {/* Pull-to-refresh dummy */}
-      <View style={{ height: 20 }} />
+      {/* Spacing for floating bottom bar */}
+      <View style={{ height: isTab ? 90 : 20 }} />
+    </>
+  );
+
+  if (isTab) {
+    return (
+      <Screen refreshControl={refreshEl}>
+        <Row style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: space.xs }}>
+          <View style={{ flex: 1 }}>
+            <AppText variant="small" style={{ color: colors.accent, fontWeight: '700' }}>
+              {t('notifications.eyebrow', { defaultValue: 'อัปเดตของคุณ' })}
+            </AppText>
+            <AppText variant="title">{t('notifications.title')}</AppText>
+          </View>
+          {markAllBtn}
+        </Row>
+        {content}
+      </Screen>
+    );
+  }
+
+  return (
+    <SubScreen
+      title={t('notifications.title')}
+      right={markAllBtn}
+      refreshControl={refreshEl}
+    >
+      {content}
     </SubScreen>
   );
 }

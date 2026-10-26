@@ -93,7 +93,7 @@ export const en: Messages = {
     },
   },
   modes: { friend: 'Friends', date: 'Dating' },
-  tabs: { space: 'Space', drop: 'Drop', chats: 'Chats', me: 'Me' },
+  tabs: { space: 'Space', drop: 'Drop', chats: 'Chats', notifications: 'Alerts', me: 'Me' },
   notifications: {
     title: 'Notifications',
     markAllRead: 'Mark all as read',

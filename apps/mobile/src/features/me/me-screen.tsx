@@ -210,7 +210,7 @@ function MeMenu({ profile }: { profile: MyProfile }) {
           tint={colors.accentTint}
           label={t('me.menu.notifications')}
           badge={unreadCount > 0 ? `${unreadCount}` : undefined}
-          onPress={() => go('/me/notifications')}
+          onPress={() => go('/(app)/(tabs)/notifications')}
         />
         <ListRow
           icon="person-outline"

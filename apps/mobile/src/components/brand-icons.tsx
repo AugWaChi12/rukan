@@ -89,6 +89,26 @@ export const TabChatsIcon = memo(function TabChatsIcon({
   return <SvgIcon svg={svg} size={size} />;
 });
 
+export const TabNotificationsIcon = memo(function TabNotificationsIcon({
+  size = 26,
+  focused = false,
+}: {
+  size?: number;
+  focused?: boolean;
+}) {
+  const stroke = focused ? '#2E2238' : '#7B6F85';
+  const bellFill = focused ? '#FFF4F7' : 'none';
+  const rimStroke = focused ? '#D4688E' : stroke;
+  const clapperFill = focused ? '#F2C66D' : 'none';
+  const svg = `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 10C29.8 10 28 11.8 28 14V16.3C21.6 18.2 17 24.1 17 31V41L12 46V49H52V46L47 41V31C47 24.1 42.4 18.2 36 16.3V14C36 11.8 34.2 10 32 10Z" fill="${bellFill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round" />
+    <path d="M12 49H52" stroke="${rimStroke}" stroke-width="4" stroke-linecap="round" />
+    <path d="M26 49C26.5 52.5 29 55 32 55C35 55 37.5 52.5 38 49" fill="${clapperFill}" stroke="${stroke}" stroke-width="3.5" stroke-linecap="round" />
+    ${focused ? '<circle cx="48" cy="18" r="4.5" fill="#E9A9BF" stroke="#2E2238" stroke-width="2.5" /><path d="M48 11L49.2 13.8L52 15L49.2 16.2L48 19L46.8 16.2L44 15L46.8 13.8L48 11Z" fill="#F2C66D" />' : ''}
+  </svg>`;
+  return <SvgIcon svg={svg} size={size} />;
+});
+
 export const TabMeIcon = memo(function TabMeIcon({
   size = 26,
   focused = false,
