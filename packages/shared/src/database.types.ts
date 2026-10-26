@@ -282,10 +282,15 @@ export type Database = {
         };
         Returns: undefined;
       };
-      create_post:
-        | { Args: { p_body: string; p_mood?: string }; Returns: Json }
-        | { Args: { p_body: string; p_media_url?: string; p_mood?: string }; Returns: Json };
+      create_post: {
+        Args: { p_body: string; p_media_url?: string; p_mood?: string };
+        Returns: Json;
+      };
       create_story: { Args: { p_caption?: string; p_media_url: string }; Returns: Json };
+      create_topup_order: {
+        Args: { p_package_id: string; p_slip_url?: string; p_target_user_id?: string };
+        Returns: Json;
+      };
       delete_my_post: { Args: { p_post_id: string }; Returns: undefined };
       delete_my_reply: { Args: { p_reply_id: string }; Returns: undefined };
       delete_my_story: { Args: { p_story_id: string }; Returns: boolean };
@@ -321,10 +326,12 @@ export type Database = {
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_status: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_subscription: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_topup_orders: { Args: Record<PropertyKey, never>; Returns: Json };
       get_profile_card: { Args: { p_user_id: string }; Returns: Json };
       get_replies: { Args: { p_post_id: string }; Returns: Json };
       get_tier_configs: { Args: Record<PropertyKey, never>; Returns: Json };
       get_trending_hashtags: { Args: { p_hours?: number; p_limit?: number }; Returns: Json };
+      get_user_topup_info: { Args: { p_user_id: string }; Returns: Json };
       health: { Args: Record<PropertyKey, never>; Returns: Json };
       join_waitlist: {
         Args: {
@@ -340,6 +347,7 @@ export type Database = {
       };
       like_post: { Args: { p_post_id: string }; Returns: undefined };
       mark_conversation_read: { Args: { p_conversation_id: string }; Returns: undefined };
+      mod_approve_topup_order: { Args: { p_order_id: string }; Returns: Json };
       mod_get_dashboard_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_get_report: { Args: { p_report_id: string }; Returns: Json };
       mod_get_waitlist_stats: { Args: Record<PropertyKey, never>; Returns: Json };

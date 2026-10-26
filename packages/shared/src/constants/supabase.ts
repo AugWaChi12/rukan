@@ -39,6 +39,11 @@ export const SUPABASE_RPC = {
   modListUsers: 'mod_list_users',
   modSetUserVerification: 'mod_set_user_verification',
   modSetUserModes: 'mod_set_user_modes',
+  // Web Top-up Portal & Slips
+  getUserTopupInfo: 'get_user_topup_info',
+  createTopupOrder: 'create_topup_order',
+  getMyTopupOrders: 'get_my_topup_orders',
+  modApproveTopupOrder: 'mod_approve_topup_order',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   createPost: 'create_post',
   getFeed: 'get_feed',
@@ -80,6 +85,8 @@ export const STORAGE_BUCKETS = {
   photos: 'photos',
   /** รูปใน Space โพสต์ & Stories (สาธารณะสำหรับอ่าน) */
   spaceMedia: 'space_media',
+  /** สลิปการโอนเงินสำหรับเติมเหรียญ */
+  slips: 'slips',
 } as const;
 
 /** ตารางที่ client อ่านตรงได้ด้วย `supabase.from(...)` (ตาม RLS) — เขียนต้องผ่าน RPC เสมอ */

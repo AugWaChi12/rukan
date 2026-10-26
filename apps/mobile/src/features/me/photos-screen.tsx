@@ -100,7 +100,13 @@ function PhotoGrid({ userId }: { userId: string }) {
             return (
               <View
                 key={slot}
-                style={[styles.tile, { backgroundColor: colors.subtle, borderColor: colors.line }]}
+                style={[
+                  styles.tile,
+                  {
+                    backgroundColor: colors.subtle,
+                    borderColor: slot === 0 ? colors.accent : colors.line,
+                  },
+                ]}
               >
                 {photo.signedUrl ? (
                   <Image
@@ -110,14 +116,18 @@ function PhotoGrid({ userId }: { userId: string }) {
                   />
                 ) : null}
                 {slot === 0 ? (
-                  <View style={[styles.mainTag, { backgroundColor: colors.text }]}>
-                    <AppText style={[styles.tagText, { color: colors.background }]}>
-                      {t('me.photoMain')}
+                  <View style={[styles.mainTag, { backgroundColor: colors.accent }]}>
+                    <AppText style={[styles.tagText, { color: '#ffffff' }]}>
+                      ★ {t('me.photoMain')}
                     </AppText>
                   </View>
-                ) : null}
-                <View style={[styles.status, { backgroundColor: colors.card }]}>
-                  <AppText style={[styles.tagText, { color: colors.text }]}>
+                ) : (
+                  <View style={[styles.slotBadge, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                    <AppText style={[styles.tagText, { color: '#ffffff' }]}>{slot + 1}</AppText>
+                  </View>
+                )}
+                <View style={[styles.status, { backgroundColor: 'rgba(255,255,255,0.85)' }]}>
+                  <AppText style={[styles.tagText, { color: colors.text, fontSize: 10 }]}>
                     {statusLabel(photo.moderation_status)}
                   </AppText>
                 </View>
@@ -127,12 +137,12 @@ function PhotoGrid({ userId }: { userId: string }) {
                   disabled={isBusy}
                   hitSlop={8}
                   onPress={() => remove.mutate(photo)}
-                  style={[styles.removeBtn, { backgroundColor: colors.card }]}
+                  style={[styles.removeBtn, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
                 >
                   {isBusy ? (
-                    <ActivityIndicator size="small" color={colors.text} />
+                    <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
-                    <Ionicons name="close" size={16} color={colors.text} />
+                    <Ionicons name="close" size={14} color="#ffffff" />
                   )}
                 </Pressable>
               </View>
@@ -150,16 +160,35 @@ function PhotoGrid({ userId }: { userId: string }) {
                 styles.tile,
                 styles.empty,
                 {
-                  borderColor: colors.lineStrong,
+                  borderColor: slot === 0 ? colors.accentSoft : colors.lineStrong,
                   backgroundColor: pressed ? colors.subtle : colors.card,
                 },
               ]}
             >
+              <View style={[styles.slotNumberCircle, { backgroundColor: colors.subtle }]}>
+                <AppText style={{ fontSize: 11, fontWeight: '700', color: colors.muted }}>
+                  {slot + 1}
+                </AppText>
+              </View>
               {isBusy ? (
-                <ActivityIndicator color={colors.muted} />
+                <ActivityIndicator color={colors.accent} />
               ) : (
-                <Ionicons name="add" size={26} color={colors.muted} />
+                <View style={[styles.plusCircle, { backgroundColor: colors.accentTint }]}>
+                  <Ionicons name="add" size={22} color={colors.accent} />
+                </View>
               )}
+              {slot === 0 ? (
+                <AppText
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '700',
+                    color: colors.accent,
+                    marginTop: 4,
+                  }}
+                >
+                  ★ {t('me.photoMain')}
+                </AppText>
+              ) : null}
             </Pressable>
           );
         })}
@@ -183,36 +212,79 @@ const styles = StyleSheet.create({
   tile: {
     width: '31.5%',
     aspectRatio: 3 / 4,
-    borderRadius: radius.sm,
-    borderWidth: 1,
+    borderRadius: 16,
+    borderWidth: 1.5,
     overflow: 'hidden',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  empty: { borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
+  empty: {
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+  },
   image: { width: '100%', height: '100%' },
   mainTag: {
     position: 'absolute',
-    top: space.xs,
-    left: space.xs,
+    top: 6,
+    left: 6,
     borderRadius: radius.pill,
-    paddingHorizontal: space.sm,
+    paddingHorizontal: 7,
     paddingVertical: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  slotBadge: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slotNumberCircle: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   status: {
     position: 'absolute',
-    bottom: space.xs,
-    left: space.xs,
+    bottom: 6,
+    left: 6,
     borderRadius: radius.pill,
-    paddingHorizontal: space.sm,
+    paddingHorizontal: 6,
     paddingVertical: 2,
   },
-  tagText: { fontSize: 11, fontWeight: '700' },
+  tagText: { fontSize: 10, fontWeight: '700' },
   removeBtn: {
     position: 'absolute',
-    top: space.xs,
-    right: space.xs,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },

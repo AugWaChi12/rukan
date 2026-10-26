@@ -13,9 +13,18 @@ import {
 } from '@rukan/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Image,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { AiSparkleIcon } from '@/components/brand-icons';
 import { CareNoticeBanner, SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
@@ -177,7 +186,7 @@ export function SpaceScreen() {
     }
   };
 
-  // Optimistic like toggle เพื่อความสมูท 0ms latency
+  // Optimistic like toggle เพื่อความสมูท 0ms latency พร้อม Heart Pop Micro-interaction
   const likeMut = useMutation({
     mutationFn: async (post: SpacePost) => {
       if (post.liked_by_me) {
@@ -187,7 +196,11 @@ export function SpaceScreen() {
       }
     },
     onMutate: async (post: SpacePost) => {
-      haptic.light();
+      if (!post.liked_by_me) {
+        haptic.success();
+      } else {
+        haptic.light();
+      }
       await queryClient.cancelQueries({ queryKey: currentFeedKey });
       const previousFeed = queryClient.getQueryData<SpacePost[]>(currentFeedKey);
       if (previousFeed) {
@@ -234,8 +247,30 @@ export function SpaceScreen() {
     label: t(`space.sorts.${v}`),
   }));
 
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    haptic.selection();
+    await Promise.all([
+      feedQuery.refetch(),
+      storiesQuery.refetch(),
+      trendingQuery.refetch(),
+      profileQuery.refetch(),
+    ]);
+    setRefreshing(false);
+  }, [feedQuery, storiesQuery, trendingQuery, profileQuery]);
+
   return (
-    <Screen>
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.accent}
+          colors={[colors.accent]}
+        />
+      }
+    >
       {/* Header สไตล์ Modern Social App */}
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
@@ -245,7 +280,10 @@ export function SpaceScreen() {
             </AppText>
             <View style={[styles.anonPill, { backgroundColor: colors.accentTint }]}>
               <Text style={{ fontSize: 10 }}>✨</Text>
-              <AppText variant="small" style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}>
+              <AppText
+                variant="small"
+                style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}
+              >
                 {t('space.eyebrow')}
               </AppText>
             </View>
@@ -458,10 +496,7 @@ export function SpaceScreen() {
               onChangeText={setBody}
               maxLength={SPACE_LIMITS.postBody}
               multiline
-              style={[
-                styles.composerInput,
-                { color: colors.text },
-              ]}
+              style={[styles.composerInput, { color: colors.text }]}
             />
           </View>
         </Row>
@@ -667,11 +702,7 @@ export function SpaceScreen() {
       {feedQuery.isPending ? (
         <Loading />
       ) : (feedQuery.data ?? []).length === 0 ? (
-        <EmptyState
-          icon="🫧"
-          title={t('space.emptyTitle')}
-          body={t('space.emptyBody')}
-        />
+        <EmptyState icon="🫧" title={t('space.emptyTitle')} body={t('space.emptyBody')} />
       ) : (
         (feedQuery.data ?? []).map((post) => {
           const areaName = post.area_id ? (areaMap.get(post.area_id) ?? post.area_id) : null;
@@ -687,10 +718,7 @@ export function SpaceScreen() {
           return (
             <Card
               key={post.id}
-              style={[
-                styles.postCard,
-                { backgroundColor: colors.card, borderColor: colors.line },
-              ]}
+              style={[styles.postCard, { backgroundColor: colors.card, borderColor: colors.line }]}
             >
               <View style={styles.postHeader}>
                 <AliasAvatar alias={post.alias} color={post.alias_color} size={40} />
@@ -1280,7 +1308,10 @@ function StoryViewerModal({
                 { backgroundColor: 'rgba(255,255,255,0.1)', marginTop: 8 },
               ]}
             >
-              <AppText variant="small" style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
+              <AppText
+                variant="small"
+                style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}
+              >
                 {t('space.myStoryNotice')}
               </AppText>
             </View>

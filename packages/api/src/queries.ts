@@ -35,6 +35,10 @@ export const queryKeys = {
   modReports: (status: ReportStatus = 'open') => ['moderation', 'reports', status] as const,
   modReport: (reportId: string) => ['moderation', 'report', reportId] as const,
   modAppeals: (status: AppealStatus = 'pending') => ['moderation', 'appeals', status] as const,
+  topup: {
+    userInfo: (userId: string) => ['topup', 'user-info', userId] as const,
+    myOrders: ['topup', 'my-orders'] as const,
+  },
   reference: ['reference'] as const,
   tierConfigs: ['reference', 'tier-configs'] as const,
   areas: ['reference', 'areas'] as const,
@@ -160,6 +164,17 @@ export function createQueries(api: RukanApi) {
         queryKey: queryKeys.prompts,
         queryFn: api.listPrompts,
         staleTime: REFERENCE_STALE_MS,
+      }),
+    userTopupInfo: (userId: string) =>
+      queryOptions({
+        queryKey: queryKeys.topup.userInfo(userId),
+        queryFn: () => api.getUserTopupInfo(userId),
+        enabled: !!userId,
+      }),
+    myTopupOrders: () =>
+      queryOptions({
+        queryKey: queryKeys.topup.myOrders,
+        queryFn: api.getMyTopupOrders,
       }),
   };
 }
