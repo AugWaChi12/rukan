@@ -20,7 +20,12 @@ const th = {
   hero: {
     titleA: 'ไม่เหงา',
     titleB: 'แค่เริ่มทัก',
-    sub: 'หาเพื่อนคุย เพื่อนกินข้าว หรือคนพิเศษ สำหรับวัยเรียนและวัยทำงาน — ทุกคนยืนยันตัวตนจริง และระบายได้แบบไม่มีใครรู้ว่าเป็นเรา',
+    sub: 'แอปเดียว สองตัวตน — เล่าเรื่องแบบนามแฝงให้คนสนใจก่อน แล้วค่อยให้เห็นหน้าตัวจริงทีละนิด ทุกคนยืนยันว่าเป็นคนจริงก่อนเข้าเล่น',
+    identities: {
+      alias: { label: 'นามแฝง', place: 'Feed', desc: 'โพสต์ · ลง story · สะกิด' },
+      real: { label: 'ตัวจริง', place: 'ปัดๆ', desc: 'เห็น 3 รูปแรก · คุยแล้วเปิดเพิ่ม' },
+      link: 'คนเดียวกัน',
+    },
     ctaPrimary: 'ลงชื่อรอใช้ก่อนใคร →',
     ctaSecondary: 'ดูว่าทำงานยังไง',
     note: 'เปิดให้ใช้ฟรีที่กรุงเทพก่อน · iOS และ Android',
@@ -108,6 +113,9 @@ const th = {
       body: 'คนใน Feed ไม่รู้ว่านามแฝงของคุณคือใคร จนกว่าคุณจะเลือกเปิดตัวเอง',
       friend: 'นามแฝง',
       date: 'ตัวจริง',
+      aliasMeta: 'ใน Feed · คนอื่นเห็นแค่นี้',
+      realMeta: 'ในปัดๆ · เห็นหลังยืนยันตัวตน',
+      wall: 'ไม่มีใครเชื่อมสองฝั่งได้ จนกว่าคุณจะเปิดเอง',
     },
   },
   how: {
@@ -229,7 +237,12 @@ const en: Dictionary = {
   hero: {
     titleA: 'Less lonely,',
     titleB: 'one hello away',
-    sub: 'Find someone to talk to, eat with, or someone special — for students and young professionals. Everyone is verified, and you can vent without anyone knowing it’s you.',
+    sub: 'One app, two identities — get noticed under an alias first, then let them see the real you a little at a time. Everyone proves they’re real before playing.',
+    identities: {
+      alias: { label: 'Alias', place: 'Feed', desc: 'Post · story · poke' },
+      real: { label: 'Real you', place: 'Swipe', desc: '3 photos first · more as you chat' },
+      link: 'Same person',
+    },
     ctaPrimary: 'Join the waitlist →',
     ctaSecondary: 'See how it works',
     note: 'Free, launching in Bangkok first · iOS and Android',
@@ -325,6 +338,9 @@ const en: Dictionary = {
       body: 'People in the Feed can’t tell who your alias is until you choose to reveal yourself.',
       friend: 'Alias',
       date: 'Real you',
+      aliasMeta: 'In the Feed · all anyone sees',
+      realMeta: 'In Swipe · only after verification',
+      wall: 'Nobody can link the two — until you choose to',
     },
   },
   how: {
