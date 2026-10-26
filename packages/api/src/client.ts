@@ -9,6 +9,8 @@ import {
   conversationListSchema,
   createPostResultSchema,
   createPostSchema,
+  createStorySchema,
+  type CreateStoryInput,
   exchangeCoinsForPassSchema,
   getFeedSchema,
   getMessagesSchema,
@@ -66,6 +68,9 @@ import {
   sendMessageResultSchema,
   sendMessageSchema,
   spaceFeedSchema,
+  storiesFeedSchema,
+  storyItemSchema,
+  type StoryItem,
   spaceRepliesSchema,
   STORAGE_BUCKETS,
   submitAppealSchema,
@@ -681,12 +686,74 @@ export function createApi(supabase: RukanSupabaseClient) {
 
     async createPost(input: CreatePostInput): Promise<CreatePostResult> {
       const v = createPostSchema.parse(input);
+      let res = await supabase.rpc(SUPABASE_RPC.createPost, {
+        p_body: v.body,
+        p_mood: v.mood,
+        p_media_url: v.mediaUrl || null,
+      });
+
+      // Backward-compatibility: if backend function only has (p_body, p_mood)
+      if (res.error && (res.error.code === 'PGRST202' || res.error.message?.includes('PGRST202'))) {
+        res = await supabase.rpc(SUPABASE_RPC.createPost, {
+          p_body: v.body,
+          p_mood: v.mood,
+        });
+      }
+
+      return parse(createPostResultSchema, unwrap(res));
+    },
+
+    async uploadSpaceMedia(input: {
+      userId: string;
+      body: ArrayBuffer | Blob;
+      contentType?: string;
+      fileName?: string;
+    }): Promise<string> {
+      const name =
+        input.fileName || `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.jpg`;
+      const storagePath = `${input.userId}/${name}`;
+      unwrap(
+        await supabase.storage.from(STORAGE_BUCKETS.spaceMedia).upload(storagePath, input.body, {
+          contentType: input.contentType || 'image/jpeg',
+          upsert: true,
+        }),
+      );
+      const { data: signedData } = await supabase.storage
+        .from(STORAGE_BUCKETS.spaceMedia)
+        .createSignedUrl(storagePath, 31536000);
+      if (signedData?.signedUrl) {
+        return signedData.signedUrl;
+      }
+      const { data } = supabase.storage.from(STORAGE_BUCKETS.spaceMedia).getPublicUrl(storagePath);
+      return data.publicUrl;
+    },
+
+    async createStory(input: CreateStoryInput): Promise<StoryItem> {
+      const v = createStorySchema.parse(input);
       return parse(
-        createPostResultSchema,
+        storyItemSchema,
         unwrap(
-          await supabase.rpc(SUPABASE_RPC.createPost, {
-            p_body: v.body,
-            p_mood: v.mood,
+          await supabase.rpc(SUPABASE_RPC.createStory, {
+            p_media_url: v.mediaUrl,
+            p_caption: v.caption || undefined,
+          }),
+        ),
+      );
+    },
+
+    async getActiveStories(): Promise<StoryItem[]> {
+      const res = await supabase.rpc(SUPABASE_RPC.getActiveStories);
+      if (res.error && (res.error.code === 'PGRST202' || res.error.message?.includes('PGRST202'))) {
+        return [];
+      }
+      return parse(storiesFeedSchema, unwrap(res));
+    },
+
+    async deleteMyStory(storyId: string): Promise<boolean> {
+      return Boolean(
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.deleteMyStory, {
+            p_story_id: storyId,
           }),
         ),
       );

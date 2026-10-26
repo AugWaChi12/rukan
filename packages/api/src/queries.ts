@@ -23,6 +23,7 @@ export const queryKeys = {
   myMatches: ['me', 'matches'] as const,
   profileCard: (userId: string) => ['me', 'profile-card', userId] as const,
   space: ['space'] as const,
+  stories: ['space', 'stories'] as const,
   spaceFeed: (tab: SpaceFeedTab, hashtag: string | null = null, sort: SpaceFeedSort = 'latest') =>
     ['space', 'feed', tab, hashtag ?? '', sort] as const,
   spaceTrending: (hours = 24) => ['space', 'trending', hours] as const,
@@ -106,6 +107,11 @@ export function createQueries(api: RukanApi) {
       queryOptions({
         queryKey: queryKeys.spaceReplies(postId),
         queryFn: () => api.getReplies(postId),
+      }),
+    spaceStories: () =>
+      queryOptions({
+        queryKey: queryKeys.stories,
+        queryFn: api.getActiveStories,
       }),
     modDashboardCounts: () =>
       queryOptions({

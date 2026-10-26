@@ -9,11 +9,13 @@ import {
   type SpaceFeedTab,
   type SpaceMood,
   type SpacePost,
+  type StoryItem,
 } from '@rukan/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AiSparkleIcon } from '@/components/brand-icons';
 import { CareNoticeBanner, SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
@@ -36,6 +38,7 @@ import {
 import { errorMessage } from '@/i18n';
 import { api, queries, queryClient, queryKeys } from '@/lib/api';
 import { haptic } from '@/lib/haptics';
+import { compressAndPrepareImage } from '@/lib/image';
 import { detectCurrentProvince } from '@/lib/location';
 import { useAppTheme } from '@/theme/theme-provider';
 import { radius, space } from '@/theme/tokens';
@@ -71,10 +74,16 @@ export function SpaceScreen() {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [gpsStatusText, setGpsStatusText] = useState<string | null>(null);
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [activeStory, setActiveStory] = useState<StoryItem | null>(null);
+  const [isUploadingStory, setIsUploadingStory] = useState(false);
+  const [storyToDelete, setStoryToDelete] = useState<string | null>(null);
 
   const profileQuery = useQuery(queries.myProfile());
   const areasQuery = useQuery(queries.areas());
   const trendingQuery = useQuery(queries.spaceTrending());
+  const storiesQuery = useQuery(queries.spaceStories());
   const feedQuery = useQuery(queries.spaceFeed(tab, { hashtag: selectedHashtag, sort }));
   const currentFeedKey = queryKeys.spaceFeed(tab, selectedHashtag, sort);
   const composeHashtags = extractHashtags(body);
@@ -93,14 +102,80 @@ export function SpaceScreen() {
   });
 
   const createPostMut = useMutation({
-    mutationFn: () => api.createPost({ body, mood }),
+    mutationFn: () => api.createPost({ body, mood, mediaUrl: attachedImage }),
     onSuccess: async (res) => {
       haptic.success();
       setBody('');
+      setAttachedImage(null);
       if (res.care_notice) setShowCareNotice(true);
       await queryClient.invalidateQueries({ queryKey: queryKeys.space });
     },
   });
+
+  const deleteStoryMut = useMutation({
+    mutationFn: (id: string) => api.deleteMyStory(id),
+    onSuccess: async () => {
+      haptic.success();
+      setActiveStory(null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.stories });
+    },
+  });
+
+  const handlePickPostImage = async () => {
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.85,
+    });
+    if (picked.canceled || !picked.assets[0] || !profileQuery.data) return;
+
+    try {
+      setIsUploadingImage(true);
+      const prepared = await compressAndPrepareImage(picked.assets[0].uri, {
+        maxWidth: 1080,
+        quality: 0.82,
+      });
+      const publicUrl = await api.uploadSpaceMedia({
+        userId: profileQuery.data.id,
+        body: prepared.arrayBuffer,
+      });
+      setAttachedImage(publicUrl);
+      haptic.success();
+    } catch {
+      haptic.warning();
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleAddStory = async () => {
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [9, 16],
+      quality: 0.85,
+    });
+    if (picked.canceled || !picked.assets[0] || !profileQuery.data) return;
+
+    try {
+      setIsUploadingStory(true);
+      const prepared = await compressAndPrepareImage(picked.assets[0].uri, {
+        maxWidth: 1080,
+        quality: 0.82,
+      });
+      const publicUrl = await api.uploadSpaceMedia({
+        userId: profileQuery.data.id,
+        body: prepared.arrayBuffer,
+      });
+      await api.createStory({ mediaUrl: publicUrl });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.stories });
+      haptic.success();
+    } catch {
+      haptic.warning();
+    } finally {
+      setIsUploadingStory(false);
+    }
+  };
 
   // Optimistic like toggle เพื่อความสมูท 0ms latency
   const likeMut = useMutation({
@@ -202,6 +277,75 @@ export function SpaceScreen() {
         </Card>
       ) : null}
 
+      {/* แถบเรื่องราว 24 ชม. (Ephemeral Stories Bar) */}
+      <View style={styles.storiesSection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.storiesScroll}
+        >
+          {/* ปุ่มเพิ่มเรื่องราว (+) */}
+          <BouncyPressable
+            hapticFeedback="medium"
+            disabled={isUploadingStory}
+            onPress={handleAddStory}
+            style={styles.storyAddBtn}
+          >
+            <View
+              style={[
+                styles.storyAvatarWrap,
+                { borderColor: colors.accent, borderStyle: 'dashed' },
+              ]}
+            >
+              {profileQuery.data ? (
+                <AliasAvatar
+                  alias={profileQuery.data.alias}
+                  color={profileQuery.data.alias_color}
+                  size={52}
+                />
+              ) : (
+                <View style={[styles.storyPlaceholder, { backgroundColor: colors.card }]}>
+                  <Text style={{ fontSize: 20 }}>📸</Text>
+                </View>
+              )}
+              <View style={[styles.storyAddBadge, { backgroundColor: colors.accent }]}>
+                <Text style={{ color: '#fff', fontSize: 13, fontWeight: '900', lineHeight: 14 }}>
+                  {isUploadingStory ? '⏳' : '+'}
+                </Text>
+              </View>
+            </View>
+            <AppText variant="small" style={styles.storyAuthorName}>
+              {isUploadingStory ? 'กำลังอัปโหลด' : t('space.addStory')}
+            </AppText>
+          </BouncyPressable>
+
+          {/* รายการสตอรี่ */}
+          {(storiesQuery.data ?? []).map((story) => (
+            <BouncyPressable
+              key={story.id}
+              hapticFeedback="selection"
+              onPress={() => setActiveStory(story)}
+              style={styles.storyItem}
+            >
+              <View
+                style={[
+                  styles.storyRing,
+                  {
+                    borderColor: colors.accent,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+              >
+                <AliasAvatar alias={story.alias} color={story.alias_color} size={48} />
+              </View>
+              <AppText variant="small" numberOfLines={1} style={styles.storyAuthorName}>
+                {story.is_mine ? t('space.myStory') : story.alias}
+              </AppText>
+            </BouncyPressable>
+          ))}
+        </ScrollView>
+      </View>
+
       {/* เช็กอินอารมณ์ประจำวัน — ทรงฟองสบู่นุ่มนวล แนวนอน กะทัดรัด ไม่แย่งพื้นที่ฟีด */}
       <View style={styles.moodSection}>
         <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
@@ -274,6 +418,21 @@ export function SpaceScreen() {
           maxLength={SPACE_LIMITS.postBody}
           multiline
         />
+
+        {/* รูปภาพที่แนบกับโพสต์ */}
+        {attachedImage ? (
+          <View style={styles.previewImageWrap}>
+            <Image source={{ uri: attachedImage }} style={styles.previewImage} />
+            <BouncyPressable
+              hapticFeedback="light"
+              onPress={() => setAttachedImage(null)}
+              style={styles.removeImageBtn}
+            >
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>✕</Text>
+            </BouncyPressable>
+          </View>
+        ) : null}
+
         {composeHashtags.length > 0 ? (
           <Row style={{ gap: space.xs, marginTop: -4 }}>
             {composeHashtags.map((tag) => (
@@ -284,12 +443,24 @@ export function SpaceScreen() {
         {createPostMut.error ? (
           <AppText variant="error">{errorMessage(createPostMut.error)}</AppText>
         ) : null}
-        <Row style={{ justifyContent: 'flex-end', marginTop: 4 }}>
+        <Row style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+          <BouncyPressable
+            hapticFeedback="light"
+            disabled={isUploadingImage}
+            onPress={handlePickPostImage}
+            style={[styles.attachBtn, { borderColor: colors.line }]}
+          >
+            <Text style={{ fontSize: 14 }}>📷</Text>
+            <AppText variant="small" style={{ fontSize: 12, color: colors.muted }}>
+              {isUploadingImage ? t('space.uploadingImage') : t('space.addImage')}
+            </AppText>
+          </BouncyPressable>
+
           <Button
             variant="primary"
             size="md"
             label={t('space.postButton')}
-            loading={createPostMut.isPending}
+            loading={createPostMut.isPending || isUploadingImage}
             disabled={body.trim().length === 0}
             onPress={() => createPostMut.mutate()}
           />
@@ -477,6 +648,14 @@ export function SpaceScreen() {
                 {post.body}
               </AppText>
 
+              {post.media_url ? (
+                <Image
+                  source={{ uri: post.media_url }}
+                  style={[styles.postMediaImage, { borderColor: colors.line }]}
+                  resizeMode="cover"
+                />
+              ) : null}
+
               {(post.hashtags ?? []).length > 0 ? (
                 <Row style={{ gap: space.xs }}>
                   {post.hashtags.map((tag) => (
@@ -593,6 +772,52 @@ export function SpaceScreen() {
           }
         }}
         onCancel={() => setPostToDelete(null)}
+      />
+
+      {/* Modal รับชมสตอรี่แบบเต็มจอ */}
+      <StoryViewerModal
+        story={activeStory}
+        onClose={() => setActiveStory(null)}
+        onDelete={(story) => {
+          setActiveStory(null);
+          setStoryToDelete(story.id);
+        }}
+        onSendBubble={(story) => {
+          setActiveStory(null);
+          setActiveBubblePost({
+            id: story.id,
+            alias: story.alias,
+            alias_color: story.alias_color,
+            body: `[Story] ${story.caption || '🫧 สตอรี่'}`,
+            mood: null,
+            created_at: story.created_at,
+            like_count: 0,
+            reply_count: 0,
+            liked_by_me: false,
+            is_mine: story.is_mine,
+            hashtags: [],
+            area_id: null,
+            media_url: story.media_url,
+          });
+        }}
+      />
+
+      {/* Popup ยืนยันการลบสตอรี่ */}
+      <ConfirmDialog
+        visible={!!storyToDelete}
+        title={t('space.deleteStoryConfirmTitle')}
+        message={t('space.deleteStoryConfirmMessage')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        tone="danger"
+        loading={deleteStoryMut.isPending}
+        onConfirm={() => {
+          if (storyToDelete) {
+            deleteStoryMut.mutate(storyToDelete);
+            setStoryToDelete(null);
+          }
+        }}
+        onCancel={() => setStoryToDelete(null)}
       />
     </Screen>
   );
@@ -845,6 +1070,126 @@ function SendBubbleSheet({
   );
 }
 
+function StoryViewerModal({
+  story,
+  onClose,
+  onDelete,
+  onSendBubble,
+}: {
+  story: StoryItem | null;
+  onClose: () => void;
+  onDelete: (story: StoryItem) => void;
+  onSendBubble: (story: StoryItem) => void;
+}) {
+  const { t } = useTranslation();
+
+  if (!story) return null;
+
+  return (
+    <Modal visible={true} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.storyViewerBackdrop}>
+        {/* Header แถบด้านบน */}
+        <View style={styles.storyViewerHeader}>
+          <Row style={{ alignItems: 'center', gap: 10, flex: 1 }}>
+            <AliasAvatar alias={story.alias} color={story.alias_color} size={38} />
+            <View>
+              <Row style={{ alignItems: 'center', gap: 6 }}>
+                <AppText variant="subheading" style={{ color: '#FFFFFF', fontWeight: '700' }}>
+                  {story.alias}
+                </AppText>
+                {story.tier === 'premium' ? (
+                  <Badge label="Premium" tone="gold" />
+                ) : story.tier === 'gold' ? (
+                  <Badge label="Gold" tone="gold" />
+                ) : null}
+                {story.is_mine ? <Badge label={t('space.mineTag')} tone="sage" /> : null}
+              </Row>
+              <AppText variant="small" style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
+                {t('space.storyExpiresNotice')}
+              </AppText>
+            </View>
+          </Row>
+
+          <Row style={{ alignItems: 'center', gap: 10 }}>
+            {story.is_mine ? (
+              <BouncyPressable
+                onPress={() => onDelete(story)}
+                hapticFeedback="medium"
+                style={[styles.storyHeaderBtn, { backgroundColor: 'rgba(239, 68, 68, 0.3)' }]}
+              >
+                <Text style={{ fontSize: 14 }}>🗑️</Text>
+              </BouncyPressable>
+            ) : null}
+
+            <BouncyPressable
+              onPress={onClose}
+              hapticFeedback="light"
+              style={[styles.storyHeaderBtn, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}
+            >
+              <Text style={{ fontSize: 16, color: '#FFFFFF', fontWeight: '700' }}>✕</Text>
+            </BouncyPressable>
+          </Row>
+        </View>
+
+        {/* รูป Story คมชัดเต็มจอ */}
+        <View style={styles.storyImageContainer}>
+          <Image
+            source={{ uri: story.media_url }}
+            style={styles.storyFullImage}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Footer แถบล่าง: แสดงแคปชัน และปุ่ม "ส่ง Bubble" (ไม่มีฟอร์มตอบกลับสาธารณะ) */}
+        <View style={styles.storyViewerFooter}>
+          {story.caption ? (
+            <View style={styles.storyCaptionPill}>
+              <AppText variant="body" style={{ color: '#FFFFFF', textAlign: 'center' }}>
+                {story.caption}
+              </AppText>
+            </View>
+          ) : null}
+
+          {!story.is_mine ? (
+            <View style={styles.storyBubbleActionWrap}>
+              <BouncyPressable
+                onPress={() => onSendBubble(story)}
+                hapticFeedback="medium"
+                style={styles.storyBubbleBtn}
+              >
+                <Text style={{ fontSize: 17 }}>🫧</Text>
+                <AppText
+                  variant="subheading"
+                  style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}
+                >
+                  {t('space.storyBubbleBtn')}
+                </AppText>
+              </BouncyPressable>
+              <AppText
+                variant="small"
+                style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', fontSize: 11 }}
+              >
+                {t('space.storyBubbleHint')}
+              </AppText>
+            </View>
+          ) : (
+            <View
+              style={[
+                styles.storyCaptionPill,
+                { backgroundColor: 'rgba(255,255,255,0.1)', marginTop: 8 },
+              ]}
+            >
+              <AppText variant="small" style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
+                {t('space.myStoryNotice')}
+              </AppText>
+            </View>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
@@ -945,5 +1290,169 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginLeft: 'auto',
+  },
+  storiesSection: {
+    gap: 8,
+    marginVertical: 4,
+  },
+  storiesScroll: {
+    gap: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  storyItem: {
+    alignItems: 'center',
+    width: 68,
+  },
+  storyRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyAddBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  storyAvatarWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyAddBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  storyPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyAuthorName: {
+    marginTop: 4,
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  previewImageWrap: {
+    position: 'relative',
+    marginTop: 8,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    alignSelf: 'flex-start',
+  },
+  previewImage: {
+    width: 140,
+    height: 140,
+    borderRadius: radius.md,
+  },
+  removeImageBtn: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  postMediaImage: {
+    width: '100%',
+    height: 240,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  storyViewerBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'space-between',
+    paddingVertical: 44,
+    paddingHorizontal: 16,
+  },
+  storyViewerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  storyHeaderBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  storyFullImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: radius.xl,
+  },
+  storyViewerFooter: {
+    width: '100%',
+    gap: 12,
+    alignItems: 'center',
+  },
+  storyCaptionPill: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.lg,
+    maxWidth: '90%',
+  },
+  storyBubbleActionWrap: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 6,
+  },
+  storyBubbleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#8B5CF6',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: radius.pill,
+    width: '100%',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });

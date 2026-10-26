@@ -75,8 +75,15 @@ export const createPostSchema = z.object({
     .min(1, 'กรุณาเขียนข้อความ')
     .max(SPACE_LIMITS.postBody, `โพสต์ได้ไม่เกิน ${SPACE_LIMITS.postBody} ตัวอักษร`),
   mood: z.enum(SPACE_MOODS).optional(),
+  mediaUrl: z.string().url().max(500).nullish(),
 });
 export type CreatePostInput = z.input<typeof createPostSchema>;
+
+export const createStorySchema = z.object({
+  mediaUrl: z.string().url().max(500),
+  caption: z.string().trim().max(150).nullish(),
+});
+export type CreateStoryInput = z.input<typeof createStorySchema>;
 
 export const getFeedSchema = z.object({
   tab: z.enum(SPACE_FEED_TABS).default('all'),
@@ -125,6 +132,7 @@ export const createPostResultSchema = z.object({
   alias: z.string(),
   alias_color: z.string(),
   body: z.string(),
+  media_url: z.string().nullable().optional(),
   hashtags: z.array(z.string()).default([]),
   mood: z.enum(SPACE_MOODS).nullable().optional(),
   area_id: z.string().nullable().optional(),
@@ -143,6 +151,7 @@ export const spacePostSchema = z.object({
   alias: z.string(),
   alias_color: z.string(),
   body: z.string(),
+  media_url: z.string().nullable().optional(),
   hashtags: z.array(z.string()).default([]),
   mood: z.enum(SPACE_MOODS).nullable().optional(),
   area_id: z.string().nullable().optional(),
@@ -155,6 +164,20 @@ export const spacePostSchema = z.object({
 });
 export type SpacePost = z.infer<typeof spacePostSchema>;
 export const spaceFeedSchema = z.array(spacePostSchema);
+
+export const storyItemSchema = z.object({
+  id: z.guid(),
+  alias: z.string(),
+  alias_color: z.string(),
+  media_url: z.string(),
+  caption: z.string().nullable().optional(),
+  tier: z.string().default('free'),
+  is_mine: z.boolean().default(false),
+  created_at: z.string(),
+  expires_at: z.string(),
+});
+export type StoryItem = z.infer<typeof storyItemSchema>;
+export const storiesFeedSchema = z.array(storyItemSchema);
 
 export const trendingHashtagSchema = z.object({
   tag: z.string(),

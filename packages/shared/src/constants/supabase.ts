@@ -50,6 +50,9 @@ export const SUPABASE_RPC = {
   getReplies: 'get_replies',
   deleteMyReply: 'delete_my_reply',
   checkinMood: 'checkin_mood',
+  createStory: 'create_story',
+  getActiveStories: 'get_active_stories',
+  deleteMyStory: 'delete_my_story',
   // เฟส 4: Bubble & แชท & Realtime
   sendBubble: 'send_bubble',
   getMyBubbles: 'get_my_bubbles',
@@ -75,6 +78,8 @@ export const SUPABASE_RPC = {
 export const STORAGE_BUCKETS = {
   /** รูปโปรไฟล์ — path ต้องเป็น `<user id>/<uuid>.webp|jpg` (อัปโหลดแล้วเรียก add_photo) */
   photos: 'photos',
+  /** รูปใน Space โพสต์ & Stories (สาธารณะสำหรับอ่าน) */
+  spaceMedia: 'space_media',
 } as const;
 
 /** ตารางที่ client อ่านตรงได้ด้วย `supabase.from(...)` (ตาม RLS) — เขียนต้องผ่าน RPC เสมอ */

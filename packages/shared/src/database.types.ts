@@ -282,10 +282,15 @@ export type Database = {
         };
         Returns: undefined;
       };
-      create_post: { Args: { p_body: string; p_mood?: string }; Returns: Json };
+      create_post:
+        | { Args: { p_body: string; p_mood?: string }; Returns: Json }
+        | { Args: { p_body: string; p_media_url?: string; p_mood?: string }; Returns: Json };
+      create_story: { Args: { p_caption?: string; p_media_url: string }; Returns: Json };
       delete_my_post: { Args: { p_post_id: string }; Returns: undefined };
       delete_my_reply: { Args: { p_reply_id: string }; Returns: undefined };
+      delete_my_story: { Args: { p_story_id: string }; Returns: boolean };
       exchange_coins_for_pass: { Args: { p_duration?: string; p_tier: string }; Returns: Json };
+      get_active_stories: { Args: Record<PropertyKey, never>; Returns: Json };
       get_conversation: { Args: { p_conversation_id: string }; Returns: Json };
       get_conversations: { Args: Record<PropertyKey, never>; Returns: Json };
       get_feed: {
