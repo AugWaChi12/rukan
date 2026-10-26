@@ -36,6 +36,8 @@ export const SUPABASE_RPC = {
   modUpdateTierConfig: 'mod_update_tier_config',
   modSetUserSubscription: 'mod_set_user_subscription',
   modGrantUserCoins: 'mod_grant_user_coins',
+  modListUsers: 'mod_list_users',
+  modSetUserVerification: 'mod_set_user_verification',
   // เฟส 3: Space (โพสต์ไม่ระบุตัวตน)
   createPost: 'create_post',
   getFeed: 'get_feed',

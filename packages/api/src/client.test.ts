@@ -463,6 +463,50 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
       p_source: 'promo',
       p_expires_at: undefined,
     });
+
+    const userRows = [
+      {
+        user_id: UUID_1,
+        email: 'demo@rukan.dev',
+        display_name: 'Demo',
+        alias: 'ส้มโอใจดี',
+        alias_color: 'rose',
+        area_id: 'siam',
+        modes: ['friend'],
+        verification_level: 'selfie' as const,
+        state: 'active' as const,
+        tier: 'gold' as const,
+        coin_balance: 2500,
+        tier_expires_at: null,
+        is_moderator: true,
+        onboarded_at: '2026-10-25T00:00:00Z',
+        last_active_at: null,
+        created_at: '2026-10-25T00:00:00Z',
+      },
+    ];
+    rpc.mockResolvedValueOnce({ data: userRows, error: null });
+    await expect(api.moderation.listUsers({ search: 'demo' })).resolves.toEqual(userRows);
+    expect(rpc).toHaveBeenCalledWith('mod_list_users', {
+      p_search: 'demo',
+      p_filter_tier: 'all',
+      p_filter_state: 'all',
+      p_limit: 50,
+      p_offset: 0,
+    });
+
+    const verifRes = {
+      user_id: UUID_1,
+      verification_level: 'selfie' as const,
+      onboarded_at: '2026-10-25T00:00:00Z',
+    };
+    rpc.mockResolvedValueOnce({ data: verifRes, error: null });
+    await expect(
+      api.moderation.setUserVerification({ userId: UUID_1, level: 'selfie' }),
+    ).resolves.toEqual(verifRes);
+    expect(rpc).toHaveBeenCalledWith('mod_set_user_verification', {
+      p_user_id: UUID_1,
+      p_level: 'selfie',
+    });
   });
 
   it('Realtime: subscribeConversation ใช้ private channel (ไม่ใช้ postgres_changes)', () => {
