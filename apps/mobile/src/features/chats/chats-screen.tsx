@@ -123,23 +123,37 @@ export function ChatsScreen() {
       {section === 'chats' ? (
         conversationsQuery.isPending ? (
           <Loading />
-        ) : conversations.length === 0 ? (
-          <EmptyState
-            badge="Chat"
-            title={t('chats.emptyChatsTitle')}
-            body={t('chats.emptyChatsBody')}
-          />
         ) : (
-          conversations.map((conv) => (
-            <ConversationRowCard
-              key={conv.id}
-              item={conv}
-              onOpen={() => {
-                haptic.selection();
-                setActiveConversationId(conv.id);
-              }}
-            />
-          ))
+          <View style={{ gap: space.md }}>
+            {incomingBubbles.filter((b) => b.status === 'pending').length > 0 ? (
+              <BubbleTray
+                bubbles={incomingBubbles}
+                onSelect={() => {
+                  haptic.selection();
+                  setSection('bubbles');
+                }}
+              />
+            ) : null}
+
+            {conversations.length === 0 ? (
+              <EmptyState
+                badge="Chat"
+                title={t('chats.emptyChatsTitle')}
+                body={t('chats.emptyChatsBody')}
+              />
+            ) : (
+              conversations.map((conv) => (
+                <ConversationRowCard
+                  key={conv.id}
+                  item={conv}
+                  onOpen={() => {
+                    haptic.selection();
+                    setActiveConversationId(conv.id);
+                  }}
+                />
+              ))
+            )}
+          </View>
         )
       ) : null}
 
@@ -303,9 +317,87 @@ export function ChatsScreen() {
   );
 }
 
+function BubbleTray({
+  bubbles,
+  onSelect,
+}: {
+  bubbles: {
+    id: string;
+    sender_alias: string;
+    sender_alias_color: string;
+    status: string;
+    message: string;
+  }[];
+  onSelect: () => void;
+}) {
+  const { colors } = useAppTheme();
+  const pending = bubbles.filter((b) => b.status === 'pending');
+  if (pending.length === 0) return null;
+
+  return (
+    <View style={styles.bubbleTrayContainer}>
+      <Row style={{ justifyContent: 'space-between', marginBottom: 10 }}>
+        <Row style={{ gap: 6 }}>
+          <Text style={{ fontSize: 13 }}>💬</Text>
+          <AppText variant="small" style={{ fontWeight: '700', color: colors.text }}>
+            ฟองข้อความรอตอบ ({pending.length})
+          </AppText>
+        </Row>
+        <AppText variant="small" style={{ color: colors.accent, fontWeight: '700' }}>
+          ดูทั้งหมด →
+        </AppText>
+      </Row>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 12, paddingVertical: 2 }}
+      >
+        {pending.map((b) => (
+          <BouncyPressable
+            key={b.id}
+            accessibilityRole="button"
+            hapticFeedback="selection"
+            onPress={onSelect}
+            style={styles.bubbleTrayItem}
+          >
+            <View
+              style={[
+                styles.bubbleTrayRing,
+                { borderColor: colors.accent, backgroundColor: colors.accentTint },
+              ]}
+            >
+              <AliasAvatar alias={b.sender_alias} color={b.sender_alias_color} size={48} />
+              <View style={[styles.bubbleTrayBadge, { backgroundColor: colors.accent }]}>
+                <Text style={{ fontSize: 8, color: '#fff', fontWeight: '800' }}>NEW</Text>
+              </View>
+            </View>
+            <AppText
+              variant="small"
+              numberOfLines={1}
+              style={{
+                maxWidth: 62,
+                textAlign: 'center',
+                fontSize: 11,
+                fontWeight: '600',
+                color: colors.text,
+              }}
+            >
+              {b.sender_alias}
+            </AppText>
+          </BouncyPressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
 function ConversationRowCard({ item, onOpen }: { item: ConversationListItem; onOpen: () => void }) {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const title = item.is_anonymous ? item.peer.alias : (item.peer.display_name ?? item.peer.alias);
+  const time = item.last_message_at
+    ? new Date(item.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   return (
     <BouncyPressable
@@ -313,35 +405,75 @@ function ConversationRowCard({ item, onOpen }: { item: ConversationListItem; onO
       hapticFeedback="selection"
       activeScale={0.98}
       onPress={onOpen}
+      style={[
+        styles.cleanRowCard,
+        {
+          backgroundColor: colors.card,
+          borderColor: item.unread_count > 0 ? colors.accentSoft : colors.line,
+        },
+      ]}
     >
-      <Card tone={item.unread_count > 0 ? 'rose' : 'default'}>
-        <Row style={{ justifyContent: 'space-between' }}>
-          <Row style={{ flex: 1 }}>
-            <AliasAvatar alias={title} color={item.peer.alias_color} size={42} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <Row>
-                <AppText variant="subheading">{title}</AppText>
-                <Badge
-                  label={item.is_anonymous ? t('chats.anonBadge') : t('chats.matchBadge')}
-                  tone={item.is_anonymous ? 'lilac' : 'sage'}
-                />
-              </Row>
-              <AppText variant="muted" numberOfLines={1}>
-                {item.last_message_preview ?? '—'}
-              </AppText>
-            </View>
-          </Row>
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+      <View style={{ position: 'relative' }}>
+        <AliasAvatar alias={title} color={item.peer.alias_color} size={50} />
+        {item.unread_count > 0 ? (
+          <View style={[styles.unreadDot, { backgroundColor: colors.accent }]} />
+        ) : null}
+      </View>
+
+      <View style={{ flex: 1, gap: 4 }}>
+        <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <Row style={{ gap: 6, flex: 1 }}>
+            <AppText
+              variant="subheading"
+              numberOfLines={1}
+              style={{
+                fontWeight: item.unread_count > 0 ? '800' : '600',
+                maxWidth: 160,
+                fontSize: 15,
+              }}
+            >
+              {title}
+            </AppText>
             <Badge
-              label={`${item.reveal_stage}/3`}
+              label={item.is_anonymous ? t('chats.anonBadge') : t('chats.matchBadge')}
+              tone={item.is_anonymous ? 'lilac' : 'sage'}
+            />
+          </Row>
+          {time ? (
+            <AppText variant="muted" style={{ fontSize: 11 }}>
+              {time}
+            </AppText>
+          ) : null}
+        </Row>
+
+        <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <AppText
+            variant="muted"
+            numberOfLines={1}
+            style={{
+              flex: 1,
+              color: item.unread_count > 0 ? colors.text : colors.muted,
+              fontWeight: item.unread_count > 0 ? '600' : '400',
+              fontSize: 13,
+            }}
+          >
+            {item.last_message_preview ?? 'เริ่มบทสนทนา...'}
+          </AppText>
+          <Row style={{ gap: 6, marginLeft: 8 }}>
+            <Badge
+              label={`เลเวล ${item.reveal_stage}/3`}
               tone={item.reveal_stage > 0 ? 'rose' : 'muted'}
             />
             {item.unread_count > 0 ? (
-              <Badge label={t('chats.unreadCount', { count: item.unread_count })} tone="ink" />
+              <View style={[styles.unreadPill, { backgroundColor: colors.accent }]}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>
+                  {item.unread_count}
+                </Text>
+              </View>
             ) : null}
-          </View>
+          </Row>
         </Row>
-      </Card>
+      </View>
     </BouncyPressable>
   );
 }
@@ -1044,5 +1176,61 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     marginRight: space.sm,
+  },
+  bubbleTrayContainer: {
+    paddingVertical: space.sm,
+    marginBottom: space.xs,
+  },
+  bubbleTrayItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  bubbleTrayRing: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  bubbleTrayBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  cleanRowCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  unreadPill: {
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    minWidth: 18,
+    alignItems: 'center',
   },
 });

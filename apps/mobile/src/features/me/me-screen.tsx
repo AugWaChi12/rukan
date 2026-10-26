@@ -382,7 +382,11 @@ function MeMenu({ profile }: { profile: MyProfile }) {
           </AppText>
         </Card>
 
-        <Button variant="lilac" label={t('me.wallet.webTopupBtn')} onPress={() => openSite('')} />
+        <Button
+          variant="lilac"
+          label={t('me.wallet.webTopupBtn')}
+          onPress={() => openSite(`/topup?uid=${profile.id}`)}
+        />
       </ModalSheet>
     </Screen>
   );

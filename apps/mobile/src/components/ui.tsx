@@ -55,12 +55,14 @@ export function Screen({
   children,
   scroll = true,
   grid = false,
+  refreshControl,
   style,
 }: {
   children: ReactNode;
   scroll?: boolean;
   /** พื้นตารางบางๆ ด้านหลัง (ค่าเริ่มต้น: ปิด เพื่อความสะอาดแบบ native app) */
   grid?: boolean;
+  refreshControl?: React.ReactElement;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useAppTheme();
@@ -77,6 +79,7 @@ export function Screen({
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}
         >
           {content}
         </ScrollView>
@@ -710,10 +713,16 @@ export function EmptyState({
     <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <Text style={{ fontSize: 36, marginBottom: 2 }}>{icon}</Text>
       {badge ? <Badge label={badge} tone="rose" /> : null}
-      <AppText variant="subheading" style={{ textAlign: 'center', fontWeight: '700', color: colors.text }}>
+      <AppText
+        variant="subheading"
+        style={{ textAlign: 'center', fontWeight: '700', color: colors.text }}
+      >
         {title}
       </AppText>
-      <AppText variant="muted" style={{ textAlign: 'center', maxWidth: 280, fontSize: 13, lineHeight: 19 }}>
+      <AppText
+        variant="muted"
+        style={{ textAlign: 'center', maxWidth: 280, fontSize: 13, lineHeight: 19 }}
+      >
         {body}
       </AppText>
       {actionLabel && onAction ? (

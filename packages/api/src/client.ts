@@ -11,6 +11,14 @@ import {
   createPostSchema,
   createStorySchema,
   type CreateStoryInput,
+  createTopupOrderInputSchema,
+  type CreateTopupOrderInput,
+  myTopupOrdersSchema,
+  type MyTopupOrderItem,
+  topupOrderResultSchema,
+  type TopupOrderResult,
+  userTopupInfoSchema,
+  type UserTopupInfo,
   exchangeCoinsForPassSchema,
   getFeedSchema,
   getMessagesSchema,
@@ -290,6 +298,64 @@ export function createApi(supabase: RukanSupabaseClient) {
           }),
         ),
       );
+    },
+
+    // -------------------------------------------------------------------------
+    // Top-up Portal & Orders (เติมเหรียญ & ซื้อ Pass ผ่านเว็บ / In-App)
+    // -------------------------------------------------------------------------
+
+    async getUserTopupInfo(userId: string): Promise<UserTopupInfo> {
+      return parse(
+        userTopupInfoSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.getUserTopupInfo, {
+            p_user_id: userId,
+          }),
+        ),
+      );
+    },
+
+    async createTopupOrder(input: CreateTopupOrderInput): Promise<TopupOrderResult> {
+      const v = createTopupOrderInputSchema.parse(input);
+      return parse(
+        topupOrderResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.createTopupOrder, {
+            p_package_id: v.packageId,
+            p_slip_url: v.slipUrl ?? undefined,
+            p_target_user_id: v.targetUserId ?? undefined,
+          }),
+        ),
+      );
+    },
+
+    async getMyTopupOrders(): Promise<MyTopupOrderItem[]> {
+      return parse(myTopupOrdersSchema, unwrap(await supabase.rpc(SUPABASE_RPC.getMyTopupOrders)));
+    },
+
+    async uploadSlip(input: {
+      userId?: string;
+      body: ArrayBuffer | Blob | Uint8Array;
+      contentType?: string;
+      fileName?: string;
+    }): Promise<string> {
+      const uid = input.userId || 'anon';
+      const name =
+        input.fileName || `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.jpg`;
+      const storagePath = `${uid}/${name}`;
+      unwrap(
+        await supabase.storage.from(STORAGE_BUCKETS.slips).upload(storagePath, input.body, {
+          contentType: input.contentType || 'image/jpeg',
+          upsert: true,
+        }),
+      );
+      const { data: signedData } = await supabase.storage
+        .from(STORAGE_BUCKETS.slips)
+        .createSignedUrl(storagePath, 2592000);
+      if (signedData?.signedUrl) {
+        return signedData.signedUrl;
+      }
+      return storagePath;
     },
 
     async updateMyProfile(input: UpdateProfileInput): Promise<void> {
@@ -635,6 +701,14 @@ export function createApi(supabase: RukanSupabaseClient) {
         );
       },
 
+      async approveTopupOrder(orderId: string): Promise<Record<string, unknown>> {
+        return unwrap(
+          await supabase.rpc(SUPABASE_RPC.modApproveTopupOrder, {
+            p_order_id: orderId,
+          }),
+        ) as Record<string, unknown>;
+      },
+
       async listUsers(input: ModListUsersInput = {}): Promise<ModUserRow[]> {
         const v = modListUsersSchema.parse(input);
         return parse(
@@ -689,7 +763,7 @@ export function createApi(supabase: RukanSupabaseClient) {
       let res = await supabase.rpc(SUPABASE_RPC.createPost, {
         p_body: v.body,
         p_mood: v.mood,
-        p_media_url: v.mediaUrl || null,
+        p_media_url: v.mediaUrl || undefined,
       });
 
       // Backward-compatibility: if backend function only has (p_body, p_mood)

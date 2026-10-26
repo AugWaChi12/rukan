@@ -34,7 +34,7 @@ select set_eq(
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')
   $$,
-  array['health', 'join_waitlist', 'get_tier_configs'],
+  array['health', 'join_waitlist', 'get_tier_configs', 'get_user_topup_info', 'create_topup_order'],
   'anon เรียกได้เฉพาะ allowlist'
 );
 
@@ -72,10 +72,11 @@ select set_eq(
     -- เฟส 5: Daily Drop + Match + Profile Card
     'get_my_deck', 'swipe', 'get_my_matches',
     'polite_close', 'unmatch', 'get_profile_card',
-    -- Master & Plans & Subscriptions & Rukan Coins & AI Wingman & Admin Users
+    -- Master & Plans & Subscriptions & Rukan Coins & AI Wingman & Admin Users & Web Topup
     'get_my_subscription', 'mod_update_tier_config', 'mod_set_user_subscription',
     'exchange_coins_for_pass', 'mod_grant_user_coins', 'use_ai_wingman',
-    'mod_list_users', 'mod_set_user_verification', 'mod_set_user_modes'
+    'mod_list_users', 'mod_set_user_verification', 'mod_set_user_modes',
+    'get_user_topup_info', 'create_topup_order', 'get_my_topup_orders', 'mod_approve_topup_order'
   ],
   'authenticated เรียกได้เฉพาะ API ที่ประกาศไว้'
 );

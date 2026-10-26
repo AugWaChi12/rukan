@@ -90,6 +90,7 @@ export function DropScreen() {
   // cache อาจยังมีการ์ดค้างเกินโควตาที่เหลือ — แสดงเท่าที่ยังปัดได้
   const visibleCards = (deckQuery.data?.cards ?? []).slice(0, remaining);
   const topCard = visibleCards[0];
+  const nextCard = visibleCards[1];
   const quotaFull = quota !== undefined && quota.remaining === 0;
 
   const msLeft = useCountdown(quota?.resets_at);
@@ -224,7 +225,28 @@ export function DropScreen() {
         />
       ) : (
         <View style={{ gap: space.md }}>
-          <View>
+          <View style={styles.cardStackContainer}>
+            {nextCard ? (
+              <View
+                style={[
+                  styles.depthCardBehind,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.line,
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                <CandidateCard
+                  card={nextCard}
+                  areaMap={areaMap}
+                  interestMap={interestMap}
+                  promptMap={promptMap}
+                  onOpenSafety={() => {}}
+                />
+              </View>
+            ) : null}
+
             <SwipeableCard
               key={`${topCard.candidate_id}-${cardNonce}`}
               disabled={busy}
@@ -699,9 +721,36 @@ const styles = StyleSheet.create({
     width: 0,
     height: 0,
   },
+  cardStackContainer: {
+    position: 'relative',
+  },
+  depthCardBehind: {
+    position: 'absolute',
+    top: 12,
+    left: 8,
+    right: 8,
+    bottom: -12,
+    opacity: 0.82,
+    transform: [{ scale: 0.96 }],
+    borderRadius: 24,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
+  },
   dropCard: {
     gap: space.md,
     padding: space.lg,
+    borderRadius: 24,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 4,
   },
   lockedBox: {
     minHeight: 180,

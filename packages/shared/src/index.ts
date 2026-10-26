@@ -8,6 +8,7 @@ export * from './schemas/matching';
 export * from './schemas/profile';
 export * from './schemas/safety';
 export * from './schemas/space';
+export * from './schemas/topup';
 export * from './schemas/waitlist';
 export type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database.types';
 

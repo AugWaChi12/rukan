@@ -25,15 +25,11 @@ export async function compressAndPrepareImage(
   const { maxWidth = 1080, quality = 0.82 } = options;
 
   // 1. ปรับขนาดและบีบอัดด้วย Native ImageManipulator
-  const result = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: maxWidth } }],
-    {
-      compress: quality,
-      format: ImageManipulator.SaveFormat.JPEG,
-      base64: true,
-    },
-  );
+  const result = await ImageManipulator.manipulateAsync(uri, [{ resize: { width: maxWidth } }], {
+    compress: quality,
+    format: ImageManipulator.SaveFormat.JPEG,
+    base64: true,
+  });
 
   if (!result.base64) {
     throw new Error('failed_to_encode_image_base64');

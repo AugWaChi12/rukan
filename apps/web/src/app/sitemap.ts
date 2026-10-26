@@ -27,6 +27,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
       alternates: { languages: { th: SITE_URL, en: `${SITE_URL}/en` } },
     },
+    {
+      url: `${SITE_URL}/topup`,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
     ...legalEntries,
   ];
 }

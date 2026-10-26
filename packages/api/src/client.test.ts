@@ -210,7 +210,7 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
     expect(rpc).toHaveBeenCalledWith('create_post', {
       p_body: 'หาเพื่อนกินชาบู #เหงาๆ',
       p_mood: 'happy',
-      p_media_url: null,
+      p_media_url: undefined,
     });
 
     const feedItem = {
@@ -563,5 +563,72 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
 
     unsubscribe();
     expect(removeChannel).toHaveBeenCalledWith(fakeChannelObj);
+  });
+
+  it('Top-up Portal & Orders: getUserTopupInfo, createTopupOrder, getMyTopupOrders, modApproveTopupOrder', async () => {
+    const topupInfo = {
+      user_id: UUID_1,
+      alias: 'สายลมแสนหวาน',
+      alias_color: 'indigo',
+      display_name: 'Somchai',
+      tier: 'gold',
+      coin_balance: 1200,
+    };
+    const { client, rpc } = fakeClient({ data: topupInfo, error: null });
+    const api = createApi(client);
+
+    await expect(api.getUserTopupInfo(UUID_1)).resolves.toEqual(topupInfo);
+    expect(rpc).toHaveBeenCalledWith('get_user_topup_info', { p_user_id: UUID_1 });
+
+    const orderRes = {
+      order_id: UUID_2,
+      user_id: UUID_1,
+      package_id: 'best_value',
+      package_name: 'สุดคุ้ม (Best Value)',
+      coin_amount: 2500,
+      bonus_coins: 450,
+      total_coins: 2950,
+      price_thb: 249,
+      slip_url: 'https://example.com/slip.jpg',
+      status: 'pending' as const,
+      created_at: '2026-10-26T12:00:00Z',
+    };
+    rpc.mockResolvedValueOnce({ data: orderRes, error: null });
+    await expect(
+      api.createTopupOrder({
+        packageId: 'best_value',
+        slipUrl: 'https://example.com/slip.jpg',
+        targetUserId: UUID_1,
+      }),
+    ).resolves.toEqual(orderRes);
+    expect(rpc).toHaveBeenCalledWith('create_topup_order', {
+      p_package_id: 'best_value',
+      p_slip_url: 'https://example.com/slip.jpg',
+      p_target_user_id: UUID_1,
+    });
+
+    const ordersList = [
+      {
+        id: UUID_2,
+        package_id: 'best_value',
+        package_name: 'สุดคุ้ม (Best Value)',
+        coin_amount: 2500,
+        bonus_coins: 450,
+        total_coins: 2950,
+        price_thb: 249,
+        slip_url: 'https://example.com/slip.jpg',
+        status: 'pending' as const,
+        created_at: '2026-10-26T12:00:00Z',
+        approved_at: null,
+      },
+    ];
+    rpc.mockResolvedValueOnce({ data: ordersList, error: null });
+    await expect(api.getMyTopupOrders()).resolves.toEqual(ordersList);
+    expect(rpc).toHaveBeenCalledWith('get_my_topup_orders');
+
+    const approveRes = { order_id: UUID_2, user_id: UUID_1, total_coins: 2950, status: 'approved' };
+    rpc.mockResolvedValueOnce({ data: approveRes, error: null });
+    await expect(api.moderation.approveTopupOrder(UUID_2)).resolves.toEqual(approveRes);
+    expect(rpc).toHaveBeenCalledWith('mod_approve_topup_order', { p_order_id: UUID_2 });
   });
 });
