@@ -1,23 +1,28 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
-import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { TabChatsIcon, TabDropIcon, TabMeIcon, TabSpaceIcon } from '@/components/brand-icons';
 import { queries } from '@/lib/api';
 import { haptic } from '@/lib/haptics';
 import { useAppTheme } from '@/theme/theme-provider';
-import { palette, radius } from '@/theme/tokens';
+import { radius } from '@/theme/tokens';
 
-type IoniconName = ComponentProps<typeof Ionicons>['name'];
-
-const TAB_ICONS: Record<string, { active: IoniconName; inactive: IoniconName }> = {
-  space: { active: 'sparkles', inactive: 'sparkles-outline' },
-  drop: { active: 'layers', inactive: 'layers-outline' },
-  chats: { active: 'paper-plane', inactive: 'paper-plane-outline' },
-  me: { active: 'person-circle', inactive: 'person-circle-outline' },
-};
+function renderTabBrandIcon(routeName: string, focused: boolean) {
+  switch (routeName) {
+    case 'space':
+      return <TabSpaceIcon size={26} focused={focused} />;
+    case 'drop':
+      return <TabDropIcon size={26} focused={focused} />;
+    case 'chats':
+      return <TabChatsIcon size={26} focused={focused} />;
+    case 'me':
+      return <TabMeIcon size={26} focused={focused} />;
+    default:
+      return <TabSpaceIcon size={26} focused={focused} />;
+  }
+}
 
 const SUPPORTS_NATIVE_LIQUID_GLASS = Platform.OS === 'ios' && isLiquidGlassAvailable();
 
@@ -96,9 +101,6 @@ function LiquidGlassTabBar({
         borderColor: 'rgba(255, 255, 255, 0.85)',
       };
 
-  const activeIconColor = isDark ? '#ffffff' : palette.ink;
-  const inactiveIconColor = isDark ? 'rgba(242, 234, 219, 0.68)' : 'rgba(46, 34, 56, 0.58)';
-
   return (
     <View pointerEvents="box-none" style={[styles.floatingHost, { bottom: bottomOffset }]}>
       <GlassView
@@ -122,10 +124,6 @@ function LiquidGlassTabBar({
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key]!;
             const focused = state.index === index;
-            const iconPair = TAB_ICONS[route.name] ?? {
-              active: 'ellipse',
-              inactive: 'ellipse-outline',
-            };
             const showDot = route.name === 'chats' && hasChatActivity;
 
             const onPress = () => {
@@ -163,11 +161,7 @@ function LiquidGlassTabBar({
                 ]}
               >
                 <View style={[styles.pillIndicator, focused ? activePillStyle : null]}>
-                  <Ionicons
-                    name={focused ? iconPair.active : iconPair.inactive}
-                    size={24}
-                    color={focused ? activeIconColor : inactiveIconColor}
-                  />
+                  {renderTabBrandIcon(route.name, focused)}
                   {showDot ? <View style={styles.activityDot} /> : null}
                 </View>
               </Pressable>

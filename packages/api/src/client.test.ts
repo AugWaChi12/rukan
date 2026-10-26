@@ -405,6 +405,22 @@ describe('Phase 2–5 RPC methods (Safety, Space, Bubbles/Chat, Swipe deck/Match
       p_duration: 'monthly',
     });
 
+    const aiRes = {
+      tier: 'premium' as const,
+      is_free_vip: true,
+      coins_charged: 0,
+      coin_balance: 5900,
+      suggestions: ['ทักทายครับ', 'ชวนคุยเรื่องเพลง'],
+    };
+    rpc.mockResolvedValueOnce({ data: aiRes, error: null });
+    await expect(
+      api.useAiWingman({ contextType: 'bubble', contextText: 'ชอบฟังเพลงอินดี้' }),
+    ).resolves.toEqual(aiRes);
+    expect(rpc).toHaveBeenCalledWith('use_ai_wingman', {
+      p_context_type: 'bubble',
+      p_context_text: 'ชอบฟังเพลงอินดี้',
+    });
+
     const grantRes = { user_id: UUID_1, coin_balance: 6000, delta: 6000 };
     rpc.mockResolvedValueOnce({ data: grantRes, error: null });
     await expect(

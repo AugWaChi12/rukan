@@ -139,6 +139,9 @@ export const en: Messages = {
       'Send one warm greeting message. If they accept, an anonymous chat room opens right away.',
     bubblePlaceholder: 'e.g. I love shabu too! Which place do you recommend?',
     bubbleSend: 'Send bubble →',
+    aiWingmanFreeBtn: '✨ AI Wingman Ideas (Free VIP)',
+    aiWingmanCoinBtn: '✨ AI Wingman Ideas ({{coins}} 🪙)',
+    aiWingmanHint: 'Tap a suggestion to fill the box and customize:',
     repliesTitle: 'Replies to {{alias}}',
     replyPlaceholder: 'Write an anonymous reply…',
     replySend: 'Reply',
@@ -230,6 +233,8 @@ export const en: Messages = {
       closedBanner: 'This conversation is closed',
       inputPlaceholder: 'Write a message…',
       send: 'Send',
+      aiChatFreeBtn: '✨ AI Wingman (Free VIP)',
+      aiChatCoinBtn: '✨ AI Wingman ({{coins}} 🪙)',
     },
     profileCard: {
       title: '{{name}}’s Profile',
@@ -342,6 +347,12 @@ export const en: Messages = {
       quotaSummary:
         '🎴 {{swipes}} swipes/round · 🫧 {{bubbles}} bubbles/day · ✨ {{golden}} golden/day',
       exchangeSuccess: 'Pass upgraded! Your new perks are active immediately 🎉',
+      topupPackagesTitle: 'Rukan Coin Top-Up Packs',
+      topupWebBonusTag: 'Up to +25% bonus coins on rukan.app',
+      topupPackStarter: 'Starter 300 🪙 (350 🪙 on web) · 39฿',
+      topupPackPopular: 'Popular 900 🪙 (1,080 🪙 on web) · 99฿',
+      topupPackGold: 'Gold Pack 2,500 🪙 (3,000 🪙 on web) · 249฿',
+      topupPackVip: 'VIP Pack 6,000 🪙 (7,500 🪙 on web) · 590฿',
     },
   },
   errors: {

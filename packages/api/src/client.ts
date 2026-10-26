@@ -1,4 +1,5 @@
 import {
+  aiWingmanResultSchema,
   blockedUserListSchema,
   blockUserFromSchema,
   chatMessageListSchema,
@@ -137,6 +138,9 @@ import {
   type TierConfig,
   type TrendingHashtag,
   type UpdateProfileInput,
+  type UseAiWingmanInput,
+  type AiWingmanResult,
+  useAiWingmanSchema,
 } from '@rukan/shared';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { z } from 'zod';
@@ -253,6 +257,19 @@ export function createApi(supabase: RukanSupabaseClient) {
           await supabase.rpc(SUPABASE_RPC.exchangeCoinsForPass, {
             p_tier: v.tier,
             p_duration: v.duration,
+          }),
+        ),
+      );
+    },
+
+    async useAiWingman(input: UseAiWingmanInput = {}): Promise<AiWingmanResult> {
+      const v = useAiWingmanSchema.parse(input);
+      return parse(
+        aiWingmanResultSchema,
+        unwrap(
+          await supabase.rpc(SUPABASE_RPC.useAiWingman, {
+            p_context_type: v.contextType,
+            p_context_text: v.contextText,
           }),
         ),
       );

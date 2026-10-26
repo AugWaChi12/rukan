@@ -14,6 +14,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
+import { AiSparkleIcon } from '@/components/brand-icons';
 import { CareNoticeBanner, SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
   AliasAvatar,
@@ -589,7 +590,24 @@ function SendBubbleSheet({
   onSent: () => void;
 }) {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const [note, setNote] = useState('');
+  const [aiIdeas, setAiIdeas] = useState<string[]>([]);
+  const subQuery = useQuery(queries.mySubscription());
+  const isVip = subQuery.data?.limits.allow_ai_assistant ?? false;
+  const aiCoinCost = subQuery.data?.limits.ai_coin_cost_per_use ?? 30;
+
+  const aiMut = useMutation({
+    mutationFn: () => {
+      if (!post) throw new Error('no post');
+      return api.useAiWingman({ contextType: 'bubble', contextText: post.body });
+    },
+    onSuccess: async (res) => {
+      haptic.selection();
+      setAiIdeas(res.suggestions);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.mySubscription });
+    },
+  });
 
   const sendBubbleMut = useMutation({
     mutationFn: () => {
@@ -599,6 +617,7 @@ function SendBubbleSheet({
     onSuccess: async () => {
       haptic.success();
       setNote('');
+      setAiIdeas([]);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.myBubbles }),
         queryClient.invalidateQueries({ queryKey: queryKeys.myConversations }),
@@ -619,6 +638,53 @@ function SendBubbleSheet({
         <Badge label="1-on-1 Bubble" tone="lilac" />
         <AppText variant="body">{t('space.bubbleModalHint')}</AppText>
       </Card>
+
+      {/* AI Wingman ช่วยคิดคำทักจากโพสต์ */}
+      <View style={{ gap: space.xs }}>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <Row style={{ gap: 6 }}>
+            <AiSparkleIcon size={16} />
+            <AppText variant="small" style={{ fontWeight: '700', color: colors.accent }}>
+              {t('space.aiWingmanHint')}
+            </AppText>
+          </Row>
+          <Button
+            size="sm"
+            variant="ghost"
+            loading={aiMut.isPending}
+            label={
+              isVip
+                ? t('space.aiWingmanFreeBtn')
+                : t('space.aiWingmanCoinBtn', { coins: aiCoinCost })
+            }
+            onPress={() => aiMut.mutate()}
+          />
+        </Row>
+        {aiMut.error ? <AppText variant="error">{errorMessage(aiMut.error)}</AppText> : null}
+        {aiIdeas.length > 0 ? (
+          <View style={{ gap: 6 }}>
+            {aiIdeas.map((idea) => (
+              <BouncyPressable
+                key={idea}
+                hapticFeedback="light"
+                onPress={() => setNote(idea)}
+                style={{
+                  borderRadius: radius.md,
+                  borderWidth: 1,
+                  borderColor: colors.accentSoft,
+                  backgroundColor: colors.accentTint,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                }}
+              >
+                <AppText variant="small" style={{ fontWeight: '600' }}>
+                  {idea}
+                </AppText>
+              </BouncyPressable>
+            ))}
+          </View>
+        ) : null}
+      </View>
 
       <TextField
         label={`${note.trim().length}/${CHAT_LIMITS.bubbleMessage}`}

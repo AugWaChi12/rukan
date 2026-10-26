@@ -16,6 +16,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { AiSparkleIcon } from '@/components/brand-icons';
 import { SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
   AliasAvatar,
@@ -357,6 +358,7 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
   const { colors } = useAppTheme();
 
   const [text, setText] = useState('');
+  const [aiIdeas, setAiIdeas] = useState<string[]>([]);
   const [showProfileUserId, setShowProfileUserId] = useState<string | null>(null);
   const [showPoliteClose, setShowPoliteClose] = useState(false);
   const [safetyTarget, setSafetyTarget] = useState<SafetyTarget | null>(null);
@@ -365,6 +367,24 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
 
   const detailQuery = useQuery(queries.conversation(conversationId));
   const messagesQuery = useQuery(queries.messages(conversationId));
+  const subQuery = useQuery(queries.mySubscription());
+  const isVip = subQuery.data?.limits.allow_ai_assistant ?? false;
+  const aiCoinCost = subQuery.data?.limits.ai_coin_cost_per_use ?? 30;
+
+  const aiMut = useMutation({
+    mutationFn: () => {
+      const lastPeer = (messagesQuery.data ?? []).find((m) => !m.is_mine && m.kind === 'text');
+      return api.useAiWingman({
+        contextType: 'chat',
+        contextText: lastPeer?.body ?? detailQuery.data?.peer.alias ?? '',
+      });
+    },
+    onSuccess: async (res) => {
+      haptic.selection();
+      setAiIdeas(res.suggestions);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.mySubscription });
+    },
+  });
 
   useEffect(() => {
     void api.markConversationRead(conversationId).then(() => {
@@ -618,29 +638,65 @@ function ChatRoomView({ conversationId, onBack }: { conversationId: string; onBa
           })}
         </ScrollView>
 
-        {/* Icebreaker Prompts เมื่อข้อความยังน้อย เพื่อให้เริ่มคุยได้ง่ายขึ้น */}
-        {!detail.closed_at && chronologicalMessages.length < 4 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.icebreakersRow}
-          >
-            {ICEBREAKERS.map((prompt) => (
+        {/* Icebreaker Prompts & AI Wingman ช่วยชวนคุยต่อ */}
+        {!detail.closed_at ? (
+          <View style={{ gap: 6 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.icebreakersRow}
+            >
               <BouncyPressable
-                key={prompt}
-                hapticFeedback="light"
-                onPress={() => sendMut.mutate(prompt)}
+                hapticFeedback="selection"
+                disabled={aiMut.isPending}
+                onPress={() => aiMut.mutate()}
                 style={[
                   styles.icebreakerChip,
-                  { backgroundColor: colors.card, borderColor: colors.line },
+                  {
+                    backgroundColor: colors.accentTint,
+                    borderColor: colors.accentSoft,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  },
                 ]}
               >
-                <Text style={{ fontSize: 13, color: colors.accent, fontWeight: '600' }}>
-                  {prompt}
+                <AiSparkleIcon size={15} />
+                <Text style={{ fontSize: 13, color: colors.accent, fontWeight: '700' }}>
+                  {isVip
+                    ? t('chats.room.aiChatFreeBtn')
+                    : t('chats.room.aiChatCoinBtn', { coins: aiCoinCost })}
                 </Text>
               </BouncyPressable>
-            ))}
-          </ScrollView>
+              {(aiIdeas.length > 0
+                ? aiIdeas
+                : chronologicalMessages.length < 4
+                  ? ICEBREAKERS
+                  : []
+              ).map((prompt) => (
+                <BouncyPressable
+                  key={prompt}
+                  hapticFeedback="light"
+                  onPress={() => {
+                    if (aiIdeas.length > 0) {
+                      setText(prompt);
+                    } else {
+                      sendMut.mutate(prompt);
+                    }
+                  }}
+                  style={[
+                    styles.icebreakerChip,
+                    { backgroundColor: colors.card, borderColor: colors.line },
+                  ]}
+                >
+                  <Text style={{ fontSize: 13, color: colors.accent, fontWeight: '600' }}>
+                    {prompt}
+                  </Text>
+                </BouncyPressable>
+              ))}
+            </ScrollView>
+            {aiMut.error ? <AppText variant="error">{errorMessage(aiMut.error)}</AppText> : null}
+          </View>
         ) : null}
 
         {/* แถบพิมพ์ข้อความสไตล์ Compact ปักด้านล่าง */}

@@ -6,6 +6,7 @@ export const SUPABASE_RPC = {
   getTierConfigs: 'get_tier_configs',
   getMySubscription: 'get_my_subscription',
   exchangeCoinsForPass: 'exchange_coins_for_pass',
+  useAiWingman: 'use_ai_wingman',
   // เฟส 1: ตัวตน & โปรไฟล์
   getMyStatus: 'get_my_status',
   getMyProfile: 'get_my_profile',
