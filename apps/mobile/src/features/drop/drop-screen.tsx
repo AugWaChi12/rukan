@@ -14,6 +14,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { NotificationBellButton } from '@/components/notification-bell';
 import { SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
   AppText,
@@ -160,7 +161,10 @@ export function DropScreen() {
           </AppText>
           <AppText variant="title">{t('drop.title')}</AppText>
         </View>
-        {quota ? <Badge label={t('drop.remaining', { count: remaining })} tone="rose" /> : null}
+        <Row style={{ alignItems: 'center', gap: 8 }}>
+          {quota ? <Badge label={t('drop.remaining', { count: remaining })} tone="rose" /> : null}
+          <NotificationBellButton />
+        </Row>
       </View>
 
       <AppText variant="muted">{t('drop.subtitle')}</AppText>

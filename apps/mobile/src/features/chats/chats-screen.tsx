@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { AiSparkleIcon } from '@/components/brand-icons';
+import { NotificationBellButton } from '@/components/notification-bell';
 import { SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
   AliasAvatar,
@@ -110,12 +111,15 @@ export function ChatsScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <AppText variant="small" style={{ color: colors.accent, fontWeight: '700' }}>
-          {t('chats.eyebrow')}
-        </AppText>
-        <AppText variant="title">{t('chats.title')}</AppText>
-      </View>
+      <Row style={[styles.header, { justifyContent: 'space-between', alignItems: 'center' }]}>
+        <View style={{ flex: 1 }}>
+          <AppText variant="small" style={{ color: colors.accent, fontWeight: '700' }}>
+            {t('chats.eyebrow')}
+          </AppText>
+          <AppText variant="title">{t('chats.title')}</AppText>
+        </View>
+        <NotificationBellButton />
+      </Row>
 
       <SegmentedControl options={sectionOptions} value={section} onChange={setSection} />
 

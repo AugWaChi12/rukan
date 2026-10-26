@@ -33,15 +33,19 @@ export function WithProfile({ children }: { children: (profile: MyProfile) => Re
 export function SubScreen({
   title,
   hint,
+  right,
+  refreshControl,
   children,
 }: {
   title: string;
   hint?: string;
+  right?: ReactNode;
+  refreshControl?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <Screen>
-      <ScreenHeader title={title} />
+    <Screen refreshControl={refreshControl as any}>
+      <ScreenHeader title={title} right={right} />
       {hint ? <AppText variant="muted">{hint}</AppText> : null}
       {children}
     </Screen>

@@ -323,6 +323,7 @@ export type Database = {
       get_my_deck: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_matches: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_moderation_history: { Args: Record<PropertyKey, never>; Returns: Json };
+      get_my_notifications: { Args: { p_limit?: number; p_offset?: number }; Returns: Json };
       get_my_profile: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_status: { Args: Record<PropertyKey, never>; Returns: Json };
       get_my_subscription: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -331,6 +332,7 @@ export type Database = {
       get_replies: { Args: { p_post_id: string }; Returns: Json };
       get_tier_configs: { Args: Record<PropertyKey, never>; Returns: Json };
       get_trending_hashtags: { Args: { p_hours?: number; p_limit?: number }; Returns: Json };
+      get_unread_notification_count: { Args: Record<PropertyKey, never>; Returns: number };
       get_user_topup_info: { Args: { p_user_id: string }; Returns: Json };
       health: { Args: Record<PropertyKey, never>; Returns: Json };
       join_waitlist: {
@@ -346,7 +348,9 @@ export type Database = {
         Returns: Json;
       };
       like_post: { Args: { p_post_id: string }; Returns: undefined };
+      mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
       mark_conversation_read: { Args: { p_conversation_id: string }; Returns: undefined };
+      mark_notification_read: { Args: { p_notification_id: string }; Returns: boolean };
       mod_approve_topup_order: { Args: { p_order_id: string }; Returns: Json };
       mod_get_dashboard_counts: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_get_report: { Args: { p_report_id: string }; Returns: Json };

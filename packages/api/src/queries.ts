@@ -14,6 +14,8 @@ export const queryKeys = {
   myPhotos: ['me', 'photos'] as const,
   myBlocks: ['me', 'blocks'] as const,
   myModerationHistory: ['me', 'moderation-history'] as const,
+  notifications: ['me', 'notifications'] as const,
+  unreadNotificationCount: ['me', 'notifications', 'unread-count'] as const,
   myBubbles: ['me', 'bubbles'] as const,
   myConversations: ['me', 'conversations'] as const,
   conversation: (conversationId: string) => ['me', 'conversations', conversationId] as const,
@@ -62,6 +64,16 @@ export function createQueries(api: RukanApi) {
       queryOptions({
         queryKey: queryKeys.myModerationHistory,
         queryFn: api.getMyModerationHistory,
+      }),
+    myNotifications: (limit = 50, offset = 0) =>
+      queryOptions({
+        queryKey: [...queryKeys.notifications, limit, offset] as const,
+        queryFn: () => api.getMyNotifications({ limit, offset }),
+      }),
+    unreadNotificationCount: () =>
+      queryOptions({
+        queryKey: queryKeys.unreadNotificationCount,
+        queryFn: api.getUnreadNotificationCount,
       }),
     myBubbles: () => queryOptions({ queryKey: queryKeys.myBubbles, queryFn: api.getMyBubbles }),
     myConversations: () =>
