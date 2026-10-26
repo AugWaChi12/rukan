@@ -1,9 +1,11 @@
 // หน้าแรกของเว็บโปรโมท (ไทย / อังกฤษ ใช้ component เดียวกัน) — โครงตาม docs/WEBSITE.md หัวข้อ 3
+import Image from 'next/image';
 import { dictionaries, type Locale } from '@/i18n/dictionaries';
 import {
   ChatIcon,
   CheckIcon,
   ChevronIcon,
+  LockIcon,
   LogoMark,
   MoonIcon,
   PeopleIcon,
@@ -17,6 +19,9 @@ import { WaitlistForm } from './waitlist-form';
 const card = 'rounded-3xl border border-line bg-white p-[22px]';
 const eyebrow = 'font-display text-[15px] font-semibold text-rose-deep';
 const h2 = 'font-display text-[clamp(28px,4vw,44px)] font-bold leading-tight';
+// ตัวอธิบาย: ใหญ่พออ่านบนมือถือ + เข้มกว่า text-muted (ตัวเทาเดิมอ่านยาก)
+const body = 'text-base leading-relaxed text-ink/75 sm:text-[17px]';
+const PHOTO = '/landing/card-photo.png';
 
 export function Landing({ locale }: { locale: Locale }) {
   const t = dictionaries[locale];
@@ -80,9 +85,46 @@ export function Landing({ locale }: { locale: Locale }) {
           <h1 className="font-display text-[clamp(30px,5vw,60px)] leading-tight font-bold">
             {t.hero.titleA} <span className="text-gradient">{t.hero.titleB}</span>
           </h1>
-          <p className="max-w-[640px] text-[clamp(16px,1.8vw,20px)] leading-relaxed text-muted">
+          <p className="max-w-[640px] text-[clamp(17px,1.8vw,20px)] leading-relaxed text-ink/75">
             {t.hero.sub}
           </p>
+          {/* หนึ่งคน สองตัวตน */}
+          <div className="flex w-full max-w-[560px] items-stretch justify-center gap-2 sm:gap-3">
+            <IdentityPill
+              tone="bg-lilac-tint"
+              avatar={
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lilac to-rose font-display text-lg font-bold text-white">
+                  {t.features.space.sampleAlias.slice(0, 1)}
+                </span>
+              }
+              label={t.hero.identities.alias.label}
+              place={t.hero.identities.alias.place}
+              desc={t.hero.identities.alias.desc}
+            />
+            <span className="flex shrink-0 flex-col items-center justify-center gap-1 font-display text-[11px] font-semibold text-muted sm:text-xs">
+              <span className="h-4 w-px bg-line-strong" />
+              {t.hero.identities.link}
+              <span className="h-4 w-px bg-line-strong" />
+            </span>
+            <IdentityPill
+              tone="bg-rose-tint"
+              avatar={
+                <span className="relative size-11 shrink-0 overflow-hidden rounded-full">
+                  <Image
+                    src={PHOTO}
+                    alt=""
+                    fill
+                    sizes="44px"
+                    unoptimized
+                    className="object-cover [image-rendering:pixelated]"
+                  />
+                </span>
+              }
+              label={t.hero.identities.real.label}
+              place={t.hero.identities.real.place}
+              desc={t.hero.identities.real.desc}
+            />
+          </div>
           <div className="mt-1 flex flex-wrap justify-center gap-3">
             <a
               href="#waitlist"
@@ -97,7 +139,7 @@ export function Landing({ locale }: { locale: Locale }) {
               {t.hero.ctaSecondary}
             </a>
           </div>
-          <p className="text-[13px] text-muted">{t.hero.note}</p>
+          <p className="text-sm text-muted">{t.hero.note}</p>
         </header>
 
         <Phones t={t.phones} />
@@ -146,18 +188,18 @@ export function Landing({ locale }: { locale: Locale }) {
         <div className="flex flex-col items-center gap-2.5 text-center">
           <p className={eyebrow}>{t.features.eyebrow}</p>
           <h2 className={h2}>{t.features.title}</h2>
-          <p className="max-w-[620px] text-[17px] leading-relaxed text-muted">{t.features.sub}</p>
+          <p className={`max-w-[640px] ${body}`}>{t.features.sub}</p>
         </div>
         <div className="flex flex-wrap gap-[18px]">
           <article className={`${card} flex flex-[2_1_520px] flex-col gap-3.5`}>
             <div className="flex flex-col gap-2 rounded-[18px] bg-cream p-4">
-              <div className="rounded-[14px] bg-white px-3 py-2.5 text-[13px] shadow-[0_3px_10px_rgba(46,34,56,0.05)]">
+              <div className="rounded-[14px] bg-white px-3 py-2.5 text-[15px] shadow-[0_3px_10px_rgba(46,34,56,0.05)]">
                 <b>{t.features.space.sampleAlias}</b>{' '}
                 <span className="text-muted">· {t.features.space.sampleMeta}</span>
                 <br />
                 {t.features.space.sampleBody}
               </div>
-              <span className="self-start rounded-full bg-lilac-tint px-2.5 py-1 text-xs font-semibold">
+              <span className="self-start rounded-full bg-lilac-tint px-3 py-1 text-[13px] font-semibold">
                 {t.phones.sendBubble}
               </span>
             </div>
@@ -170,11 +212,27 @@ export function Landing({ locale }: { locale: Locale }) {
           </article>
 
           <article className={`${card} flex flex-[1_1_300px] flex-col gap-3.5`}>
-            <div className="relative flex h-[110px] items-center justify-center rounded-[18px] bg-cream">
-              <div className="h-[92px] w-[70px] -rotate-[8deg] rounded-[14px] bg-lilac-tint" />
-              <div className="-ml-[30px] h-[92px] w-[70px] rounded-[14px] bg-rose-tint" />
-              <div className="-ml-[30px] h-[92px] w-[70px] rotate-[8deg] rounded-[14px] bg-sage-tint" />
-              <span className="absolute top-3 right-3.5 rounded-full bg-ink px-2.5 py-1 font-display text-[13px] text-white">
+            <div className="relative flex h-[130px] items-center justify-center gap-2 rounded-[18px] bg-cream px-3">
+              {['object-[30%_40%]', 'object-center', 'object-[70%_30%]'].map((pos, i) => (
+                <span
+                  key={pos}
+                  className={`relative h-[96px] w-[64px] overflow-hidden rounded-[12px] shadow-[0_6px_14px_rgba(46,34,56,0.10)] ${['-rotate-[5deg]', '', 'rotate-[5deg]'][i]}`}
+                >
+                  <Image
+                    src={PHOTO}
+                    alt=""
+                    fill
+                    sizes="64px"
+                    unoptimized
+                    className={`object-cover [image-rendering:pixelated] ${pos}`}
+                  />
+                </span>
+              ))}
+              <span className="flex h-[96px] w-[64px] flex-col items-center justify-center gap-1 rounded-[12px] border border-dashed border-line-strong bg-white/70 text-muted">
+                <LockIcon size={16} />
+                <span className="font-display text-[11px]">+3</span>
+              </span>
+              <span className="absolute top-2.5 right-3 rounded-full bg-ink px-2.5 py-1 font-display text-[13px] text-white">
                 3 / 6
               </span>
             </div>
@@ -194,7 +252,7 @@ export function Landing({ locale }: { locale: Locale }) {
                 <div className="h-2 rounded-full bg-rose" />
                 <div className="h-2 rounded-full bg-line" />
               </div>
-              <p className="text-xs text-muted">{t.features.reveal.progressSub}</p>
+              <p className="text-[13px] text-ink/70">{t.features.reveal.progressSub}</p>
             </div>
             <FeatureText
               icon={<UnlockIcon />}
@@ -205,7 +263,7 @@ export function Landing({ locale }: { locale: Locale }) {
           </article>
 
           <article className={`${card} flex flex-[1_1_300px] flex-col gap-3.5`}>
-            <div className="flex h-[110px] flex-col justify-center gap-2 rounded-[18px] bg-cream p-4 text-[13px]">
+            <div className="flex h-[110px] flex-col justify-center gap-2 rounded-[18px] bg-cream p-4 text-[15px]">
               {t.features.verified.checks.map((c) => (
                 <p key={c} className="flex items-center gap-2">
                   <CheckIcon size={15} className="text-[#3E9A74]" /> {c}
@@ -224,16 +282,43 @@ export function Landing({ locale }: { locale: Locale }) {
           </article>
 
           <article className={`${card} flex flex-[2_1_520px] flex-col gap-3.5`}>
-            <div className="flex justify-center rounded-[18px] bg-cream p-4">
-              <div className="flex gap-1 rounded-full bg-white p-[5px] shadow-[0_3px_10px_rgba(46,34,56,0.06)]">
-                <span className="rounded-full bg-rose px-[22px] py-2 font-display text-[15px]">
-                  {t.features.modes.friend}
-                </span>
-                <span className="rounded-full px-[22px] py-2 font-display text-[15px] text-muted">
-                  {t.features.modes.date}
-                </span>
-              </div>
+            <div className="flex flex-col items-stretch gap-3 rounded-[18px] bg-cream p-4 sm:flex-row sm:items-center">
+              <MiniProfile
+                tone="bg-lilac-tint"
+                avatar={
+                  <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lilac to-rose font-display text-xl font-bold text-white">
+                    {t.features.space.sampleAlias.slice(0, 1)}
+                  </span>
+                }
+                tag={t.features.modes.friend}
+                name={t.features.space.sampleAlias}
+                meta={t.features.modes.aliasMeta}
+              />
+              <span className="flex shrink-0 items-center justify-center text-muted">
+                <LockIcon size={18} />
+              </span>
+              <MiniProfile
+                tone="bg-rose-tint"
+                avatar={
+                  <span className="relative size-14 shrink-0 overflow-hidden rounded-full">
+                    <Image
+                      src={PHOTO}
+                      alt=""
+                      fill
+                      sizes="56px"
+                      unoptimized
+                      className="object-cover [image-rendering:pixelated]"
+                    />
+                  </span>
+                }
+                tag={t.features.modes.date}
+                name={t.phones.cardName}
+                meta={t.features.modes.realMeta}
+              />
             </div>
+            <p className="-mt-1 text-center font-display text-sm font-semibold text-rose-deep">
+              {t.features.modes.wall}
+            </p>
             <FeatureText
               icon={<PeopleIcon />}
               tint="bg-lilac-tint"
@@ -262,7 +347,7 @@ export function Landing({ locale }: { locale: Locale }) {
                 {String(i + 1).padStart(2, '0')}
               </span>
               <h3 className="font-display text-xl font-semibold">{step.title}</h3>
-              <p className="text-[15px] leading-relaxed text-muted">{step.body}</p>
+              <p className={body}>{step.body}</p>
             </li>
           ))}
         </ol>
@@ -290,7 +375,7 @@ export function Landing({ locale }: { locale: Locale }) {
               >
                 <ShieldIcon size={20} className="text-gold" />
                 <p className="font-display text-base font-semibold">{item.title}</p>
-                <p className="text-[13px] text-night-muted">{item.body}</p>
+                <p className="text-[15px] text-night-muted">{item.body}</p>
               </li>
             ))}
           </ul>
@@ -370,7 +455,7 @@ function FeatureText({
   icon,
   tint,
   title,
-  body,
+  body: text,
 }: {
   icon: React.ReactNode;
   tint: string;
@@ -383,7 +468,64 @@ function FeatureText({
         {icon}
       </span>
       <h3 className="font-display text-[22px] font-semibold">{title}</h3>
-      <p className="text-[15px] leading-relaxed text-muted">{body}</p>
+      <p className={body}>{text}</p>
     </>
+  );
+}
+
+/** การ์ดเล็กใน hero: ตัวตนหนึ่งฝั่ง (นามแฝง / ตัวจริง) */
+function IdentityPill({
+  tone,
+  avatar,
+  label,
+  place,
+  desc,
+}: {
+  tone: string;
+  avatar: React.ReactNode;
+  label: string;
+  place: string;
+  desc: string;
+}) {
+  return (
+    <div
+      className={`flex flex-1 flex-col items-center gap-1.5 rounded-[22px] px-3 py-3 text-center sm:flex-row sm:text-left ${tone}`}
+    >
+      {avatar}
+      <div className="min-w-0">
+        <p className="font-display text-[15px] font-bold sm:text-base">
+          {label} <span className="font-medium text-muted">· {place}</span>
+        </p>
+        <p className="text-[13px] leading-snug text-ink/70 sm:text-sm">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+/** โปรไฟล์ย่อในการ์ด "นามแฝงกับตัวจริง" */
+function MiniProfile({
+  tone,
+  avatar,
+  tag,
+  name,
+  meta,
+}: {
+  tone: string;
+  avatar: React.ReactNode;
+  tag: string;
+  name: string;
+  meta: string;
+}) {
+  return (
+    <div className="flex flex-1 items-center gap-3 rounded-[16px] bg-white p-3 shadow-[0_3px_10px_rgba(46,34,56,0.05)]">
+      {avatar}
+      <div className="min-w-0">
+        <span className={`rounded-full px-2 py-0.5 font-display text-xs font-semibold ${tone}`}>
+          {tag}
+        </span>
+        <p className="mt-1 font-display text-base font-semibold">{name}</p>
+        <p className="text-[13px] text-ink/70">{meta}</p>
+      </div>
+    </div>
   );
 }
