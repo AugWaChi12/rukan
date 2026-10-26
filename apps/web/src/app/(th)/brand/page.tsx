@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { LogoMark } from '@/components/landing/icons';
 
 type BrandAsset = {
@@ -353,7 +354,7 @@ export default function BrandKitPage() {
     <div className="bg-grid min-h-dvh pb-24 text-ink">
       <header className="sticky top-3 z-40 mx-auto flex max-w-[1120px] items-center justify-between gap-3 px-4 pt-3">
         <div className="flex w-full items-center justify-between rounded-full border border-white/80 bg-white/85 px-5 py-2.5 shadow-[0_12px_36px_rgba(46,34,56,0.08)] backdrop-blur-xl">
-          <a href="/" className="flex items-center gap-2.5 no-underline">
+          <Link href="/" className="flex items-center gap-2.5 no-underline">
             <LogoMark size={32} />
             <div>
               <span className="font-display text-lg font-bold">รู้กัน · Brand & Figma Kit</span>
@@ -361,7 +362,7 @@ export default function BrandKitPage() {
                 Vector SVG 100%
               </span>
             </div>
-          </a>
+          </Link>
 
           <div className="flex items-center gap-1.5 rounded-full border border-line bg-cream p-1 text-xs font-semibold">
             <button
