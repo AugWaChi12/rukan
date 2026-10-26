@@ -1,0 +1,16 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="RukanCoinGold" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFEBA8" />
+      <stop offset="50%" stop-color="#F2C66D" />
+      <stop offset="100%" stop-color="#C88A1E" />
+    </linearGradient>
+  </defs>
+  <g id="Rukan-Icon-Coin">
+    <circle id="Coin-Outer" cx="32" cy="32" r="26" fill="url(#RukanCoinGold)" stroke="#2E2238" stroke-width="3.5" />
+    <circle id="Coin-Inner-Rim" cx="32" cy="32" r="20" stroke="#7A5210" stroke-opacity="0.45" stroke-width="2" stroke-dasharray="4 3" />
+    <circle id="Coin-Bubble-L" cx="27" cy="32" r="9" fill="#FFF9E6" fill-opacity="0.85" stroke="#2E2238" stroke-width="2.5" />
+    <circle id="Coin-Bubble-R" cx="37" cy="32" r="9" fill="#E9A9BF" fill-opacity="0.9" stroke="#2E2238" stroke-width="2.5" />
+    <path id="Coin-Center-Spark" d="M32 26L33.5 30.5L38 32L33.5 33.5L32 38L30.5 33.5L26 32L30.5 30.5L32 26Z" fill="#2E2238" />
+  </g>
+</svg>

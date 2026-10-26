@@ -1,3 +1,38 @@
 <svg width="652" height="606" viewBox="0 0 652 606" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M353.554 0H298.446C273.006 0 249.684 14.6347 237.962 37.9539L4.37994 502.646C-1.04325 513.435 -1.45067 526.178 3.2716 537.313L22.6123 582.918C34.6475 611.297 72.5404 614.156 88.4414 587.885L309.863 222.063C313.34 216.317 319.439 212.826 326 212.826C332.561 212.826 338.659 216.317 342.137 222.063L563.559 587.885C579.46 614.156 617.352 611.297 629.388 582.918L648.728 537.313C653.451 526.178 653.043 513.435 647.62 502.646L414.038 37.9539C402.316 14.6347 378.994 0 353.554 0Z" fill="white"/>
+  <defs>
+    <linearGradient id="RoseBubble" x1="80" y1="120" x2="360" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFD0E0" />
+      <stop offset="50%" stop-color="#E9A9BF" />
+      <stop offset="100%" stop-color="#C96A8B" />
+    </linearGradient>
+    <linearGradient id="LilacBubble" x1="292" y1="120" x2="572" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E5DFFF" />
+      <stop offset="50%" stop-color="#C7BEE3" />
+      <stop offset="100%" stop-color="#8E7EC0" />
+    </linearGradient>
+    <linearGradient id="GoldSpark" x1="296" y1="258" x2="356" y2="318" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF3C4" />
+      <stop offset="50%" stop-color="#F2C66D" />
+      <stop offset="100%" stop-color="#D99B26" />
+    </linearGradient>
+  </defs>
+  <g id="Rukan-Mobile-App-Symbol">
+    <path
+      d="M242 128C152.53 128 80 200.53 80 290C80 331.11 95.3 368.64 120.52 397.2L92.3 467.2L168.02 434.95C190.67 445.9 216.07 452 242 452C331.47 452 404 379.47 404 290C404 200.53 331.47 128 242 128Z"
+      fill="url(#RoseBubble)"
+    />
+    <path
+      d="M410 128C499.47 128 572 200.53 572 290C572 331.11 556.7 368.64 531.48 397.2L559.7 467.2L483.98 434.95C461.33 445.9 435.93 452 410 452C320.53 452 248 379.47 248 290C248 200.53 320.53 128 410 128Z"
+      fill="url(#LilacBubble)"
+    />
+    <path
+      d="M326 151.6C372.58 179.8 404 231.16 404 290C404 348.84 372.58 400.2 326 428.4C279.42 400.2 248 348.84 248 290C248 231.16 279.42 179.8 326 151.6Z"
+      fill="#2E2238"
+    />
+    <path
+      d="M326 232C331.4 262.8 343.8 275.2 374.6 280.6C343.8 286 331.4 298.4 326 329.2C320.6 298.4 308.2 286 277.4 280.6C308.2 275.2 320.6 262.8 326 232Z"
+      fill="url(#GoldSpark)"
+    />
+    <circle cx="326" cy="360" r="7" fill="#F2C66D" />
+  </g>
 </svg>

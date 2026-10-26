@@ -1,0 +1,26 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="VipDiamondGrad" x1="14" y1="14" x2="50" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFD4E4" />
+      <stop offset="50%" stop-color="#D4688E" />
+      <stop offset="100%" stop-color="#7B5EA7" />
+    </linearGradient>
+  </defs>
+  <g id="Rukan-Icon-Pass-Premium-VIP-AI">
+    <rect id="Vip-Badge-Base" x="8" y="8" width="48" height="48" rx="16" fill="#2E2238" stroke="#F2C66D" stroke-width="3" />
+    <path
+      id="Diamond-Gem"
+      d="M23 20H41L48 29L32 47L16 29L23 20Z"
+      fill="url(#VipDiamondGrad)"
+      stroke="#FFFFFF"
+      stroke-width="2.8"
+      stroke-linejoin="round"
+    />
+    <path id="Diamond-Facet" d="M16 29H48M25 20L32 47L39 20" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2" stroke-linejoin="round" />
+    <path
+      id="AI-Wingman-Sparkle"
+      d="M47 11L48.8 15.2L53 17L48.8 18.8L47 23L45.2 18.8L41 17L45.2 15.2L47 11Z"
+      fill="#F2C66D"
+    />
+  </g>
+</svg>

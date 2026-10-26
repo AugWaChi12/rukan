@@ -1,0 +1,26 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g id="Rukan-Icon-Tab-Chats">
+    <path
+      id="Bubble-Left"
+      d="M25 14C15.611 14 8 21.163 8 30C8 33.82 9.42 37.33 11.8 40.08L9.5 48.5L17.9 44.8C20.1 45.58 22.5 46 25 46C34.389 46 42 38.837 42 30C42 21.163 34.389 14 25 14Z"
+      fill="#FCEEF3"
+      stroke="#2E2238"
+      stroke-width="3.5"
+      stroke-linejoin="round"
+    />
+    <path
+      id="Bubble-Right"
+      d="M39 18C48.389 18 56 25.163 56 34C56 37.82 54.58 41.33 52.2 44.08L54.5 52.5L46.1 48.8C43.9 49.58 41.5 50 39 50C29.611 50 22 42.837 22 34C22 25.163 29.611 18 39 18Z"
+      fill="#E9A9BF"
+      fill-opacity="0.85"
+      stroke="#2E2238"
+      stroke-width="3.5"
+      stroke-linejoin="round"
+    />
+    <path
+      id="Rukan-Center-Spark"
+      d="M32 25L33.8 30.2L39 32L33.8 33.8L32 39L30.2 33.8L25 32L30.2 30.2L32 25Z"
+      fill="#2E2238"
+    />
+  </g>
+</svg>

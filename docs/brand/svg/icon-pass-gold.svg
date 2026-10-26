@@ -1,0 +1,16 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g id="Rukan-Icon-Pass-Gold">
+    <rect id="Gold-Badge-Base" x="8" y="8" width="48" height="48" rx="16" fill="#FFF6DC" stroke="#B67E15" stroke-width="3" />
+    <path
+      id="Crown-Body"
+      d="M16 42L19 24L27.5 31L32 20L36.5 31L45 24L48 42H16Z"
+      fill="#F2C66D"
+      stroke="#2E2238"
+      stroke-width="3.2"
+      stroke-linejoin="round"
+    />
+    <circle id="Crown-Gem-Center" cx="32" cy="17" r="3" fill="#D4688E" />
+    <circle id="Crown-Gem-L" cx="18" cy="21" r="2.5" fill="#F2C66D" />
+    <circle id="Crown-Gem-R" cx="46" cy="21" r="2.5" fill="#F2C66D" />
+  </g>
+</svg>
