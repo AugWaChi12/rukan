@@ -13,7 +13,7 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AiSparkleIcon } from '@/components/brand-icons';
 import { CareNoticeBanner, SafetySheet, type SafetyTarget } from '@/components/safety-sheet';
 import {
@@ -24,6 +24,7 @@ import {
   Button,
   Card,
   Chip,
+  ConfirmDialog,
   EmptyState,
   Loading,
   ModalSheet,
@@ -35,8 +36,21 @@ import {
 import { errorMessage } from '@/i18n';
 import { api, queries, queryClient, queryKeys } from '@/lib/api';
 import { haptic } from '@/lib/haptics';
+import { detectCurrentProvince } from '@/lib/location';
 import { useAppTheme } from '@/theme/theme-provider';
 import { radius, space } from '@/theme/tokens';
+
+const MOOD_ICONS: Record<SpaceMood, string> = {
+  lonely: '🌙',
+  tired: '🥱',
+  happy: '✨',
+  anxious: '🌧️',
+  bored: '🫥',
+  hopeful: '🌱',
+  calm: '🍵',
+  excited: '🎉',
+  overthinking: '💭',
+};
 
 export function SpaceScreen() {
   const { t, i18n } = useTranslation();
@@ -54,6 +68,9 @@ export function SpaceScreen() {
   const [activeReplyPost, setActiveReplyPost] = useState<SpacePost | null>(null);
   const [activeBubblePost, setActiveBubblePost] = useState<SpacePost | null>(null);
   const [safetyTarget, setSafetyTarget] = useState<SafetyTarget | null>(null);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [gpsStatusText, setGpsStatusText] = useState<string | null>(null);
 
   const profileQuery = useQuery(queries.myProfile());
   const areasQuery = useQuery(queries.areas());
@@ -185,34 +202,69 @@ export function SpaceScreen() {
         </Card>
       ) : null}
 
-      {/* เช็กอินอารมณ์ประจำวัน — ทรงฟองสบู่น่ารัก */}
-      <Card tone="cream" style={styles.moodCard}>
-        <Row style={{ gap: 6, alignItems: 'center' }}>
-          <Text style={{ fontSize: 16 }}>🫧</Text>
-          <AppText variant="small" style={{ fontWeight: '700', color: colors.text }}>
-            {checkedMood
-              ? `${t('space.moodCheckedIn')} ${t(`space.moods.${checkedMood}`)}`
-              : t('space.moodTitle')}
-          </AppText>
+      {/* เช็กอินอารมณ์ประจำวัน — ทรงฟองสบู่นุ่มนวล แนวนอน กะทัดรัด ไม่แย่งพื้นที่ฟีด */}
+      <View style={styles.moodSection}>
+        <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <Row style={{ gap: 6, alignItems: 'center' }}>
+            <Text style={{ fontSize: 15 }}>🫧</Text>
+            <AppText variant="small" style={{ fontWeight: '700', color: colors.text }}>
+              {checkedMood
+                ? `${t('space.moodCheckedIn')} ${t(`space.moods.${checkedMood}`)}`
+                : t('space.moodTitle')}
+            </AppText>
+          </Row>
+          {checkedMood ? <Badge label={t(`space.moods.${checkedMood}`)} tone="gold" /> : null}
         </Row>
-        <Row>
-          {SPACE_MOODS.map((m) => (
-            <Chip
-              key={m}
-              tone="lilac"
-              label={t(`space.moods.${m}`)}
-              selected={mood === m}
-              onPress={() => {
-                setMood(mood === m ? undefined : m);
-                checkinMut.mutate(m);
-              }}
-            />
-          ))}
-        </Row>
-      </Card>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.moodScroll}
+        >
+          {SPACE_MOODS.map((m) => {
+            const isSelected = mood === m;
+            return (
+              <BouncyPressable
+                key={m}
+                hapticFeedback="light"
+                onPress={() => {
+                  setMood(isSelected ? undefined : m);
+                  checkinMut.mutate(m);
+                }}
+                style={[
+                  styles.moodPill,
+                  {
+                    backgroundColor: isSelected ? colors.accentTint : colors.card,
+                    borderColor: isSelected ? colors.accent : colors.line,
+                  },
+                ]}
+              >
+                <Text style={{ fontSize: 14 }}>{MOOD_ICONS[m]}</Text>
+                <AppText
+                  variant="small"
+                  style={{
+                    color: isSelected ? colors.accent : colors.text,
+                    fontWeight: isSelected ? '700' : '500',
+                  }}
+                >
+                  {t(`space.moods.${m}`)}
+                </AppText>
+              </BouncyPressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
-      {/* กล่องเขียนโพสต์ไม่ระบุตัวตน */}
-      <Card>
+      {/* กล่องเขียนโพสต์ไม่ระบุตัวตน สไตล์ Liquid Glass */}
+      <View
+        style={[
+          styles.composerCard,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.accentSoft,
+            shadowColor: '#000',
+          },
+        ]}
+      >
         <TextField
           label={`${body.trim().length}/${SPACE_LIMITS.postBody}`}
           hint={t('space.composeHint')}
@@ -223,23 +275,26 @@ export function SpaceScreen() {
           multiline
         />
         {composeHashtags.length > 0 ? (
-          <Row style={{ gap: space.xs }}>
+          <Row style={{ gap: space.xs, marginTop: -4 }}>
             {composeHashtags.map((tag) => (
-              <Badge key={tag} label={`#${tag}`} tone="rose" />
+              <Badge key={tag} label={`#${tag}`} tone="gold" />
             ))}
           </Row>
         ) : null}
         {createPostMut.error ? (
           <AppText variant="error">{errorMessage(createPostMut.error)}</AppText>
         ) : null}
-        <Button
-          variant="rose"
-          label={t('space.postButton')}
-          loading={createPostMut.isPending}
-          disabled={body.trim().length === 0}
-          onPress={() => createPostMut.mutate()}
-        />
-      </Card>
+        <Row style={{ justifyContent: 'flex-end', marginTop: 4 }}>
+          <Button
+            variant="primary"
+            size="md"
+            label={t('space.postButton')}
+            loading={createPostMut.isPending}
+            disabled={body.trim().length === 0}
+            onPress={() => createPostMut.mutate()}
+          />
+        </Row>
+      </View>
 
       {/* แถบ #แฮชแท็กมาแรง สไตล์ X */}
       {(trendingQuery.data ?? []).length > 0 ? (
@@ -269,6 +324,65 @@ export function SpaceScreen() {
 
       {/* แท็บกรองโพสต์ + เรียงลำดับ (ล่าสุด / มาแรง) */}
       <SegmentedControl options={tabOptions} value={tab} onChange={setTab} />
+
+      {/* แบนเนอร์พิกัดตำแหน่งเมื่อเลือกแท็บ ใกล้ฉัน (Nearby) พร้อมปุ่ม GPS Auto-detect */}
+      {tab === 'nearby' ? (
+        <View
+          style={[
+            styles.locationBanner,
+            { backgroundColor: colors.card, borderColor: colors.line },
+          ]}
+        >
+          <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <Row style={{ gap: 8, alignItems: 'center', flex: 1 }}>
+              <Text style={{ fontSize: 16 }}>📍</Text>
+              <View style={{ flex: 1 }}>
+                <AppText variant="small" style={{ fontWeight: '700', color: colors.text }}>
+                  {profileQuery.data?.area_id
+                    ? (areaMap.get(profileQuery.data.area_id) ?? profileQuery.data.area_id)
+                    : 'ยังไม่ได้เลือกตำแหน่ง'}
+                </AppText>
+                <AppText variant="muted" style={{ fontSize: 11 }}>
+                  {gpsStatusText || 'แสดงเฉพาะโพสต์จากผู้คนในพื้นที่นี้'}
+                </AppText>
+              </View>
+            </Row>
+            <BouncyPressable
+              hapticFeedback="selection"
+              disabled={isDetectingGps}
+              onPress={async () => {
+                setIsDetectingGps(true);
+                setGpsStatusText(t('space.detectingGps'));
+                const res = await detectCurrentProvince();
+                setIsDetectingGps(false);
+                if (res.success && res.province) {
+                  await api.updateMyProfile({ areaId: res.province.id });
+                  await queryClient.invalidateQueries({ queryKey: queryKeys.myProfile });
+                  await queryClient.invalidateQueries({ queryKey: queryKeys.space });
+                  setGpsStatusText(t('space.gpsSuccess', { name: res.province.name_th }));
+                  haptic.success();
+                } else {
+                  setGpsStatusText('ไม่สามารถเข้าถึง GPS ได้ กรุณาลองใหม่');
+                  haptic.warning();
+                }
+              }}
+              style={[
+                styles.gpsBtn,
+                { backgroundColor: colors.accentTint, borderColor: colors.accentSoft },
+              ]}
+            >
+              <Text style={{ fontSize: 12 }}>{isDetectingGps ? '⏳' : '🎯'}</Text>
+              <AppText
+                variant="small"
+                style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}
+              >
+                {isDetectingGps ? t('space.detectingGps') : t('space.detectGps')}
+              </AppText>
+            </BouncyPressable>
+          </Row>
+        </View>
+      ) : null}
+
       <Row style={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <Row style={{ gap: space.xs }}>
           {sortOptions.map((opt) => (
@@ -332,11 +446,13 @@ export function SpaceScreen() {
                   <BouncyPressable
                     accessibilityRole="button"
                     accessibilityLabel={t('common.delete')}
-                    hapticFeedback="heavy"
-                    onPress={() => deletePostMut.mutate(post.id)}
+                    hapticFeedback="medium"
+                    onPress={() => setPostToDelete(post.id)}
                     style={[styles.iconBtn, { borderColor: colors.line }]}
                   >
-                    <AppText variant="small">{t('common.delete')}</AppText>
+                    <AppText variant="small" style={{ color: colors.muted }}>
+                      {t('common.delete')}
+                    </AppText>
                   </BouncyPressable>
                 ) : (
                   <BouncyPressable
@@ -460,6 +576,24 @@ export function SpaceScreen() {
 
       {/* Modal ความปลอดภัย (บล็อก / รายงาน) */}
       <SafetySheet target={safetyTarget} onClose={() => setSafetyTarget(null)} />
+
+      {/* Popup ยืนยันการลบโพสต์ */}
+      <ConfirmDialog
+        visible={!!postToDelete}
+        title={t('space.deleteConfirmTitle')}
+        message={t('space.deleteConfirmMessage')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        tone="danger"
+        loading={deletePostMut.isPending}
+        onConfirm={() => {
+          if (postToDelete) {
+            deletePostMut.mutate(postToDelete);
+            setPostToDelete(null);
+          }
+        }}
+        onCancel={() => setPostToDelete(null)}
+      />
     </Screen>
   );
 }
@@ -729,6 +863,47 @@ const styles = StyleSheet.create({
   },
   toastCard: {
     padding: space.md,
+  },
+  moodSection: {
+    gap: space.xs,
+  },
+  moodScroll: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  moodPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  composerCard: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    padding: space.md,
+    gap: space.xs,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  locationBanner: {
+    padding: space.sm,
+    paddingHorizontal: space.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  gpsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
   },
   moodCard: {
     gap: space.sm,

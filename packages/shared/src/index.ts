@@ -1,4 +1,5 @@
 export * from './constants/identity';
+export * from './constants/provinces';
 export * from './constants/supabase';
 export * from './schemas/chat';
 export * from './schemas/common';

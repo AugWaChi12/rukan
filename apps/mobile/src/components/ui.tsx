@@ -609,6 +609,87 @@ export function ModalSheet({
   );
 }
 
+/** กล่องข้อความยืนยันการทำรายการ (Confirmation Alert Popup พร้อม Haptic และดีไซน์ Glassmorphism) */
+export function ConfirmDialog({
+  visible,
+  title,
+  message,
+  confirmLabel = 'ยืนยัน',
+  cancelLabel = 'ยกเลิก',
+  tone = 'danger',
+  loading = false,
+  onConfirm,
+  onCancel,
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  tone?: 'danger' | 'primary';
+  loading?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const { colors } = useAppTheme();
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={styles.confirmBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} />
+        <View
+          style={[
+            styles.confirmCard,
+            { backgroundColor: colors.background, borderColor: colors.line },
+          ]}
+        >
+          <View
+            style={[
+              styles.confirmIconWrap,
+              { backgroundColor: tone === 'danger' ? '#f43f5e18' : colors.accentTint },
+            ]}
+          >
+            <Text style={{ fontSize: 24 }}>{tone === 'danger' ? '⚠️' : '🫧'}</Text>
+          </View>
+          <AppText variant="subheading" style={{ textAlign: 'center', marginTop: 12 }}>
+            {title}
+          </AppText>
+          <AppText
+            variant="muted"
+            style={{ textAlign: 'center', marginTop: 6, fontSize: 13, lineHeight: 18 }}
+          >
+            {message}
+          </AppText>
+          <View style={styles.confirmActions}>
+            <View style={{ flex: 1 }}>
+              <Button
+                variant="ghost"
+                size="md"
+                label={cancelLabel}
+                onPress={() => {
+                  haptic.light();
+                  onCancel();
+                }}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                variant={tone === 'danger' ? 'rose' : 'primary'}
+                size="md"
+                label={confirmLabel}
+                loading={loading}
+                onPress={() => {
+                  haptic.heavy();
+                  onConfirm();
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export function EmptyState({
   badge,
   title,
@@ -824,6 +905,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: space.xxl,
     gap: space.sm,
+  },
+  confirmBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: space.lg,
+  },
+  confirmCard: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    padding: space.lg,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  confirmIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: space.sm,
+    width: '100%',
+    marginTop: space.lg,
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 200 },
 });

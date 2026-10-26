@@ -127,6 +127,11 @@ export const th = {
     composePlaceholder:
       'เล่าเรื่องวันนี้ ชวนกินข้าว หรือใส่ #เหงาๆ #หาเพื่อนคุย แบบไม่ต้องบอกชื่อ…',
     composeHint: 'ห้ามใส่เบอร์โทร LINE IG หรือลิงก์ เพื่อความปลอดภัยของทุกคน',
+    deleteConfirmTitle: 'ลบโพสต์นี้หรือไม่?',
+    deleteConfirmMessage: 'โพสต์นี้และการตอบกลับทั้งหมดจะถูกลบอย่างถาวร ไม่สามารถกู้คืนได้',
+    detectGps: '🎯 ใช้พิกัดปัจจุบัน',
+    detectingGps: 'กำลังตรวจหาพิกัด...',
+    gpsSuccess: 'พบตำแหน่ง: {{name}}',
     postButton: 'โพสต์ใน Space',
     mineTag: 'โพสต์ของฉัน',
     opTag: 'เจ้าของโพสต์',
