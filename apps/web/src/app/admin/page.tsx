@@ -62,30 +62,31 @@ export default function AdminPage() {
     }
   }, [api]);
 
-  // โหลดข้อมูล Dashboard ผ่าน @rukan/api ทั้งหมด
+  // โหลดข้อมูล Dashboard ผ่าน @rukan/api ทั้งหมด (ใช้ allSettled เพื่อไม่ให้ RPC ย่อยตัวใดตัวหนึ่งพังแล้วเตะออกจากหน้า Admin)
   const refreshAdminData = useCallback(async () => {
     try {
       const countsData = await api.moderation.getDashboardCounts();
       setIsModerator(true);
       setCounts(countsData);
-
-      const [statsData, wlData, repData, appData] = await Promise.all([
-        api.moderation.getWaitlistStats(),
-        api.moderation.listWaitlist({ limit: 100, offset: 0 }),
-        api.moderation.listReports({ status: 'open', limit: 50 }),
-        api.moderation.listAppeals({ status: 'pending', limit: 50 }),
-      ]);
-
-      setStats(statsData);
-      setWaitlistRows(wlData);
-      setReports(repData);
-      setAppeals(appData);
-
-      await loadTierConfigs();
     } catch (err) {
-      console.error('Refresh error:', err);
+      console.error('Refresh error (not moderator):', err);
       setIsModerator(false);
+      return;
     }
+
+    const [statsRes, wlRes, repRes, appRes] = await Promise.allSettled([
+      api.moderation.getWaitlistStats(),
+      api.moderation.listWaitlist({ limit: 100, offset: 0 }),
+      api.moderation.listReports({ status: 'open', limit: 50 }),
+      api.moderation.listAppeals({ status: 'pending', limit: 50 }),
+    ]);
+
+    if (statsRes.status === 'fulfilled') setStats(statsRes.value);
+    if (wlRes.status === 'fulfilled') setWaitlistRows(wlRes.value);
+    if (repRes.status === 'fulfilled') setReports(repRes.value);
+    if (appRes.status === 'fulfilled') setAppeals(appRes.value);
+
+    await loadTierConfigs();
   }, [api, loadTierConfigs]);
 
   useEffect(() => {
@@ -112,23 +113,24 @@ export default function AdminPage() {
           if (ignore) return;
           setIsModerator(true);
           setCounts(countsData);
-
-          const [statsData, wlData, repData, appData] = await Promise.all([
-            api.moderation.getWaitlistStats(),
-            api.moderation.listWaitlist({ limit: 100, offset: 0 }),
-            api.moderation.listReports({ status: 'open', limit: 50 }),
-            api.moderation.listAppeals({ status: 'pending', limit: 50 }),
-          ]);
-
-          if (!ignore) {
-            setStats(statsData);
-            setWaitlistRows(wlData);
-            setReports(repData);
-            setAppeals(appData);
-            await loadTierConfigs();
-          }
         } catch {
           if (!ignore) setIsModerator(false);
+          return;
+        }
+
+        const [statsRes, wlRes, repRes, appRes] = await Promise.allSettled([
+          api.moderation.getWaitlistStats(),
+          api.moderation.listWaitlist({ limit: 100, offset: 0 }),
+          api.moderation.listReports({ status: 'open', limit: 50 }),
+          api.moderation.listAppeals({ status: 'pending', limit: 50 }),
+        ]);
+
+        if (!ignore) {
+          if (statsRes.status === 'fulfilled') setStats(statsRes.value);
+          if (wlRes.status === 'fulfilled') setWaitlistRows(wlRes.value);
+          if (repRes.status === 'fulfilled') setReports(repRes.value);
+          if (appRes.status === 'fulfilled') setAppeals(appRes.value);
+          await loadTierConfigs();
         }
       } catch (err) {
         console.error('Admin init error:', err);
